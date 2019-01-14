@@ -1,0 +1,19 @@
+[
+  ["Strict-Transport-Security", "max-age=31536000"],
+  ["Content-Security-Policy", [
+    "default-src 'none'",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "connect-src 'self' http://getto.workstation:10380 http://getto.workstation:30081 ws://getto.workstation:30080",
+    "img-src 'self' data:",
+    "font-src 'self' https://fonts.gstatic.com/ https://use.fontawesome.com/",
+    "script-src 'self' http://getto.workstation:10380",
+    "style-src 'self' https://use.fontawesome.com/ https://css.getto.systems/ https://fonts.googleapis.com/ 'sha256-OlnaRV41aq4G4QB8aZszLJlkNcDuCDMAjy+fGE1iAOc='",
+    "frame-src 'self' http://getto.workstation:10380"
+  ]],
+  ["X-Content-Type-Options", "nosniff"],
+  ["X-Frame-Options", "allow-from http://getto.workstation:10380"],
+  ["X-XSS-Protection", "1; mode=block"],
+  ["Referrer-Policy", "same-origin"]
+]

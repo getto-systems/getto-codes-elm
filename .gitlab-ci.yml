@@ -1,0 +1,12 @@
+image: node:11.6.0-stretch
+
+test:
+  script:
+    - npm install
+    - ./bin/test.sh
+
+release:
+  only:
+    - release@getto-systems-labo/upload/elm
+  script:
+    - ./bin/push_tags.sh

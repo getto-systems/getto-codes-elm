@@ -1,0 +1,13 @@
+module GettoUpload.App.<%= info.module %>.EntryPoint exposing (main)
+import GettoUpload.App.<%= info.module %>.Page as Page
+
+import Browser
+
+main = Browser.application
+  { init          = Page.init
+  , subscriptions = Page.subscriptions
+  , onUrlRequest  = Page.onUrlRequest
+  , onUrlChange   = Page.onUrlChange
+  , update        = Page.update
+  , view          = Page.view
+  }

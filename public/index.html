@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ja">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+
+<title>GETTO Upload</title>
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+<link rel="stylesheet" href="https://css.getto.systems/0.7.4/getto.css">
+
+</head>
+<body>
+
+<div id="app"></div>
+<div id="error" class="display-none">
+  <div class="LoginLayout">
+    <article>
+      <header>
+        <p>
+        <small id="company">GETTO</small><br>
+        <span id="title">Upload</span><br>
+        <small id="sub-title">logging works</small>
+        </p>
+      </header>
+      <section>
+        <form method="get" action="/">
+          <footer>
+            <p><em class="badge is-danger"><i class="fa fa-exclamation-triangle"></i> システムエラーが発生しました</em></p>
+            <p><a href="?reset"><i class="fa fa-refresh"></i> リセット</a></p>
+          </footer>
+        </form>
+      </section>
+    </article>
+    <footer>
+      <span><i class="far fa-copyright"></i>GETTO systems</span>
+      <span id="project">getto/upload</span>
+    </footer>
+  </div>
+</div>
+
+<script defer src="/js/getto-detect.js"></script>
+<script defer src="/js/redirect.js"></script>
+
+</body>
+</html>
