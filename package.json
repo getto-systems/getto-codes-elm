@@ -6,7 +6,8 @@
     "watch": "npm run watch:build & npm run watch:test & npm run watch:routes",
     "watch:build": "exec-on-changed -d ./src -f ./bin/build.sh",
     "watch:test": "exec-on-changed -d ./tests -f ./bin/test.sh",
-    "watch:routes": "exec-on-changed -d ./config/routes -f ./bin/routes.sh"
+    "watch:routes": "exec-on-changed -d ./config/routes -f ./bin/routes.sh",
+    "test": "elm-test"
   },
   "author": "shun@getto.systems",
   "license": "MIT",
