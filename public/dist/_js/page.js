@@ -1,5 +1,13 @@
 "use strict";
 
+/*
+ * // _config/path/to/page.js
+ * window.config = {
+ *   path: "path/to/page.html",
+ *   page: "Path.To.Page",
+ * }
+ */
+
 try {
   var Error = (function(){
     var node = document.getElementById("error").cloneNode(true);
@@ -12,15 +20,17 @@ try {
     };
   })();
 
-  if (document.getElementById("version").innerText !== "version : DEV") {
-    GettoDetect({
-      version_to_path: function(version){
-        return "/"+version+"/"+path+location.search;
-      }
-    }).from_current_version(version,function(path) {
-      location.href = path;
-    });
-  }
+  var Detect = {
+    init: function(){
+      GettoDetect({
+        version_to_path: function(version){
+          return "/"+version+"/"+config.path+location.search;
+        }
+      }).from_current_version(version,function(path) {
+        location.href = path;
+      });
+    },
+  };
 
   var Auth = (function(){
     var keycloak = Keycloak({
@@ -97,9 +107,7 @@ try {
 
   Auth.init(function(token){
     try {
-      var page = config.page;
-      var path = config.path;
-      var modules = page.split(".");
+      var modules = config.page.split(".");
 
       var entry_point = modules.reduce(function(acc,m){return acc[m];},Elm.GettoUpload.App).EntryPoint;
 
@@ -128,6 +136,10 @@ try {
           app.ports[name].send(data);
         }
       };
+
+      subscribe("detectNewVersion", function(_params){
+        Detect.init();
+      });
 
       Auth.setUpdateTokenInterval(function(token){
         send("onTokenChanged",token);
