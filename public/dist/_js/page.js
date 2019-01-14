@@ -84,7 +84,7 @@ try {
 
     return {
       load: function(){
-        return localStorage.getItem(key);
+        return JSON.parse(localStorage.getItem(key));
       },
 
       addChangedListener: function(callback){
