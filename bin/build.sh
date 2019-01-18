@@ -41,7 +41,7 @@ getto_elm_build_main(){
 
 getto_elm_build_after(){
   case "$target" in
-    */EntryPoint.elm)
+    */Page.elm)
       if [ -n "$(getto_elm_build_changed)" ]; then
         mkdir -p $(dirname $dist_target)
         mv "$tmp_target" "$dist_target"
