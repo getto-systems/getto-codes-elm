@@ -29,7 +29,7 @@ try {
   var Detect = (function(config){
     var current_path = config.path;
 
-    var redirect = function(){
+    var redirect = function(version){
       GettoDetect({
         version_to_path: function(version){
           return "/"+version+"/"+current_path+location.search;
@@ -40,8 +40,8 @@ try {
     };
 
     return {
-      redirect: function(){
-        redirect();
+      redirect: function(version){
+        redirect(version);
       },
     };
   })(config);
@@ -228,8 +228,9 @@ try {
         ports.send("onStorageChanged",value);
       };
 
-      ports.subscribe("detectNewVersion", function(_params){
-        Detect.redirect();
+      // version: "0.0.0"
+      ports.subscribe("detectNewVersion", function(version){
+        Detect.redirect(version);
       });
 
       Auth.setUpdateTokenInterval(function(token){
