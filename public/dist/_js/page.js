@@ -103,8 +103,8 @@ try {
 
     return {
       /**
-       * callback: function(token){
-       *   token // access token
+       * callback: function(credential){
+       *   credential // { token: "access token", roles: ["role"] }
        * }
        */
       init: function(callback){
@@ -112,11 +112,11 @@ try {
       },
 
       /**
-       * callback: function(token){
-       *   token // access token
+       * callback: function(credential){
+       *   credential // { token: "access token", roles: ["role"] }
        * }
        */
-      setUpdateTokenInterval: function(callback){
+      setUpdateCredentialInterval: function(callback){
         setTimeout(function(){ updateToken(callback); }, 0);
         setInterval(function(){ updateToken(callback); }, updateTokenConfig.interval);
       },
@@ -201,7 +201,7 @@ try {
   var App = (function(config){
     var current_page = config.page;
 
-    var init = function(auth){
+    var init = function(credential){
       return current_page.split(".")
         .reduce(function(acc,m){return acc[m];},Elm.GettoUpload.App).Page
         .init({
@@ -213,16 +213,16 @@ try {
               sub:     document.getElementById("sub-title").innerText,
             },
             page: config,
-            credential: auth,
+            credential: credential,
             storage: Storage.load(),
           },
         });
     };
 
     var setupPorts = function(ports){
-      var onTokenChanged = function(token){
-        // token: "access token"
-        ports.send("onTokenChanged",token);
+      var onTokenChanged = function(credential){
+        // credential: { token: "access token", roles: ["role"] }
+        ports.send("onTokenChanged",credential);
       };
 
       var onStorageChanged = function(value) {
@@ -235,8 +235,8 @@ try {
         Detect.redirect(version);
       });
 
-      Auth.setUpdateTokenInterval(function(token){
-        onTokenChanged(token);
+      Auth.setUpdateCredentialInterval(function(credential){
+        onTokenChanged(credential);
       });
 
       ports.subscribe("logout", function(_params){
@@ -278,9 +278,9 @@ try {
 
     return {
       init: function(){
-        Auth.init(function(auth){
+        Auth.init(function(credential){
           try {
-            setupPorts(ports(init(auth)));
+            setupPorts(ports(init(credential)));
           } catch(e) {
             Error.show();
             throw e;
