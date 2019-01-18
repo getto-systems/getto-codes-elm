@@ -116,33 +116,39 @@ try {
     var key = "app";
 
     var allStorage = function(){
-      return JSON.parse(localStorage.getItem(key));
+      return localStorage.getItem(key);
     };
 
     var toValue = function(value){
-      if (value === null) {
+      try {
+        var obj = JSON.parse(value);
+
+        return {
+          global: obj._global,
+          local:  obj[current_path],
+        };
+      } catch(e) {
         return {
           global: null,
           local:  null,
         };
-      } else {
-        return {
-          global: value._global,
-          local:  value[current_path],
-        };
       }
     };
 
+    var load = function(){
+      return toValue(allStorage());
+    };
+
     var update = function(value){
-      if (value === null) {
-        localStorage.removeItem(key);
-      } else {
-        var all = allStorage();
+      try {
+        var all = JSON.parse(allStorage());
 
         all.global        = value.global;
         all[current_path] = value.local;
 
         localStorage.setItem(key, JSON.stringify(all));
+      } catch(e) {
+        localStorage.removeItem(key);
       }
     };
 
@@ -151,7 +157,7 @@ try {
        * returns: { global: obj, local: obj }
        */
       load: function(){
-        return toValue(allStorage());
+        return load();
       },
 
       /**
