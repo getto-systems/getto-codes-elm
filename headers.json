@@ -10,10 +10,10 @@
     "font-src 'self' https://fonts.gstatic.com/ https://use.fontawesome.com/",
     "script-src 'self' http://getto.workstation:10380",
     "style-src 'self' https://use.fontawesome.com/ https://css.getto.systems/ https://fonts.googleapis.com/ 'sha256-OlnaRV41aq4G4QB8aZszLJlkNcDuCDMAjy+fGE1iAOc='",
-    "frame-src 'self' http://getto.workstation:10380"
+    "frame-src 'none'"
   ]],
   ["X-Content-Type-Options", "nosniff"],
-  ["X-Frame-Options", "allow-from http://getto.workstation:10380"],
+  ["X-Frame-Options", "deny"],
   ["X-XSS-Protection", "1; mode=block"],
   ["Referrer-Policy", "same-origin"]
 ]
