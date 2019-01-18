@@ -9,7 +9,7 @@ getto_elm_routes_main(){
   local info
   local path
   local module
-  local entry_point
+  local page
 
   dump=./node_modules/.bin/dump-routes-info
   render=./node_modules/.bin/render-ejs
@@ -30,7 +30,6 @@ getto_elm_routes_main(){
 
     "$render" -d "$json" -t config/templates/html.ejs   -f public/dist/${path}.html
     "$render" -d "$json" -t config/templates/config.ejs -f public/dist/_config/${path}.js
-    "$render" -d "$json" -t config/templates/elm.ejs    -f src/GettoUpload/App/${module}/EntryPoint.elm
   done
 
   sleep 1
@@ -38,8 +37,8 @@ getto_elm_routes_main(){
 
   rm tmp/wip
 
-  for entry_point in $(find modules/app/src -name EntryPoint.elm); do
-    "$build" "./src" "${entry_point#modules/app/src/}"
+  for page in $(find modules/app/src -name Page.elm); do
+    "$build" "./src" "${page#modules/app/src/}"
   done
 }
 

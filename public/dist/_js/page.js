@@ -218,7 +218,7 @@ try {
     try {
       var ports = ElmPorts.init((function(){
         return config.page.split(".")
-          .reduce(function(acc,m){return acc[m];},Elm.GettoUpload.App).EntryPoint
+          .reduce(function(acc,m){return acc[m];},Elm.GettoUpload.App).Page
           .init({
             flags: {
               project: {
