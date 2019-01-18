@@ -49,7 +49,7 @@ try {
   var Auth = (function(){
     var keycloak = Keycloak({
       url: document.getElementById("keycloak").src.replace("/js/keycloak.js",""),
-      realm: "getto",
+      realm:    "getto",
       clientId: "upload",
     });
 
@@ -64,7 +64,16 @@ try {
         checkLoginIframe: false,
       })
         .success(function(){
-          callback(keycloak.token);
+          var resource = keycloak.tokenParsed.resource_access[keycloak.clientId];
+          var roles = [];
+          if (resource !== null && resource.roles !== null) {
+            roles = resource.roles;
+          }
+
+          callback({
+            token: keycloak.token,
+            roles: roles,
+          });
         })
         .error(Error.show);
     };
@@ -205,21 +214,24 @@ try {
 
 
   // main entry point
-  Auth.init(function(token){
+  Auth.init(function(auth){
     try {
       var ports = ElmPorts.init((function(){
         return config.page.split(".")
           .reduce(function(acc,m){return acc[m];},Elm.GettoUpload.App).EntryPoint
           .init({
             flags: {
-              token:   token,
-              storage: Storage.load(),
               project: {
                 name:     document.getElementById("project").innerText,
                 company:  document.getElementById("company").innerText,
                 title:    document.getElementById("title").innerText,
                 subTitle: document.getElementById("sub-title").innerText,
               },
+              credential: {
+                token: auth.token,
+                roles: auth.roles,
+              },
+              storage: Storage.load(),
             },
           });
       })());
