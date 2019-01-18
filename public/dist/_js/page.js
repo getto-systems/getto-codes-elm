@@ -200,7 +200,6 @@ try {
 
   var App = (function(config){
     var current_page = config.page;
-    var current_path = config.path;
 
     var init = function(auth){
       return current_page.split(".")
@@ -213,13 +212,8 @@ try {
               title:    document.getElementById("title").innerText,
               subTitle: document.getElementById("sub-title").innerText,
             },
-            page: {
-              path: current_path,
-            },
-            credential: {
-              token: auth.token,
-              roles: auth.roles,
-            },
+            page: config,
+            credential: auth,
             storage: Storage.load(),
           },
         });
