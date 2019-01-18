@@ -64,16 +64,7 @@ try {
         checkLoginIframe: false,
       })
         .success(function(){
-          var resource = keycloak.tokenParsed.resource_access[keycloak.clientId];
-          var roles = [];
-          if (resource !== null && resource.roles !== null) {
-            roles = resource.roles;
-          }
-
-          callback({
-            token: keycloak.token,
-            roles: roles,
-          });
+          callback(credential());
         })
         .error(Error.show);
     };
@@ -82,12 +73,28 @@ try {
       keycloak.updateToken(updateTokenConfig.scope)
         .success(function(refreshed) {
           if (refreshed) {
-            callback(keycloak.token);
+            callback(credential());
           }
         })
         .error(function() {
           keycloak.clearToken();
         });
+    };
+
+    var credential = function(){
+      var roles = function(){
+        var resource = keycloak.tokenParsed.resource_access[keycloak.clientId];
+        if (resource !== null && resource.roles !== null) {
+          return resource.roles;
+        } else {
+          return [];
+        }
+      };
+
+      return {
+        token: keycloak.token,
+        roles: roles(),
+      };
     };
 
     var logout = function(){
@@ -191,51 +198,34 @@ try {
     };
   })(config);
 
-  var ElmPorts = (function(config){
-    return {
-      init: function(app){
-        return {
-          subscribe: function(name,func) {
-            if (app.ports && app.ports[name]) {
-              app.ports[name].subscribe(func);
-            }
-          },
+  var App = (function(config){
+    var current_page = config.page;
+    var current_path = config.path;
 
-          send: function(name,data) {
-            if (app.ports && app.ports[name]) {
-              app.ports[name].send(data);
-            }
-          },
-        };
-      },
-    };
-  })(config);
-
-
-
-  // main entry point
-  Auth.init(function(auth){
-    try {
-      var ports = ElmPorts.init((function(){
-        return config.page.split(".")
-          .reduce(function(acc,m){return acc[m];},Elm.GettoUpload.App).Page
-          .init({
-            flags: {
-              project: {
-                name:     document.getElementById("project").innerText,
-                company:  document.getElementById("company").innerText,
-                title:    document.getElementById("title").innerText,
-                subTitle: document.getElementById("sub-title").innerText,
-              },
-              credential: {
-                token: auth.token,
-                roles: auth.roles,
-              },
-              storage: Storage.load(),
+    var init = function(auth){
+      return current_page.split(".")
+        .reduce(function(acc,m){return acc[m];},Elm.GettoUpload.App).Page
+        .init({
+          flags: {
+            project: {
+              name:     document.getElementById("project").innerText,
+              company:  document.getElementById("company").innerText,
+              title:    document.getElementById("title").innerText,
+              subTitle: document.getElementById("sub-title").innerText,
             },
-          });
-      })());
+            page: {
+              path: current_path,
+            },
+            credential: {
+              token: auth.token,
+              roles: auth.roles,
+            },
+            storage: Storage.load(),
+          },
+        });
+    };
 
+    var setupPorts = function(ports){
       var onTokenChanged = function(token){
         // token: "access token"
         ports.send("onTokenChanged",token);
@@ -274,12 +264,42 @@ try {
           FixedMidashi.create();
         },300);
       });
+    };
 
-    } catch(e) {
-      Error.show();
-      throw e;
-    }
-  });
+    var ports = function(app){
+      return {
+        subscribe: function(name,func) {
+          if (app.ports && app.ports[name]) {
+            app.ports[name].subscribe(func);
+          }
+        },
+
+        send: function(name,data) {
+          if (app.ports && app.ports[name]) {
+            app.ports[name].send(data);
+          }
+        },
+      };
+    };
+
+    return {
+      init: function(){
+        Auth.init(function(auth){
+          try {
+            setupPorts(ports(init(auth)));
+          } catch(e) {
+            Error.show();
+            throw e;
+          }
+        });
+      },
+    };
+  })(config);
+
+
+  // main entry point
+  App.init();
+
 } catch(e) {
   Error.show();
   throw e;
