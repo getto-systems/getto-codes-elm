@@ -207,10 +207,10 @@ try {
         .init({
           flags: {
             project: {
-              name:     document.getElementById("project").innerText,
-              company:  document.getElementById("company").innerText,
-              title:    document.getElementById("title").innerText,
-              subTitle: document.getElementById("sub-title").innerText,
+              name:    document.getElementById("project").innerText,
+              company: document.getElementById("company").innerText,
+              title:   document.getElementById("title").innerText,
+              sub:     document.getElementById("sub-title").innerText,
             },
             page: config,
             credential: auth,
