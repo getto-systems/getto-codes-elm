@@ -2,6 +2,8 @@ module GettoUpload.App.Index.Page exposing ( main )
 import GettoUpload.Layout.Flags as Flags
 import GettoUpload.Layout.Version as Version
 
+import Getto.Transit as Transit
+
 import Browser
 import Browser.Navigation as Navigation
 import Url exposing ( Url )
@@ -32,13 +34,13 @@ subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update msg =
   case msg of
     UrlRequest urlRequest ->
       case urlRequest of
-        Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
-        Browser.External href -> ( model, href |> Navigation.load )
-    UrlChange url -> ( model, Cmd.none )
+        Browser.Internal url ->  Transit.batch (\model -> [ url  |> Url.toString |> Navigation.load ])
+        Browser.External href -> Transit.batch (\model -> [ href |> Navigation.load ])
+    UrlChange url -> Transit.none
 
 view : Model -> Browser.Document Msg
 view model =
