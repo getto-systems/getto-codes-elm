@@ -208,7 +208,6 @@ try {
             flags: {
               token:   token,
               storage: Storage.load(),
-              loadAt:  (new Date()).toISOString(),
               project: {
                 name:     document.getElementById("project").innerText,
                 company:  document.getElementById("company").innerText,
