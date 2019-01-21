@@ -43,7 +43,7 @@ suite =
     [ describe "breadcrumb"
       [ test "should return breadcrumbs" <|
         \_ ->
-          menu |> Menu.breadcrumb { path = "home.html" }
+          { path = "home.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
               ( "main"
@@ -54,7 +54,7 @@ suite =
 
       , test "should return breadcrumbs at second level" <|
         \_ ->
-          menu |> Menu.breadcrumb { path = "home/file.html" }
+          { path = "home/file.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
               ( "main"
@@ -66,7 +66,7 @@ suite =
 
       , test "should return breadcrumbs at therd level" <|
         \_ ->
-          menu |> Menu.breadcrumb { path = "home/file/edit.html" }
+          { path = "home/file/edit.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
               ( "main"
@@ -79,7 +79,7 @@ suite =
 
       , test "should return breadcrumbs at therd level of 'data'" <|
         \_ ->
-          menu |> Menu.breadcrumb { path = "master/file/edit.html" }
+          { path = "master/file/edit.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
               ( "data"
@@ -92,7 +92,7 @@ suite =
 
       , test "should return breadcrumbs at top level of another 'data'" <|
         \_ ->
-          menu |> Menu.breadcrumb { path = "upload.html" }
+          { path = "upload.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
               ( "data"
