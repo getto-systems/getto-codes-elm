@@ -3,18 +3,16 @@ module GettoUpload.App.Index.Storage exposing
   , init
   )
 
-import Json.Decode as Decode
+import Getto.Json.Decode as Decode
+
 import Json.Encode as Encode
 
 type alias Model = ()
 
-init = (decoder,default,encode)
+init = (decode,encode)
 
-decoder : Decode.Decoder Model
-decoder = Decode.succeed ()
-
-default : () -> Model
-default _ = ()
+decode : Decode.Value -> Model
+decode value = ()
 
 encode : Model -> Encode.Value
 encode storage = Encode.null
