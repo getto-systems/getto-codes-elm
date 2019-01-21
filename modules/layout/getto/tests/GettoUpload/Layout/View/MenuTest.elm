@@ -90,15 +90,13 @@ suite =
               )
             )
 
-      , test "should return breadcrumbs at therd level of another 'data'" <|
+      , test "should return breadcrumbs at top level of another 'data'" <|
         \_ ->
-          menu |> Menu.breadcrumb { path = "upload/file/edit.html" }
+          menu |> Menu.breadcrumb { path = "upload.html" }
           |> Expect.equal
             (Just
               ( "data"
               , [ { title = "upload.html", icon = Fa.solid "data", href = "upload.html" }
-                , { title = "upload/file.html", icon = Fa.solid "file", href = "upload/file.html" }
-                , { title = "upload/file/edit.html", icon = Fa.solid "pencil", href = "upload/file/edit.html" }
                 ]
               )
             )
