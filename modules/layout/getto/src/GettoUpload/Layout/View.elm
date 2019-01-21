@@ -7,6 +7,7 @@ module GettoUpload.Layout.View exposing
   )
 import GettoUpload.Layout.Model as Model
 import GettoUpload.Layout.Menu as Menu
+import GettoUpload.Layout.View.Menu as MenuView
 import GettoUpload.Layout.Href.Home as HomeHref
 import GettoUpload.Layout.Version as Version
 import GettoUpload.I18n.App as I18n
@@ -60,14 +61,10 @@ navFooter _ =
   { version = Version.version
   }
 
-articleHeader : Model.Static -> Model.Plugin storage query -> { pageTitle : String, breadcrumb : List Menu.Breadcrumb }
-articleHeader static plugin =
+articleHeader : Model.Static -> { pageTitle : String, breadcrumb : Maybe MenuView.Breadcrumb }
+articleHeader static =
   { pageTitle = static |> pageTitle
-  , breadcrumb =
-    -- TODO : plugin |> Menu.breadcrumb
-    [ BreadcrumbHeader "MAIN"
-    , BreadcrumbEntry "fas fa-home" HomeHref.index (HomeHref.index |> pageTitle)
-    ]
+  , breadcrumb = static |> MenuView.breadcrumb Menu.menu
   }
 
 articleFooter : () -> { copyright : String }

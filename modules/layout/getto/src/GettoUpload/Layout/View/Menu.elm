@@ -37,8 +37,8 @@ type alias BreadcrumbEntry =
 side : Model.Static -> Model.Layout -> Model.Plugin storage query -> List Side
 side static layout plugin = []
 
-breadcrumb : { a | path : String } -> MenuModel.Menu -> Maybe Breadcrumb
-breadcrumb static =
+breadcrumb : MenuModel.Menu -> { a | path : String } -> Maybe Breadcrumb
+breadcrumb menu static =
   let
     find parent =
       List.foldl
@@ -60,13 +60,14 @@ breadcrumb static =
         )
         parent
   in
-    List.filterMap
+    menu
+    |> List.filterMap
       (\(header,items) ->
         items
         |> find (False,[])
         |> toBreadcrumb header
       )
-    >> List.head
+    |> List.head
 
 toBreadcrumb : String -> ( Bool, List ( Fa.Icon, String ) ) -> Maybe Breadcrumb
 toBreadcrumb header result =
