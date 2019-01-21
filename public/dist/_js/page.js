@@ -9,7 +9,7 @@
  */
 
 try {
-  var Error = (function(){
+  var DisplayError = (function(){
     // clone "error" node at head of script
     // because all body nodes remove in Elm.init process
     var node = document.getElementById("error").cloneNode(true);
@@ -25,26 +25,6 @@ try {
       },
     };
   })();
-
-  var Detect = (function(config){
-    var current_path = config.path;
-
-    var redirect = function(version){
-      GettoDetect({
-        version_to_path: function(version){
-          return "/"+version+"/"+current_path+location.search;
-        }
-      }).from_current_version(version,function(path) {
-        location.href = path;
-      });
-    };
-
-    return {
-      redirect: function(version){
-        redirect(version);
-      },
-    };
-  })(config);
 
   var Auth = (function(){
     var keycloak = Keycloak({
@@ -66,7 +46,7 @@ try {
         .success(function(){
           callback(credential());
         })
-        .error(Error.show);
+        .error(DisplayError.show);
     };
 
     var updateToken = function(callback){
@@ -129,74 +109,60 @@ try {
 
   var Storage = (function(config){
     var current_path = config.path;
-    var key = "app";
+    return function(key){
+      var getItem = function(){
+        return localStorage.getItem(key);
+      };
 
-    var allStorage = function(){
-      return localStorage.getItem(key);
-    };
+      var toValue = function(value){
+        try {
+          return JSON.parse(value);
+        } catch(e) {
+          return null;
+        }
+      };
 
-    var toValue = function(value){
-      try {
-        var obj = JSON.parse(value);
+      var update = function(value){
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch(e) {
+          localStorage.removeItem(key);
+        }
+      };
 
-        return {
-          global: obj._global,
-          local:  obj[current_path],
-        };
-      } catch(e) {
-        return {
-          global: null,
-          local:  null,
-        };
-      }
-    };
+      return {
+        /**
+        * returns: obj
+        */
+        load: function(){
+          return toValue(getItem());
+        },
 
-    var load = function(){
-      return toValue(allStorage());
-    };
+        /**
+        * callback: function(value){
+        *   value // obj
+        * }
+        */
+        addChangedListener: function(callback){
+          window.addEventListener("storage", function(event) {
+            if (event.storageArea === localStorage && event.key === key) {
+              callback(toValue(event.newValue));
+            }
+          }, false);
+        },
 
-    var update = function(value){
-      try {
-        var all = JSON.parse(allStorage());
-
-        all.global        = value.global;
-        all[current_path] = value.local;
-
-        localStorage.setItem(key, JSON.stringify(all));
-      } catch(e) {
-        localStorage.removeItem(key);
-      }
-    };
-
-    return {
-      /**
-       * returns: { global: obj, local: obj }
-       */
-      load: function(){
-        return load();
-      },
-
-      /**
-       * callback: function(value){
-       *   value // { global: obj, local: obj }
-       * }
-       */
-      addChangedListener: function(callback){
-        window.addEventListener("storage", function(event) {
-          if (event.storageArea === localStorage && event.key === key) {
-            callback(toValue(event.newValue));
-          }
-        }, false);
-      },
-
-      /**
-       * value: { global: obj, local: obj }
-       */
-      store: function(value){
-        update(value);
-      },
+        /**
+        * value: { global: obj, local: obj }
+        */
+        store: function(value){
+          update(value);
+        },
+      };
     };
   })(config);
+
+  var LayoutStorage = Storage("_layout");
+  var PageStorage = Storage(config.path);
 
   var App = (function(config){
     var current_page = config.page;
@@ -212,9 +178,12 @@ try {
               title:   document.getElementById("title").innerText,
               sub:     document.getElementById("sub-title").innerText,
             },
-            page: config,
+            path: config.path,
             credential: credential,
-            storage: Storage.load(),
+            storage: {
+              layout: LayoutStorage.load(),
+              page: PageStorage.load(),
+            },
           },
         });
     };
@@ -225,15 +194,15 @@ try {
         ports.send("onTokenChanged",credential);
       };
 
-      var onStorageChanged = function(value) {
-        // value: { global: obj, local: obj }
-        ports.send("onStorageChanged",value);
+      var onLayoutStorageChanged = function(value) {
+        // value: obj
+        ports.send("onLayoutStorageChanged",value);
       };
 
-      // version: "0.0.0"
-      ports.subscribe("detectNewVersion", function(version){
-        Detect.redirect(version);
-      });
+      var onPageStorageChanged = function(value) {
+        // value: obj
+        ports.send("onPageStorageChanged",value);
+      };
 
       Auth.setUpdateCredentialInterval(function(credential){
         onTokenChanged(credential);
@@ -243,14 +212,24 @@ try {
         Auth.logout();
       });
 
-      // value: { global: obj, local: obj }
-      ports.subscribe("store", function(value) {
-        Storage.store(value);
-        setTimeout(function(){ onStorageChanged(value); }, 0);
+      // value: obj
+      ports.subscribe("storeLayout", function(value) {
+        LayoutStorage.store(value);
+        setTimeout(function(){ onLayoutStorageChanged(value); }, 0);
       });
 
-      Storage.addChangedListener(function(value){
-        onStorageChanged(value);
+      LayoutStorage.addChangedListener(function(value){
+        onLayoutStorageChanged(value);
+      });
+
+      // value: obj
+      ports.subscribe("storePage", function(value) {
+        PageStorage.store(value);
+        setTimeout(function(){ onPageStorageChanged(value); }, 0);
+      });
+
+      PageStorage.addChangedListener(function(value){
+        onPageStorageChanged(value);
       });
 
       ports.subscribe("fixedMidashi", function(_params) {
@@ -282,7 +261,7 @@ try {
           try {
             setupPorts(ports(init(credential)));
           } catch(e) {
-            Error.show();
+            DisplayError.show();
             throw e;
           }
         });
@@ -290,11 +269,10 @@ try {
     };
   })(config);
 
-
   // main entry point
   App.init();
 
 } catch(e) {
-  Error.show();
+  DisplayError.show();
   throw e;
 }
