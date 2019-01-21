@@ -1,8 +1,5 @@
 module GettoUpload.Layout.Frame exposing
-  ( Flags
-  , Init
-  , Model
-  , Msg
+  ( Msg
   , init
   , onUrlRequest
   , onUrlChange
@@ -12,7 +9,6 @@ module GettoUpload.Layout.Frame exposing
   , storePage
   , pushUrl
   , mapHtml
-  , title
   , documentTitle
   , mobileHeader
   , nav
@@ -20,6 +16,7 @@ module GettoUpload.Layout.Frame exposing
   , articleHeader
   , articleFooter
   )
+import GettoUpload.Layout.Model as Model
 import GettoUpload.Layout.Command.Store  as StoreCommand
 import GettoUpload.Layout.Command.Search as SearchCommand
 import GettoUpload.Layout.Storage as Storage
@@ -40,78 +37,6 @@ import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-
-type alias Flags =
-  { project    : Project
-  , path       : String
-  , credential : Credential
-  , storage :
-    { layout : Decode.Value
-    , page   : Decode.Value
-    }
-  }
-
-type alias Project =
-  { name    : String
-  , company : String
-  , title   : String
-  , sub     : String
-  }
-
-type alias Credential =
-  { token : String
-  , roles : List String
-  }
-
-type alias Init storage query =
-  { static : Static
-  , layout : Layout
-  , plugin : Plugin storage query
-  , command :
-    { store  : StoreCommand.Model
-    , search : SearchCommand.Model
-    }
-  }
-
-type alias Model storage query page =
-  { static : Static
-  , layout : Layout
-  , plugin : Plugin storage query
-  , page   : page
-  , command :
-    { store  : StoreCommand.Model
-    , search : SearchCommand.Model
-    }
-  }
-
-type alias Static =
-  { project : Project
-  , path    : String
-  , key     : Navigation.Key
-  }
-
-type alias Layout =
-  { url        : Url
-  , credential : Credential
-  }
-
-type alias Plugin storage query =
-  { storage : Storage storage
-  , query   : Query query
-  }
-
-type alias Storage storage =
-  { layout : Storage.Model
-  , page   : storage
-  , encode : storage -> Encode.Value
-  }
-
-type alias Query query =
-  { page   : query
-  , encode : query -> QueryEncode.Value
-  }
-
-
 type Msg msg
   = Frame FrameMsg
   | Page msg
@@ -128,9 +53,9 @@ onUrlChange  = UrlChange  >> Frame
 type alias InitPlugin storage query = ( InitStorage storage, InitQuery query )
 type alias InitStorage storage = ( Decode.Value -> storage, storage -> Encode.Value )
 type alias InitQuery   query   = ( List String -> query, query -> QueryEncode.Value )
-type alias InitModel   storage query model = Init storage query -> ( model, Init storage query )
+type alias InitModel   storage query model = Model.Init storage query -> ( model, Model.Init storage query )
 
-init : InitPlugin storage query -> InitModel storage query model -> Flags -> Url -> Navigation.Key -> ( Model storage query model, Cmd (Msg msg) )
+init : InitPlugin storage query -> InitModel storage query model -> Model.Flags -> Url -> Navigation.Key -> ( Model.Model storage query model, Cmd (Msg msg) )
 init (initStorageTuple,initQueryTuple) initPage flags url key =
   let
     (page,model) =
@@ -162,27 +87,27 @@ init (initStorageTuple,initQueryTuple) initPage flags url key =
     }
     |> done
 
-initStorage : InitStorage storage -> Flags -> Storage storage
+initStorage : InitStorage storage -> Model.Flags -> Model.Storage storage
 initStorage (decode,encode) flags =
   { layout = flags.storage.layout |> Storage.decode
   , page   = flags.storage.page   |> decode
   , encode = encode
   }
 
-initQuery : InitQuery query -> Url -> Query query
+initQuery : InitQuery query -> Url -> Model.Query query
 initQuery (decode,encode) url =
   { page   = url.query |> Maybe.map QueryDecode.split |> Maybe.withDefault [] |> decode
   , encode = encode
   }
 
 
-subscriptions : Model storage query model -> Sub (Msg msg)
+subscriptions : Model.Model storage query model -> Sub (Msg msg)
 subscriptions model = Sub.none
 
 
-type alias Update storage query model msg = msg -> Model storage query model -> Model storage query model
+type alias Update storage query model msg = msg -> Model.Model storage query model -> Model.Model storage query model
 
-update : Update storage query model msg -> Msg msg -> Model storage query model -> ( Model storage query model, Cmd (Msg msg) )
+update : Update storage query model msg -> Msg msg -> Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
 update up msg model =
   case msg of
     Page sub -> model |> up sub |> done
@@ -203,7 +128,7 @@ update up msg model =
     Frame (ToggleMenu name) -> ( model, Cmd.none )
 
 
-done : Model storage query model -> ( Model storage query model, Cmd (Msg msg) )
+done : Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
 done model =
   ( model, Cmd.none )
   |> andThen storeExec
@@ -217,7 +142,7 @@ andThen f (model,cmd) =
     ( newModel, Cmd.batch [ cmd, newCmd ] )
 
 
-storeExec : Model storage query model -> ( Model storage query model, Cmd (Msg msg) )
+storeExec : Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
 storeExec model =
   let
     command = model.command
@@ -232,21 +157,21 @@ storeExec model =
     , cmd
     )
 
-storeCmd : (StoreCommand.Model -> StoreCommand.Model) -> Model storage query model -> Model storage query model
+storeCmd : (StoreCommand.Model -> StoreCommand.Model) -> Model.Model storage query model -> Model.Model storage query model
 storeCmd f model =
   let
     command = model.command
   in
     { model | command = { command | store = command.store |> f } }
 
-storeLayout : Model storage query model -> Model storage query model
+storeLayout : Model.Model storage query model -> Model.Model storage query model
 storeLayout = storeCmd StoreCommand.layout
 
-storePage : Model storage query model -> Model storage query model
+storePage : Model.Model storage query model -> Model.Model storage query model
 storePage = storeCmd StoreCommand.page
 
 
-searchExec : Model storage query model -> ( Model storage query model, Cmd (Msg msg) )
+searchExec : Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
 searchExec model =
   let
     command = model.command
@@ -258,14 +183,14 @@ searchExec model =
     , cmd
     )
 
-searchCmd : (SearchCommand.Model -> SearchCommand.Model) -> Model storage query model -> Model storage query model
+searchCmd : (SearchCommand.Model -> SearchCommand.Model) -> Model.Model storage query model -> Model.Model storage query model
 searchCmd f model =
   let
     command = model.command
   in
     { model | command = { command | search = command.search |> f } }
 
-pushUrl : Model storage query model -> Model storage query model
+pushUrl : Model.Model storage query model -> Model.Model storage query model
 pushUrl model = model |> searchCmd (SearchCommand.pushUrl (model.plugin.query.page |> model.plugin.query.encode))
 
 
@@ -273,10 +198,10 @@ mapHtml : (sub -> msg) -> List (Html sub) -> List (Html (Msg msg))
 mapHtml msg = List.map (H.map (msg >> Page))
 
 
-title : Model storage query model -> String
+title : Model.Model storage query model -> String
 title model = model.static.path |> I18n.title
 
-documentTitle : Model storage query model -> String
+documentTitle : Model.Model storage query model -> String
 documentTitle model =
   (model |> title)
   ++ " | "
@@ -284,7 +209,7 @@ documentTitle model =
   ++ " "
   ++ model.static.project.title
 
-mobileHeader : Model storage query model -> Html (Msg msg)
+mobileHeader : Model.Model storage query model -> Html (Msg msg)
 mobileHeader model =
   H.header []
     [ H.p []
@@ -298,7 +223,7 @@ mobileHeader model =
       ]
     ]
 
-navHeader : Model storage query model -> Html (Msg msg)
+navHeader : Model.Model storage query model -> Html (Msg msg)
 navHeader model =
   H.header []
     [ H.p []
@@ -310,7 +235,7 @@ navHeader model =
       ]
     ]
 
-nav : Model storage query model -> Html (Msg msg)
+nav : Model.Model storage query model -> Html (Msg msg)
 nav model =
   H.nav []
     [ model |> navHeader
@@ -319,7 +244,7 @@ nav model =
     , model |> navFooter
     ]
 
-navAddress : Model storage query model -> Html (Msg msg)
+navAddress : Model.Model storage query model -> Html (Msg msg)
 navAddress model =
   H.address []
     [ H.a [ A.href HomeHref.index ]
@@ -355,7 +280,7 @@ navAddress model =
       ]
     ]
 
-navBody : Model storage query model -> Html (Msg msg)
+navBody : Model.Model storage query model -> Html (Msg msg)
 navBody model =
   H.section []
     [ H.ul []
@@ -400,11 +325,11 @@ navBody model =
       ]
     ]
 
-navFooter : Model storage query model -> Html (Msg msg)
+navFooter : Model.Model storage query model -> Html (Msg msg)
 navFooter model =
   H.footer [] [ H.p [] [ "version : " ++ Version.version |> H.text ] ]
 
-articleHeader : Model storage query model -> Html (Msg msg)
+articleHeader : Model.Model storage query model -> Html (Msg msg)
 articleHeader model =
   H.header []
     [ H.h1 [] [ model |> title |> H.text ]
@@ -420,7 +345,7 @@ articleHeader model =
       ]
     ]
 
-articleFooter : Model storage query model -> Html (Msg msg)
+articleFooter : Model.Model storage query model -> Html (Msg msg)
 articleFooter model =
   H.footer []
     [ H.p []
