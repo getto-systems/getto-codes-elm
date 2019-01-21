@@ -1,21 +1,16 @@
 module GettoUpload.Layout.Storage exposing
   ( Model
-  , default
   , encode
-  , decoder
+  , decode
   )
 import GettoUpload.Layout.Storage.Menu as Menu
 
+import Getto.Json.Decode as Decode
+
 import Json.Encode as Encode
-import Json.Decode as Decode
 
 type alias Model =
   { menu : Menu.Model
-  }
-
-default : () -> Model
-default _ =
-  { menu = Menu.init
   }
 
 encode : Model -> Encode.Value
@@ -23,6 +18,7 @@ encode model =
   [ ( "menu", model.menu |> Menu.encode )
   ] |> Encode.object
 
-decoder : Decode.Decoder Model
-decoder = Decode.map Model
-  (Decode.at ["menu"] Menu.decoder)
+decode : Decode.Value -> Model
+decode value =
+  { menu = value |> Decode.valueAt ["menu"] |> Menu.decode
+  }

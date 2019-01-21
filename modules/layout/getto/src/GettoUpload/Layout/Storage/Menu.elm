@@ -1,23 +1,18 @@
 module GettoUpload.Layout.Storage.Menu exposing
   ( Model
-  , init
   , encode
-  , decoder
+  , decode
   , toggle
   , isCollapsed
   )
 
+import Getto.Json.Decode as Decode
+
 import Set exposing ( Set )
 import Json.Encode as Encode
-import Json.Decode as Decode
 
 type alias Model =
   { collapsed : Set String
-  }
-
-init : Model
-init =
-  { collapsed = Set.empty
   }
 
 encode : Model -> Encode.Value
@@ -25,9 +20,10 @@ encode model =
   [ ( "collapsed", model.collapsed |> Encode.set Encode.string )
   ] |> Encode.object
 
-decoder : Decode.Decoder Model
-decoder = Decode.map Model
-  (Decode.at ["collapsed"] (Decode.list Decode.string |> Decode.map Set.fromList))
+decode : Decode.Value -> Model
+decode value =
+  { collapsed = value |> Decode.at ["collapsed"] (Decode.list (Decode.string "")) |> Set.fromList
+  }
 
 toggle : String -> Model -> Model
 toggle name model =
