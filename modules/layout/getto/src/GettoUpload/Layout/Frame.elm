@@ -127,7 +127,7 @@ onUrlChange  = UrlChange  >> Frame
 
 type alias InitPlugin storage query = ( InitStorage storage, InitQuery query )
 type alias InitStorage storage = ( Decode.Value -> storage, storage -> Encode.Value )
-type alias InitQuery   query   = ( QueryDecode.Decoder query, () -> query, query -> QueryEncode.Value )
+type alias InitQuery   query   = ( List String -> query, query -> QueryEncode.Value )
 type alias InitModel   storage query model = Init storage query -> ( model, Init storage query )
 
 init : InitPlugin storage query -> InitModel storage query model -> Flags -> Url -> Navigation.Key -> ( Model storage query model, Cmd (Msg msg) )
@@ -170,16 +170,10 @@ initStorage (decode,encode) flags =
   }
 
 initQuery : InitQuery query -> Url -> Query query
-initQuery (decoder,default,encode) url =
-  { page   = url.query |> Maybe.map (QueryDecode.split decoder) |> withDefault default
+initQuery (decode,encode) url =
+  { page   = url.query |> Maybe.map QueryDecode.split |> Maybe.withDefault [] |> decode
   , encode = encode
   }
-
-withDefault : (() -> a) -> Maybe a -> a
-withDefault default raw =
-  case raw of
-    Just value -> value
-    Nothing    -> default ()
 
 
 subscriptions : Model storage query model -> Sub (Msg msg)
