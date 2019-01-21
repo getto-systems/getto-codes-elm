@@ -8,13 +8,10 @@ import Getto.Url.Query.Encode as Encode
 
 type alias Model = ()
 
-init = (decoder,default,encode)
+init = (decode,encode)
 
-decoder : Decode.Decoder Model
-decoder query = ()
-
-default : () -> Model
-default _ = ()
+decode : List String -> Model
+decode query = ()
 
 encode : Model -> Encode.Value
 encode storage = Encode.empty

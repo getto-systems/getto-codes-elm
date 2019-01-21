@@ -47,5 +47,5 @@ filter names suffix =
           else Nothing
       )
 
-split : Decoder a -> String -> a
-split decoder = String.split "&" >> decoder
+split : String -> List String
+split = String.split "&"
