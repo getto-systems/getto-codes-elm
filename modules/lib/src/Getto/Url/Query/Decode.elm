@@ -1,37 +1,38 @@
 module Getto.Url.Query.Decode exposing
-  ( string
+  ( Decoder
+  , string
   , int
   , entryAt
-  , boolAt
   , listAt
+  , boolAt
   , split
   )
 import Getto.Url.Query.Encode as Encode
 
 import Url
 
-type alias Decoder a = Maybe String -> a
-type alias Picker a = List String -> a
+type alias Decoder a = List String -> a
+type alias ValueDecoder a = Maybe String -> a
 
-string : String -> Decoder String
+string : String -> ValueDecoder String
 string default = Maybe.andThen Url.percentDecode >> Maybe.withDefault default
 
-int : Int -> Decoder Int
+int : Int -> ValueDecoder Int
 int default = Maybe.andThen String.toInt >> Maybe.withDefault default
 
-entryAt : List String -> Decoder a -> Picker a
+entryAt : List String -> ValueDecoder a -> Decoder a
 entryAt names decoder =
   filter names "="
   >> List.head
   >> decoder
 
-boolAt : List String -> Picker Bool
-boolAt names = List.any ((==) (names |> Encode.toName))
-
-listAt : List String -> Decoder a -> Picker (List a)
+listAt : List String -> ValueDecoder a -> Decoder (List a)
 listAt names decoder =
   filter names "[]="
   >> List.map (Just >> decoder)
+
+boolAt : List String -> Decoder Bool
+boolAt names = List.any ((==) (names |> Encode.toName))
 
 filter : List String -> String -> List String -> List String
 filter names suffix =
@@ -46,5 +47,5 @@ filter names suffix =
           else Nothing
       )
 
-split : Picker a -> String -> a
+split : Decoder a -> String -> a
 split decoder = String.split "&" >> decoder
