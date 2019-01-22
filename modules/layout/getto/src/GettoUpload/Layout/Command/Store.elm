@@ -2,25 +2,25 @@ port module GettoUpload.Layout.Command.Store exposing
   ( Model
   , init
   , layout
-  , page
+  , app
   , exec
   )
 
 import Json.Encode as Encode
 
 port storeLayout : Encode.Value -> Cmd msg
-port storePage : Encode.Value -> Cmd msg
+port storeApp    : Encode.Value -> Cmd msg
 
 type alias Model = List StorageType
 
 type alias Storage =
   { layout : Encode.Value
-  , page   : Encode.Value
+  , app    : Encode.Value
   }
 
 type StorageType
   = Layout
-  | Page
+  | App
 
 init : Model
 init = []
@@ -31,11 +31,11 @@ layout model =
     then model
     else Layout :: model
 
-page : Model -> Model
-page model =
-  if model |> List.member Page
+app : Model -> Model
+app model =
+  if model |> List.member App
     then model
-    else Page :: model
+    else App :: model
 
 exec : Storage -> Model -> ( Model, Cmd msg )
 exec storage model =
@@ -49,4 +49,4 @@ execCmd : Storage -> StorageType -> Cmd msg
 execCmd storage t =
   case t of
     Layout -> storage.layout |> storeLayout
-    Page   -> storage.page   |> storePage
+    App    -> storage.app    |> storeApp
