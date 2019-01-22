@@ -1,17 +1,16 @@
 module GettoUpload.Layout.Menu.Model exposing
   ( Menu
   , Item
-  , Info
   , item
-  , info
+  , icon
+  , href
   , children
   )
 import GettoUpload.Layout.Fa as Fa
 
 type alias Menu = List ( String, List Item )
 
-type Item
-  = Item Info (List Item)
+type Item = Item Info (List Item)
 
 type alias Info =
   { icon : Fa.Icon
@@ -19,10 +18,21 @@ type alias Info =
   }
 
 item : Fa.Icon -> String -> List Item -> Item
-item icon href items = Item { icon = icon, href = href } items
+item iconData hrefData items =
+  Item
+    { icon = iconData
+    , href = hrefData
+    }
+    items
+
+icon : Item -> Fa.Icon
+icon = info >> .icon
+
+href : Item -> String
+href = info >> .href
 
 info : Item -> Info
-info (Item entry _) = entry
+info (Item data _) = data
 
 children : Item -> List Item
 children (Item _ items) = items

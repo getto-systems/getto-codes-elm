@@ -5,6 +5,7 @@ module GettoUpload.Layout.Model exposing
   , Project
   , Credential
   , Static
+  , Page
   , Layout
   , Plugin
   , Storage
@@ -67,8 +68,12 @@ type alias Model storage query app =
 
 type alias Static =
   { project : Project
-  , path    : String
+  , page    : Page
   , key     : Navigation.Key
+  }
+
+type alias Page =
+  { path : String
   }
 
 type alias Layout =
