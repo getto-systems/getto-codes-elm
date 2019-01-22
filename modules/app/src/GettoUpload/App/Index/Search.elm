@@ -1,4 +1,4 @@
-module GettoUpload.App.Index.Query exposing
+module GettoUpload.App.Index.Search exposing
   ( Model
   , init
   )

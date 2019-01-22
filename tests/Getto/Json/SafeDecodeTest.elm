@@ -1,5 +1,5 @@
-module Getto.Json.DecodeTest exposing (..)
-import Getto.Json.Decode as Decode
+module Getto.Json.SafeDecodeTest exposing (..)
+import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
 
@@ -9,7 +9,7 @@ import Test exposing (..)
 
 suite : Test
 suite =
-  describe "Decode"
+  describe "SafeDecode"
     [ describe "at"
       [ test "should decode query" <|
         \_ ->
@@ -27,17 +27,17 @@ suite =
               ] |> Encode.object
           in
             { query =
-              { name     = value |> Decode.at ["q","name"]  (Decode.string "")
-              , none     = value |> Decode.at ["q","none"]  (Decode.string "")
-              , age      = value |> Decode.at ["q","age"]   (Decode.int 0)
-              , zero     = value |> Decode.at ["q","zero"]  (Decode.int 0)
-              , enabled  = value |> Decode.at ["q","en"]    (Decode.bool False)
-              , disabled = value |> Decode.at ["q","dis"]   (Decode.bool False)
-              , roles    = value |> Decode.at ["q","roles"] (Decode.list (Decode.string ""))
-              , numbers  = value |> Decode.at ["q","nums"]  (Decode.list (Decode.int 0))
-              , empty    = value |> Decode.at ["q","empty"] (Decode.list (Decode.int 0))
+              { name     = value |> SafeDecode.at ["q","name"]  (SafeDecode.string "")
+              , none     = value |> SafeDecode.at ["q","none"]  (SafeDecode.string "")
+              , age      = value |> SafeDecode.at ["q","age"]   (SafeDecode.int 0)
+              , zero     = value |> SafeDecode.at ["q","zero"]  (SafeDecode.int 0)
+              , enabled  = value |> SafeDecode.at ["q","en"]    (SafeDecode.bool False)
+              , disabled = value |> SafeDecode.at ["q","dis"]   (SafeDecode.bool False)
+              , roles    = value |> SafeDecode.at ["q","roles"] (SafeDecode.list (SafeDecode.string ""))
+              , numbers  = value |> SafeDecode.at ["q","nums"]  (SafeDecode.list (SafeDecode.int 0))
+              , empty    = value |> SafeDecode.at ["q","empty"] (SafeDecode.list (SafeDecode.int 0))
               }
-            , sort = value |> Decode.at ["s"] (Decode.string "")
+            , sort = value |> SafeDecode.at ["s"] (SafeDecode.string "")
             }
             |> Expect.equal
               { query =
@@ -68,7 +68,7 @@ suite =
             )
           , ( "s", "name.desc" |> Encode.string )
           ] |> Encode.object
-          |> Decode.valueAt ["q"]
+          |> SafeDecode.valueAt ["q"]
           |> Expect.equal
             ( [ ( "name", "John" |> Encode.string )
               , ( "age",  30     |> Encode.int )

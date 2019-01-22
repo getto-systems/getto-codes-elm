@@ -9,7 +9,7 @@ module GettoUpload.Layout.Model exposing
   )
 import GettoUpload.Layout.Command.Store  as Store
 import GettoUpload.Layout.Command.Search as Search
-import GettoUpload.Layout.Storage as Storage
+import GettoUpload.Layout.Store as LayoutStore
 
 
 type alias Flags =
@@ -22,7 +22,7 @@ type alias Base store search a =
   { a
   | static     : Static
   , credential : Credential
-  , store      : Store.Model Storage.Model store
+  , store      : Store.Model LayoutStore.Model store
   , search     : Search.Model search
   }
 

@@ -1,12 +1,13 @@
-module GettoUpload.Layout.Storage exposing
+module GettoUpload.Layout.Store exposing
   ( Model
   , init
   )
-import GettoUpload.Layout.Storage.Menu as Menu
+import GettoUpload.Layout.Store.Menu as Menu
 
-import Getto.Json.Decode as Decode
+import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
+import Json.Decode as Decode
 
 type alias Model =
   { menu : Menu.Model
@@ -21,5 +22,5 @@ encode model =
 
 decode : Decode.Value -> Model
 decode value =
-  { menu = value |> Decode.valueAt ["menu"] |> Menu.decode
+  { menu = value |> SafeDecode.valueAt ["menu"] |> Menu.decode
   }
