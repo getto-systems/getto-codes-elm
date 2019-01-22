@@ -8,8 +8,6 @@ module GettoUpload.Layout.Frame.View.Menu exposing
 import GettoUpload.Layout.Frame.Store.Menu as MenuStore
 import GettoUpload.Layout.Command.Static     as Static
 import GettoUpload.Layout.Command.Credential as Credential
-import GettoUpload.Layout.Command.Store      as Store
-import GettoUpload.Layout.Command.Search     as Search
 import GettoUpload.Layout.Menu as Menu
 import GettoUpload.Layout.Fa as Fa
 
