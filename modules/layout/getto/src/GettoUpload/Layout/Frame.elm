@@ -14,8 +14,9 @@ module GettoUpload.Layout.Frame exposing
   , articleFooter
   )
 import GettoUpload.Layout.Model as Model
-import GettoUpload.Layout.Command.Store  as Store
-import GettoUpload.Layout.Command.Search as Search
+import GettoUpload.Layout.Command.Store      as Store
+import GettoUpload.Layout.Command.Search     as Search
+import GettoUpload.Layout.Command.Credential as Credential
 import GettoUpload.Layout.Store as LayoutStore
 import GettoUpload.Layout.Href.Home as HomeHref
 import GettoUpload.Layout.Version as Version
@@ -59,9 +60,9 @@ init (initStore,initSearch) initApp flags url key =
   let
     (app,model) =
       { static     = flags.static
-      , credential = flags.credential
+      , credential = flags.credential |> Credential.init
       , store      = flags.store |> Store.init (LayoutStore.init,initStore)
-      , search     = (url,key)   |> Search.init initSearch
+      , search     = (url,key) |> Search.init initSearch
       }
       |> initApp
   in
@@ -108,6 +109,7 @@ done model =
   ( model, Cmd.none )
   |> andThen storeExec
   |> andThen searchExec
+  |> andThen credentialExec
 
 andThen : (model -> ( model, Cmd (Msg msg) )) -> ( model, Cmd (Msg msg) ) -> ( model, Cmd (Msg msg) )
 andThen f (model,cmd) =
@@ -130,6 +132,13 @@ searchExec model =
     (search,cmd) = model.search |> Search.exec
   in
     ( { model | search = search }, cmd )
+
+credentialExec : Model.Model store search model -> ( Model.Model store search model, Cmd (Msg msg) )
+credentialExec model =
+  let
+    (credential,cmd) = model.credential |> Credential.exec
+  in
+    ( { model | credential = credential }, cmd )
 
 
 mapHtml : (sub -> msg) -> List (Html sub) -> List (Html (Msg msg))

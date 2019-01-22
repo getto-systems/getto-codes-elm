@@ -189,9 +189,9 @@ try {
     };
 
     var setupPorts = function(ports){
-      var onTokenChanged = function(credential){
+      var onCredentialChanged = function(credential){
         // credential: { token: "access token", roles: ["role"] }
-        ports.send("onTokenChanged",credential);
+        ports.send("onCredentialChanged",credential);
       };
 
       var onLayoutStoreChanged = function(value) {
@@ -205,10 +205,10 @@ try {
       };
 
       Auth.setUpdateCredentialInterval(function(credential){
-        onTokenChanged(credential);
+        onCredentialChanged(credential);
       });
 
-      ports.subscribe("logout", function(_params){
+      ports.subscribe("clearCredential", function(_params){
         Auth.logout();
       });
 
