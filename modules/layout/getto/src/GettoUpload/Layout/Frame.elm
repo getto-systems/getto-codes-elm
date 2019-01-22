@@ -29,7 +29,6 @@ import GettoUpload.Layout.Version as Version
 import GettoUpload.I18n.App as I18n
 
 import Getto.Url.Query.Encode as QueryEncode
-import Getto.Url.Query.Decode as QueryDecode
 
 import Browser
 import Browser.Navigation as Navigation
