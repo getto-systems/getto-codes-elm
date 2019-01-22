@@ -1,11 +1,12 @@
-module GettoUpload.App.Index.Storage exposing
+module GettoUpload.App.Index.Store exposing
   ( Model
   , init
   )
 
-import Getto.Json.Decode as Decode
+import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
+import Json.Decode as Decode
 
 type alias Model = ()
 

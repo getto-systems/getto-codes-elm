@@ -1,6 +1,5 @@
-module Getto.Json.Decode exposing
-  ( Value
-  , string
+module Getto.Json.SafeDecode exposing
+  ( string
   , int
   , bool
   , list
@@ -10,8 +9,6 @@ module Getto.Json.Decode exposing
 
 import Json.Encode as Encode
 import Json.Decode as Decode
-
-type alias Value = Decode.Value
 
 type Decoder a
   = Decoder (Decode.Decoder a) a

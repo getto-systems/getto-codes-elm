@@ -16,7 +16,7 @@ module GettoUpload.Layout.Frame exposing
 import GettoUpload.Layout.Model as Model
 import GettoUpload.Layout.Command.Store  as Store
 import GettoUpload.Layout.Command.Search as Search
-import GettoUpload.Layout.Storage as Storage
+import GettoUpload.Layout.Store as LayoutStore
 import GettoUpload.Layout.Href.Home as HomeHref
 import GettoUpload.Layout.Version as Version
 import GettoUpload.I18n.App as I18n
@@ -60,7 +60,7 @@ init (initStore,initSearch) initApp flags url key =
     (app,model) =
       { static     = flags.static
       , credential = flags.credential
-      , store      = flags.store |> Store.init (Storage.init,initStore)
+      , store      = flags.store |> Store.init (LayoutStore.init,initStore)
       , search     = (url,key)   |> Search.init initSearch
       }
       |> initApp

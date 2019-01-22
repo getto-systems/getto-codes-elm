@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Storage.Menu exposing
+module GettoUpload.Layout.Store.Menu exposing
   ( Model
   , encode
   , decode
@@ -6,10 +6,11 @@ module GettoUpload.Layout.Storage.Menu exposing
   , isCollapsed
   )
 
-import Getto.Json.Decode as Decode
+import Getto.Json.SafeDecode as SafeDecode
 
 import Set exposing ( Set )
 import Json.Encode as Encode
+import Json.Decode as Decode
 
 type alias Model =
   { collapsed : Set String
@@ -22,7 +23,7 @@ encode model =
 
 decode : Decode.Value -> Model
 decode value =
-  { collapsed = value |> Decode.at ["collapsed"] (Decode.list (Decode.string "")) |> Set.fromList
+  { collapsed = value |> SafeDecode.at ["collapsed"] (SafeDecode.list (SafeDecode.string "")) |> Set.fromList
   }
 
 toggle : String -> Model -> Model

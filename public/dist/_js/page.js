@@ -107,7 +107,7 @@ try {
     };
   })();
 
-  var Storage = (function(config){
+  var Store = (function(config){
     var current_path = config.path;
     return function(key){
       var getItem = function(){
@@ -157,8 +157,8 @@ try {
     };
   })(config);
 
-  var LayoutStorage = Storage("_layout");
-  var AppStorage = Storage(config.path);
+  var LayoutStore = Store("_layout");
+  var AppStore = Store(config.path);
 
   var App = (function(config){
     var current_page = config.page;
@@ -181,8 +181,8 @@ try {
             },
             credential: credential,
             store: {
-              layout: LayoutStorage.load(),
-              app:    AppStorage.load(),
+              layout: LayoutStore.load(),
+              app:    AppStore.load(),
             },
           },
         });
@@ -194,14 +194,14 @@ try {
         ports.send("onTokenChanged",credential);
       };
 
-      var onLayoutStorageChanged = function(value) {
+      var onLayoutStoreChanged = function(value) {
         // value: obj
-        ports.send("onLayoutStorageChanged",value);
+        ports.send("onLayoutStoreChanged",value);
       };
 
-      var onAppStorageChanged = function(value) {
+      var onAppStoreChanged = function(value) {
         // value: obj
-        ports.send("onAppStorageChanged",value);
+        ports.send("onAppStoreChanged",value);
       };
 
       Auth.setUpdateCredentialInterval(function(credential){
@@ -214,20 +214,20 @@ try {
 
       // value: obj
       ports.subscribe("storeLayout", function(value) {
-        LayoutStorage.store(value);
+        LayoutStore.store(value);
       });
 
-      LayoutStorage.addChangedListener(function(value){
-        onLayoutStorageChanged(value);
+      LayoutStore.addChangedListener(function(value){
+        onLayoutStoreChanged(value);
       });
 
       // value: obj
       ports.subscribe("storeApp", function(value) {
-        AppStorage.store(value);
+        AppStore.store(value);
       });
 
-      AppStorage.addChangedListener(function(value){
-        onAppStorageChanged(value);
+      AppStore.addChangedListener(function(value){
+        onAppStoreChanged(value);
       });
 
       ports.subscribe("fixedMidashi", function(_params) {

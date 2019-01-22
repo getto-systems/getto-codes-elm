@@ -3,11 +3,11 @@ module GettoUpload.App.Index.Model exposing
   , Init
   , init
   )
-import GettoUpload.App.Index.Storage as Storage
-import GettoUpload.App.Index.Query   as Query
+import GettoUpload.App.Index.Store  as Store
+import GettoUpload.App.Index.Search as Search
 import GettoUpload.Layout.Model as Model
 
-type alias Model page = Model.Model Storage.Model Query.Model page
-type alias Init       = Model.Init  Storage.Model Query.Model
+type alias Model page = Model.Model Store.Model Search.Model page
+type alias Init       = Model.Init  Store.Model Search.Model
 
-init = (Storage.init,Query.init)
+init = (Store.init,Search.init)

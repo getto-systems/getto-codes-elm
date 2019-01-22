@@ -14,7 +14,7 @@ main = Browser.application
   , onUrlRequest  = Frame.onUrlRequest
   , onUrlChange   = Frame.onUrlChange
   , update        = Frame.update update
-  , view          = view
+  , view          = document
   }
 
 type alias Model = Model.Model App
@@ -36,8 +36,8 @@ update msg model =
     Dashboard sub -> model |> Dashboard.update sub
       |> (\m -> model)
 
-view : Model -> Browser.Document Msg
-view model =
+document : Model -> Browser.Document Msg
+document model =
   { title = model |> Frame.documentTitle
   , body = [ model |> L.lazy content ]
   }

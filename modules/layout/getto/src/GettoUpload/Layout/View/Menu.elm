@@ -4,7 +4,7 @@ module GettoUpload.Layout.View.Menu exposing
   , side
   , breadcrumb
   )
-import GettoUpload.Layout.Storage.Menu as MenuStorage
+import GettoUpload.Layout.Store.Menu as MenuStore
 import GettoUpload.Layout.Menu as Menu
 import GettoUpload.Layout.Menu.Model as MenuModel
 import GettoUpload.Layout.Model as Model
@@ -35,7 +35,7 @@ type alias BreadcrumbEntry =
   , href  : String
   }
 
-side : MenuModel.Menu -> ( Model.Page, Model.Credential, MenuStorage.Model ) -> List Side
+side : MenuModel.Menu -> ( Model.Page, Model.Credential, MenuStore.Model ) -> List Side
 side menu (page,credential,storage) =
   menu
   |> List.filter
@@ -50,7 +50,7 @@ side menu (page,credential,storage) =
       { title = group |> I18n.menu
       , badge = Nothing -- TODO items |> map (api |> getter) |> sum
       , items =
-        if storage |> MenuStorage.isCollapsed group
+        if storage |> MenuStore.isCollapsed group
           then []
           else items |> List.map
             (\item ->

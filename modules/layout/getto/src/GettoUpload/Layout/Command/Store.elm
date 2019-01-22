@@ -18,8 +18,8 @@ import Json.Decode as Decode
 port storeLayout : Encode.Value -> Cmd msg
 port storeApp    : Encode.Value -> Cmd msg
 
-port onLayoutStorageChanged : (Decode.Value -> msg) -> Sub msg
-port onAppStorageChanged    : (Decode.Value -> msg) -> Sub msg
+port onLayoutStoreChanged : (Decode.Value -> msg) -> Sub msg
+port onAppStoreChanged    : (Decode.Value -> msg) -> Sub msg
 
 type alias Flags =
   { layout : Decode.Value
@@ -29,42 +29,42 @@ type alias Flags =
 type Model layout app = Model (Info layout app)
 
 type alias Info layout app =
-  { layout : Storage layout
-  , app    : Storage app
+  { layout : Entry layout
+  , app    : Entry app
   }
 
-type alias Storage storage =
-  { storage : storage
-  , decode  : Decode.Value -> storage
-  , encode  : storage -> Encode.Value
-  , cmd     : Store
+type alias Entry store =
+  { store  : store
+  , decode : Decode.Value -> store
+  , encode : store -> Encode.Value
+  , cmd    : Store
   }
 
 type Store
   = None
   | Store
 
-type alias Init storage = ( Decode.Value -> storage, storage -> Encode.Value )
+type alias Init store = ( Decode.Value -> store, store -> Encode.Value )
 
 init : (Init layout, Init app) -> Flags -> Model layout app
 init (initLayout,initApp) flags =
   Model
-    { layout = flags.layout |> initStorage initLayout
-    , app    = flags.app    |> initStorage initApp
+    { layout = flags.layout |> initStore initLayout
+    , app    = flags.app    |> initStore initApp
     }
 
-initStorage : Init storage -> Decode.Value -> Storage storage
-initStorage (decode,encode) value =
-  { storage = value |> decode
-  , decode  = decode
-  , encode  = encode
-  , cmd     = None
+initStore : Init store -> Decode.Value -> Entry store
+initStore (decode,encode) value =
+  { store  = value |> decode
+  , decode = decode
+  , encode = encode
+  , cmd    = None
   }
 
 subscriptions : ( Decode.Value -> msg, Decode.Value -> msg ) -> Sub msg
 subscriptions (layoutMsg,appMsg) =
-  [ onLayoutStorageChanged layoutMsg
-  , onAppStorageChanged    appMsg
+  [ onLayoutStoreChanged layoutMsg
+  , onAppStoreChanged    appMsg
   ] |> Sub.batch
 
 exec : Model layout app -> ( Model layout app, Cmd msg )
@@ -84,13 +84,13 @@ exec (Model model) =
     ]
   )
 
-execCmd : (Encode.Value -> Cmd msg) -> Storage storage -> ( Storage storage, Cmd msg )
-execCmd f storage =
-  case storage.cmd of
-    None  -> ( storage, Cmd.none )
+execCmd : (Encode.Value -> Cmd msg) -> Entry store -> ( Entry store, Cmd msg )
+execCmd f store =
+  case store.cmd of
+    None  -> ( store, Cmd.none )
     Store ->
-      ( { storage | cmd = None }
-      , storage.storage |> storage.encode |> f
+      ( { store | cmd = None }
+      , store.store |> store.encode |> f
       )
 
 layoutChanged : Decode.Value -> Model layout app -> Model layout app
@@ -101,24 +101,24 @@ appChanged : Decode.Value -> Model layout app -> Model layout app
 appChanged value (Model model) =
   Model { model | app = model.app |> storageChanged value }
 
-storageChanged : Decode.Value -> Storage storage -> Storage storage
-storageChanged value storage =
-  { storage | storage = value |> storage.decode }
+storageChanged : Decode.Value -> Entry store -> Entry store
+storageChanged value store =
+  { store | store = value |> store.decode }
 
-layout : Model layout app -> Storage layout
+layout : Model layout app -> Entry layout
 layout (Model model) = model.layout
 
-app : Model layout app -> Storage app
+app : Model layout app -> Entry app
 app (Model model) = model.app
 
 updateLayout : (layout -> layout) -> Model layout app -> Model layout app
 updateLayout f (Model model) =
-  Model { model | layout = model.layout |> updateStorage f }
+  Model { model | layout = model.layout |> updateStore f }
 
 updateApp : (app -> app) -> Model layout app -> Model layout app
 updateApp f (Model model) =
-  Model { model | app = model.app |> updateStorage f }
+  Model { model | app = model.app |> updateStore f }
 
-updateStorage : (storage -> storage) -> Storage storage -> Storage storage
-updateStorage f storage =
-  { storage | storage = storage.storage |> f, cmd = Store }
+updateStore : (store -> store) -> Entry store -> Entry store
+updateStore f store =
+  { store | store = store.store |> f, cmd = Store }
