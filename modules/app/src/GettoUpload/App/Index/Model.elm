@@ -5,9 +5,9 @@ module GettoUpload.App.Index.Model exposing
   )
 import GettoUpload.App.Index.Store  as Store
 import GettoUpload.App.Index.Search as Search
-import GettoUpload.Layout.Model as Model
+import GettoUpload.Layout.Frame as Frame
 
-type alias Model page = Model.Model Store.Model Search.Model page
-type alias Init       = Model.Init  Store.Model Search.Model
+type alias Model page = Frame.Model Store.Model Search.Model page
+type alias Init       = Frame.Init  Store.Model Search.Model
 
 init = (Store.init,Search.init)

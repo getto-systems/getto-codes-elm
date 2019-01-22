@@ -68,4 +68,8 @@ articleFooter _ =
 pageTitle : Static.Page -> String
 pageTitle page = page.path |> I18n.title
 
-menuI18n = ( I18n.menu, I18n.title )
+menuI18n : MenuView.MenuI18n
+menuI18n =
+  { menu = I18n.menu
+  , title = I18n.title
+  }
