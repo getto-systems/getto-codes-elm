@@ -35,7 +35,7 @@ try {
 
     var updateTokenConfig = {
       interval: 2 * 60 * 1000,
-      scope: 2 * 60 + 30,
+      scope:    2 * 60 + 30,
     };
 
     var init = function(callback){
@@ -131,18 +131,16 @@ try {
       };
 
       return {
-        /**
-        * returns: obj
-        */
+        // returns: obj
         load: function(){
           return toValue(getItem());
         },
 
         /**
-        * callback: function(value){
-        *   value // obj
-        * }
-        */
+         * callback: function(value){
+         *   value // obj
+         * }
+         */
         addChangedListener: function(callback){
           window.addEventListener("storage", function(event) {
             if (event.storageArea === localStorage && event.key === key) {
@@ -151,9 +149,7 @@ try {
           }, false);
         },
 
-        /**
-        * value: { global: obj, local: obj }
-        */
+        // value: obj
         store: function(value){
           update(value);
         },
@@ -172,15 +168,19 @@ try {
         .reduce(function(acc,m){return acc[m];},Elm.GettoUpload.App).Page
         .init({
           flags: {
-            project: {
-              name:    document.getElementById("project").innerText,
-              company: document.getElementById("company").innerText,
-              title:   document.getElementById("title").innerText,
-              sub:     document.getElementById("sub-title").innerText,
+            'static': {
+              project: {
+                name:    document.getElementById("project").innerText,
+                company: document.getElementById("company").innerText,
+                title:   document.getElementById("title").innerText,
+                sub:     document.getElementById("sub-title").innerText,
+              },
+              page: {
+                path: config.path,
+              },
             },
-            path: config.path,
             credential: credential,
-            storage: {
+            store: {
               layout: LayoutStorage.load(),
               app:    AppStorage.load(),
             },
@@ -215,7 +215,6 @@ try {
       // value: obj
       ports.subscribe("storeLayout", function(value) {
         LayoutStorage.store(value);
-        setTimeout(function(){ onLayoutStorageChanged(value); }, 0);
       });
 
       LayoutStorage.addChangedListener(function(value){
@@ -225,7 +224,6 @@ try {
       // value: obj
       ports.subscribe("storeApp", function(value) {
         AppStorage.store(value);
-        setTimeout(function(){ onAppStorageChanged(value); }, 0);
       });
 
       AppStorage.addChangedListener(function(value){

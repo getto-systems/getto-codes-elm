@@ -5,9 +5,6 @@ module GettoUpload.Layout.Frame exposing
   , onUrlChange
   , subscriptions
   , update
-  , storeLayout
-  , storeApp
-  , pushUrl
   , mapHtml
   , documentTitle
   , mobileHeader
@@ -17,8 +14,8 @@ module GettoUpload.Layout.Frame exposing
   , articleFooter
   )
 import GettoUpload.Layout.Model as Model
-import GettoUpload.Layout.Command.Store  as StoreCommand
-import GettoUpload.Layout.Command.Search as SearchCommand
+import GettoUpload.Layout.Command.Store  as Store
+import GettoUpload.Layout.Command.Search as Search
 import GettoUpload.Layout.Storage as Storage
 import GettoUpload.Layout.Href.Home as HomeHref
 import GettoUpload.Layout.Version as Version
@@ -44,93 +41,69 @@ type Msg msg
 type LayoutMsg
   = UrlRequest Browser.UrlRequest
   | UrlChange Url
+  | LayoutStoreChanged Decode.Value
+  | AppStoreChanged Decode.Value
   | ToggleMenu String
 
 onUrlRequest = UrlRequest >> Layout
 onUrlChange  = UrlChange  >> Layout
 
 
-type alias InitPlugin storage query = ( InitStorage storage, InitQuery query )
-type alias InitStorage storage = ( Decode.Value -> storage, storage -> Encode.Value )
-type alias InitQuery   query   = ( List String -> query, query -> QueryEncode.Value )
-type alias InitModel   storage query model = Model.Init storage query -> ( model, Model.Init storage query )
+type alias InitCommand store search = ( InitStore store, InitSearch search )
+type alias InitStore  store = ( Decode.Value -> store, store -> Encode.Value )
+type alias InitSearch search = ( List String -> search, search -> QueryEncode.Value )
+type alias InitModel store search model = Model.Init store search -> ( model, Model.Init store search )
 
-init : InitPlugin storage query -> InitModel storage query model -> Model.Flags -> Url -> Navigation.Key -> ( Model.Model storage query model, Cmd (Msg msg) )
-init (initStorageTuple,initQueryTuple) initApp flags url key =
+init : InitCommand store search -> InitModel store search model -> Model.Flags -> Url -> Navigation.Key -> ( Model.Model store search model, Cmd (Msg msg) )
+init (initStore,initSearch) initApp flags url key =
   let
     (app,model) =
-      { static =
-        { project = flags.project
-        , page    =
-          { path = flags.path
-          }
-        , key     = key
-        }
-      , layout =
-        { url = url
-        , credential = flags.credential
-        }
-      , plugin =
-        { storage = flags |> initStorage initStorageTuple
-        , query   = url |> initQuery initQueryTuple
-        }
-      , command =
-        { store  = StoreCommand.init
-        , search = SearchCommand.init
-        }
+      { static     = flags.static
+      , credential = flags.credential
+      , store      = flags.store |> Store.init (Storage.init,initStore)
+      , search     = (url,key)   |> Search.init initSearch
       }
       |> initApp
   in
-    { static  = model.static
-    , layout  = model.layout
-    , plugin  = model.plugin
-    , command = model.command
-    , app     = app
+    { static     = model.static
+    , credential = model.credential
+    , store      = model.store
+    , search     = model.search
+    , app        = app
     }
     |> done
 
-initStorage : InitStorage storage -> Model.Flags -> Model.Storage storage
-initStorage (decode,encode) flags =
-  { layout = flags.storage.layout |> Storage.decode
-  , app    = flags.storage.app    |> decode
-  , encode = encode
-  }
 
-initQuery : InitQuery query -> Url -> Model.Query query
-initQuery (decode,encode) url =
-  { app    = url.query |> Maybe.map QueryDecode.split |> Maybe.withDefault [] |> decode
-  , encode = encode
-  }
+subscriptions : Model.Model store search model -> Sub (Msg msg)
+subscriptions model =
+  Sub.batch
+    [ (LayoutStoreChanged >> Layout,AppStoreChanged >> Layout) |> Store.subscriptions
+    ]
 
 
-subscriptions : Model.Model storage query model -> Sub (Msg msg)
-subscriptions model = Sub.none
+type alias Update store search model msg = msg -> Model.Model store search model -> Model.Model store search model
 
-
-type alias Update storage query model msg = msg -> Model.Model storage query model -> Model.Model storage query model
-
-update : Update storage query model msg -> Msg msg -> Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
-update up msg model =
+update : Update store search model msg -> Msg msg -> Model.Model store search model -> ( Model.Model store search model, Cmd (Msg msg) )
+update updateApp msg model =
   case msg of
-    App sub -> model |> up sub |> done
+    App sub -> model |> updateApp sub |> done
 
     Layout (UrlRequest urlRequest) ->
       case urlRequest of
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
         Browser.External href -> ( model, href |> Navigation.load )
 
-    Layout (UrlChange url) ->
-      let
-        layout = model.layout
-      in
-        ( { model | layout = { layout | url = url } }
-        , Cmd.none
-        )
+    Layout (UrlChange url) -> ( { model | search = model.search |> Search.changed url }, Cmd.none )
+
+    Layout (LayoutStoreChanged value) ->
+      ( { model | store = model.store |> Store.layoutChanged value }, Cmd.none )
+    Layout (AppStoreChanged value) ->
+      ( { model | store = model.store |> Store.appChanged value }, Cmd.none )
 
     Layout (ToggleMenu name) -> ( model, Cmd.none )
 
 
-done : Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
+done : Model.Model store search model -> ( Model.Model store search model, Cmd (Msg msg) )
 done model =
   ( model, Cmd.none )
   |> andThen storeExec
@@ -144,66 +117,29 @@ andThen f (model,cmd) =
     ( newModel, Cmd.batch [ cmd, newCmd ] )
 
 
-storeExec : Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
+storeExec : Model.Model store search model -> ( Model.Model store search model, Cmd (Msg msg) )
 storeExec model =
   let
-    command = model.command
-    (store,cmd) =
-      command.store
-      |> StoreCommand.exec
-        { layout = model.plugin.storage.layout |> Storage.encode
-        , app    = model.plugin.storage.app    |> model.plugin.storage.encode
-        }
+    (store,cmd) = model.store |> Store.exec
   in
-    ( { model | command = { command | store = store } }
-    , cmd
-    )
+    ( { model | store = store }, cmd )
 
-storeCmd : (StoreCommand.Model -> StoreCommand.Model) -> Model.Model storage query model -> Model.Model storage query model
-storeCmd f model =
-  let
-    command = model.command
-  in
-    { model | command = { command | store = command.store |> f } }
-
-storeLayout : Model.Model storage query model -> Model.Model storage query model
-storeLayout = storeCmd StoreCommand.layout
-
-storeApp : Model.Model storage query model -> Model.Model storage query model
-storeApp = storeCmd StoreCommand.app
-
-
-searchExec : Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
+searchExec : Model.Model store search model -> ( Model.Model store search model, Cmd (Msg msg) )
 searchExec model =
   let
-    command = model.command
-    (search,cmd) =
-      command.search
-      |> SearchCommand.exec model.static.key
+    (search,cmd) = model.search |> Search.exec
   in
-    ( { model | command = { command | search = search } }
-    , cmd
-    )
-
-searchCmd : (SearchCommand.Model -> SearchCommand.Model) -> Model.Model storage query model -> Model.Model storage query model
-searchCmd f model =
-  let
-    command = model.command
-  in
-    { model | command = { command | search = command.search |> f } }
-
-pushUrl : Model.Model storage query model -> Model.Model storage query model
-pushUrl model = model |> searchCmd (SearchCommand.pushUrl (model.plugin.query.app |> model.plugin.query.encode))
+    ( { model | search = search }, cmd )
 
 
 mapHtml : (sub -> msg) -> List (Html sub) -> List (Html (Msg msg))
 mapHtml msg = List.map (H.map (msg >> App))
 
 
-title : Model.Model storage query model -> String
+title : Model.Model store search model -> String
 title model = model.static.page.path |> I18n.title
 
-documentTitle : Model.Model storage query model -> String
+documentTitle : Model.Model store search model -> String
 documentTitle model =
   (model |> title)
   ++ " | "
@@ -211,7 +147,7 @@ documentTitle model =
   ++ " "
   ++ model.static.project.title
 
-mobileHeader : Model.Model storage query model -> Html (Msg msg)
+mobileHeader : Model.Model store search model -> Html (Msg msg)
 mobileHeader model =
   H.header []
     [ H.p []
@@ -225,7 +161,7 @@ mobileHeader model =
       ]
     ]
 
-navHeader : Model.Model storage query model -> Html (Msg msg)
+navHeader : Model.Model store search model -> Html (Msg msg)
 navHeader model =
   H.header []
     [ H.p []
@@ -237,7 +173,7 @@ navHeader model =
       ]
     ]
 
-nav : Model.Model storage query model -> Html (Msg msg)
+nav : Model.Model store search model -> Html (Msg msg)
 nav model =
   H.nav []
     [ model |> navHeader
@@ -246,7 +182,7 @@ nav model =
     , model |> navFooter
     ]
 
-navAddress : Model.Model storage query model -> Html (Msg msg)
+navAddress : Model.Model store search model -> Html (Msg msg)
 navAddress model =
   H.address []
     [ H.a [ A.href HomeHref.index ]
@@ -282,7 +218,7 @@ navAddress model =
       ]
     ]
 
-navBody : Model.Model storage query model -> Html (Msg msg)
+navBody : Model.Model store search model -> Html (Msg msg)
 navBody model =
   H.section []
     [ H.ul []
@@ -327,11 +263,11 @@ navBody model =
       ]
     ]
 
-navFooter : Model.Model storage query model -> Html (Msg msg)
+navFooter : Model.Model store search model -> Html (Msg msg)
 navFooter model =
   H.footer [] [ H.p [] [ "version : " ++ Version.version |> H.text ] ]
 
-articleHeader : Model.Model storage query model -> Html (Msg msg)
+articleHeader : Model.Model store search model -> Html (Msg msg)
 articleHeader model =
   H.header []
     [ H.h1 [] [ model |> title |> H.text ]
@@ -347,7 +283,7 @@ articleHeader model =
       ]
     ]
 
-articleFooter : Model.Model storage query model -> Html (Msg msg)
+articleFooter : Model.Model store search model -> Html (Msg msg)
 articleFooter model =
   H.footer []
     [ H.p []

@@ -1,7 +1,6 @@
 module GettoUpload.Layout.Storage exposing
   ( Model
-  , encode
-  , decode
+  , init
   )
 import GettoUpload.Layout.Storage.Menu as Menu
 
@@ -12,6 +11,8 @@ import Json.Encode as Encode
 type alias Model =
   { menu : Menu.Model
   }
+
+init = (decode,encode)
 
 encode : Model -> Encode.Value
 encode model =
