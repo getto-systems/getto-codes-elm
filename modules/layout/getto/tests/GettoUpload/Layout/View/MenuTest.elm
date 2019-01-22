@@ -37,7 +37,10 @@ menu =
     )
   ]
 
-i18n = (identity,identity)
+i18n =
+  { menu = identity
+  , title = identity
+  }
 
 suite : Test
 suite =

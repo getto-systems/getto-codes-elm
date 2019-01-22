@@ -1,6 +1,7 @@
 module GettoUpload.Layout.View.Menu exposing
   ( Side
   , Breadcrumb
+  , MenuI18n
   , side
   , breadcrumb
   )
@@ -37,10 +38,14 @@ type alias BreadcrumbEntry =
   , href  : String
   }
 
+type alias MenuI18n =
+  { menu  : I18n
+  , title : I18n
+  }
 type alias I18n = String -> String
 
-side : (I18n,I18n) -> MenuModel.Menu -> ( Static.Page, Credential.Model, MenuStore.Model ) -> List Side
-side (i18nMenu,i18nTitle) menu (page,credential,storage) =
+side : MenuI18n -> MenuModel.Menu -> ( Static.Page, Credential.Model, MenuStore.Model ) -> List Side
+side i18n menu (page,credential,store) =
   let
     roles = credential |> Credential.roles
   in
@@ -54,15 +59,15 @@ side (i18nMenu,i18nTitle) menu (page,credential,storage) =
       )
     |> List.map
       (\(group,items) ->
-        { title = group |> i18nMenu
+        { title = group |> i18n.menu
         , badge = Nothing -- TODO items |> map (api |> getter) |> sum
         , items =
-          if storage |> MenuStore.isCollapsed group
+          if (store |> MenuStore.isCollapsed group) && (items |> List.any (isActive page) |> not)
             then []
             else items |> List.map
               (\item ->
                 { isActive = item |> isActive page
-                , title    = item |> MenuModel.href |> i18nTitle
+                , title    = item |> MenuModel.href |> i18n.title
                 , href     = item |> MenuModel.href
                 , icon     = item |> MenuModel.icon
                 , badge    = Nothing -- TODO api |> getter
@@ -79,7 +84,7 @@ isActive page item =
 isMatch : Static.Page -> MenuModel.Item -> Bool
 isMatch page = MenuModel.href >> (==) page.path
 
-breadcrumb : (I18n,I18n) -> MenuModel.Menu -> Static.Page -> Maybe Breadcrumb
+breadcrumb : MenuI18n -> MenuModel.Menu -> Static.Page -> Maybe Breadcrumb
 breadcrumb i18n menu page =
   let
     find parent =
@@ -111,17 +116,17 @@ breadcrumb i18n menu page =
       )
     |> List.head
 
-toBreadcrumb : (I18n,I18n) -> String -> ( Bool, List MenuModel.Item ) -> Maybe Breadcrumb
-toBreadcrumb (i18nMenu,i18nTitle) group result =
+toBreadcrumb : MenuI18n -> String -> ( Bool, List MenuModel.Item ) -> Maybe Breadcrumb
+toBreadcrumb i18n group result =
   case result of
     (True,entries) ->
       Just
-        ( group |> i18nMenu
+        ( group |> i18n.menu
         , entries
           |> List.reverse
           |> List.map
             (\item ->
-              { title = item |> MenuModel.href |> i18nTitle
+              { title = item |> MenuModel.href |> i18n.title
               , href  = item |> MenuModel.href
               , icon  = item |> MenuModel.icon
               }
