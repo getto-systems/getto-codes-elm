@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Store.Menu exposing
+module GettoUpload.Layout.Frame.Store.Menu exposing
   ( Model
   , encode
   , decode

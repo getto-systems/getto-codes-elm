@@ -23,7 +23,7 @@ import GettoUpload.Layout.Command.Static     as Static
 import GettoUpload.Layout.Command.Credential as Credential
 import GettoUpload.Layout.Command.Store      as Store
 import GettoUpload.Layout.Command.Search     as Search
-import GettoUpload.Layout.Store as LayoutStore
+import GettoUpload.Layout.Frame.Store as FrameStore
 import GettoUpload.Layout.Href.Home as HomeHref
 import GettoUpload.Layout.Version as Version
 import GettoUpload.I18n.App as I18n
@@ -51,7 +51,7 @@ type alias Base store search a =
   { a
   | static     : Static.Flags
   , credential : Credential.Model
-  , store      : Store.Model LayoutStore.Model store
+  , store      : Store.Model FrameStore.Model store
   , search     : Search.Model search
   }
 
@@ -85,7 +85,7 @@ init (initStore,initSearch) initApp flags url key =
     (app,model) =
       { static     = flags.static
       , credential = flags.credential |> Credential.init
-      , store      = flags.store |> Store.init (LayoutStore.init,initStore)
+      , store      = flags.store |> Store.init (FrameStore.init,initStore)
       , search     = (url,key) |> Search.init initSearch
       }
       |> initApp
@@ -172,7 +172,7 @@ credentialExec model =
 logout : Model store search model -> Model store search model
 logout model = { model | credential = model.credential |> Credential.logout }
 
-updateLayoutStore : (LayoutStore.Model -> LayoutStore.Model) -> Model store search model -> Model store search model
+updateLayoutStore : (FrameStore.Model -> FrameStore.Model) -> Model store search model -> Model store search model
 updateLayoutStore f model = { model | store = model.store |> Store.updateLayout f }
 
 updateAppStore : (store -> store) -> Model store search model -> Model store search model

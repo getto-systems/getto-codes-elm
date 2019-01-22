@@ -1,8 +1,8 @@
-module GettoUpload.Layout.Store exposing
+module GettoUpload.Layout.Frame.Store exposing
   ( Model
   , init
   )
-import GettoUpload.Layout.Store.Menu as Menu
+import GettoUpload.Layout.Frame.Store.Menu as Menu
 
 import Getto.Json.SafeDecode as SafeDecode
 
