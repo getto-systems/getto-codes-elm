@@ -37,16 +37,18 @@ menu =
     )
   ]
 
+i18n = (identity,identity)
+
 suite : Test
 suite =
   describe "Menu"
     [ describe "breadcrumb"
       [ test "should return breadcrumbs" <|
         \_ ->
-          { path = "home.html" } |> Menu.breadcrumb menu
+          { path = "home.html" } |> Menu.breadcrumb i18n menu
           |> Expect.equal
             (Just
-              ( "MAIN"
+              ( "main"
               , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
                 ]
               )
@@ -54,10 +56,10 @@ suite =
 
       , test "should return breadcrumbs at second level" <|
         \_ ->
-          { path = "home/file.html" } |> Menu.breadcrumb menu
+          { path = "home/file.html" } |> Menu.breadcrumb i18n menu
           |> Expect.equal
             (Just
-              ( "MAIN"
+              ( "main"
               , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
                 , { title = "home/file.html", icon = Fa.solid "file", href = "home/file.html" }
                 ]
@@ -66,10 +68,10 @@ suite =
 
       , test "should return breadcrumbs at therd level" <|
         \_ ->
-          { path = "home/file/edit.html" } |> Menu.breadcrumb menu
+          { path = "home/file/edit.html" } |> Menu.breadcrumb i18n menu
           |> Expect.equal
             (Just
-              ( "MAIN"
+              ( "main"
               , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
                 , { title = "home/file.html", icon = Fa.solid "file", href = "home/file.html" }
                 , { title = "home/file/edit.html", icon = Fa.solid "pencil", href = "home/file/edit.html" }
@@ -79,10 +81,10 @@ suite =
 
       , test "should return breadcrumbs at therd level of 'data'" <|
         \_ ->
-          { path = "master/file/edit.html" } |> Menu.breadcrumb menu
+          { path = "master/file/edit.html" } |> Menu.breadcrumb i18n menu
           |> Expect.equal
             (Just
-              ( "DATA"
+              ( "data"
               , [ { title = "master.html", icon = Fa.solid "home", href = "master.html" }
                 , { title = "master/file.html", icon = Fa.solid "file", href = "master/file.html" }
                 , { title = "master/file/edit.html", icon = Fa.solid "pencil", href = "master/file/edit.html" }
@@ -92,10 +94,10 @@ suite =
 
       , test "should return breadcrumbs at top level of another 'data'" <|
         \_ ->
-          { path = "upload.html" } |> Menu.breadcrumb menu
+          { path = "upload.html" } |> Menu.breadcrumb i18n menu
           |> Expect.equal
             (Just
-              ( "DATA"
+              ( "data"
               , [ { title = "upload.html", icon = Fa.solid "data", href = "upload.html" }
                 ]
               )

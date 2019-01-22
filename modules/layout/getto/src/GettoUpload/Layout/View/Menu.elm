@@ -4,12 +4,14 @@ module GettoUpload.Layout.View.Menu exposing
   , side
   , breadcrumb
   )
+import GettoUpload.Layout.Command.Static     as Static
+import GettoUpload.Layout.Command.Credential as Credential
+import GettoUpload.Layout.Command.Store      as Store
+import GettoUpload.Layout.Command.Search     as Search
 import GettoUpload.Layout.Store.Menu as MenuStore
 import GettoUpload.Layout.Menu as Menu
 import GettoUpload.Layout.Menu.Model as MenuModel
-import GettoUpload.Layout.Model as Model
 import GettoUpload.Layout.Fa as Fa
-import GettoUpload.I18n.App as I18n
 
 type alias Side =
   { title : String
@@ -35,45 +37,50 @@ type alias BreadcrumbEntry =
   , href  : String
   }
 
-side : MenuModel.Menu -> ( Model.Page, Model.Credential, MenuStore.Model ) -> List Side
-side menu (page,credential,storage) =
-  menu
-  |> List.filter
-    (\(group,_) ->
-      (group == "home") ||
-      (group == "system") ||
-      (credential.roles |> List.member "admin") ||
-      (credential.roles |> List.member group)
-    )
-  |> List.map
-    (\(group,items) ->
-      { title = group |> I18n.menu
-      , badge = Nothing -- TODO items |> map (api |> getter) |> sum
-      , items =
-        if storage |> MenuStore.isCollapsed group
-          then []
-          else items |> List.map
-            (\item ->
-              { isActive = item |> isActive page
-              , title    = item |> MenuModel.href |> I18n.title
-              , href     = item |> MenuModel.href
-              , icon     = item |> MenuModel.icon
-              , badge    = Nothing -- TODO api |> getter
-              }
-            )
-      }
-    )
+type alias I18n = String -> String
 
-isActive : Model.Page -> MenuModel.Item -> Bool
+side : (I18n,I18n) -> MenuModel.Menu -> ( Static.Page, Credential.Model, MenuStore.Model ) -> List Side
+side (i18nMenu,i18nTitle) menu (page,credential,storage) =
+  let
+    roles = credential |> Credential.roles
+  in
+    menu
+    |> List.filter
+      (\(group,_) ->
+        (group == "home") ||
+        (group == "system") ||
+        (roles |> List.member "admin") ||
+        (roles |> List.member group)
+      )
+    |> List.map
+      (\(group,items) ->
+        { title = group |> i18nMenu
+        , badge = Nothing -- TODO items |> map (api |> getter) |> sum
+        , items =
+          if storage |> MenuStore.isCollapsed group
+            then []
+            else items |> List.map
+              (\item ->
+                { isActive = item |> isActive page
+                , title    = item |> MenuModel.href |> i18nTitle
+                , href     = item |> MenuModel.href
+                , icon     = item |> MenuModel.icon
+                , badge    = Nothing -- TODO api |> getter
+                }
+              )
+        }
+      )
+
+isActive : Static.Page -> MenuModel.Item -> Bool
 isActive page item =
   (item |> isMatch page) ||
   (item |> MenuModel.children |> List.any (isActive page))
 
-isMatch : Model.Page -> MenuModel.Item -> Bool
+isMatch : Static.Page -> MenuModel.Item -> Bool
 isMatch page = MenuModel.href >> (==) page.path
 
-breadcrumb : MenuModel.Menu -> Model.Page -> Maybe Breadcrumb
-breadcrumb menu page =
+breadcrumb : (I18n,I18n) -> MenuModel.Menu -> Static.Page -> Maybe Breadcrumb
+breadcrumb i18n menu page =
   let
     find parent =
       List.foldl
@@ -100,21 +107,21 @@ breadcrumb menu page =
       (\(group,items) ->
         items
         |> find (False,[])
-        |> toBreadcrumb group
+        |> toBreadcrumb i18n group
       )
     |> List.head
 
-toBreadcrumb : String -> ( Bool, List MenuModel.Item ) -> Maybe Breadcrumb
-toBreadcrumb group result =
+toBreadcrumb : (I18n,I18n) -> String -> ( Bool, List MenuModel.Item ) -> Maybe Breadcrumb
+toBreadcrumb (i18nMenu,i18nTitle) group result =
   case result of
     (True,entries) ->
       Just
-        ( group |> I18n.menu
+        ( group |> i18nMenu
         , entries
           |> List.reverse
           |> List.map
             (\item ->
-              { title = item |> MenuModel.href |> I18n.title
+              { title = item |> MenuModel.href |> i18nTitle
               , href  = item |> MenuModel.href
               , icon  = item |> MenuModel.icon
               }
