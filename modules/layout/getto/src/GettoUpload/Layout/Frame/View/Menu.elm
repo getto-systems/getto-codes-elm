@@ -1,17 +1,16 @@
-module GettoUpload.Layout.View.Menu exposing
+module GettoUpload.Layout.Frame.View.Menu exposing
   ( Side
   , Breadcrumb
   , MenuI18n
   , side
   , breadcrumb
   )
+import GettoUpload.Layout.Frame.Store.Menu as MenuStore
 import GettoUpload.Layout.Command.Static     as Static
 import GettoUpload.Layout.Command.Credential as Credential
 import GettoUpload.Layout.Command.Store      as Store
 import GettoUpload.Layout.Command.Search     as Search
-import GettoUpload.Layout.Store.Menu as MenuStore
 import GettoUpload.Layout.Menu as Menu
-import GettoUpload.Layout.Menu.Model as MenuModel
 import GettoUpload.Layout.Fa as Fa
 
 type alias Side =
@@ -44,7 +43,7 @@ type alias MenuI18n =
   }
 type alias I18n = String -> String
 
-side : MenuI18n -> MenuModel.Menu -> ( Static.Page, Credential.Model, MenuStore.Model ) -> List Side
+side : MenuI18n -> Menu.Menu -> ( Static.Page, Credential.Model, MenuStore.Model ) -> List Side
 side i18n menu (page,credential,store) =
   let
     roles = credential |> Credential.roles
@@ -67,24 +66,24 @@ side i18n menu (page,credential,store) =
             else items |> List.map
               (\item ->
                 { isActive = item |> isActive page
-                , title    = item |> MenuModel.href |> i18n.title
-                , href     = item |> MenuModel.href
-                , icon     = item |> MenuModel.icon
+                , title    = item |> Menu.href |> i18n.title
+                , href     = item |> Menu.href
+                , icon     = item |> Menu.icon
                 , badge    = Nothing -- TODO api |> getter
                 }
               )
         }
       )
 
-isActive : Static.Page -> MenuModel.Item -> Bool
+isActive : Static.Page -> Menu.Item -> Bool
 isActive page item =
   (item |> isMatch page) ||
-  (item |> MenuModel.children |> List.any (isActive page))
+  (item |> Menu.children |> List.any (isActive page))
 
-isMatch : Static.Page -> MenuModel.Item -> Bool
-isMatch page = MenuModel.href >> (==) page.path
+isMatch : Static.Page -> Menu.Item -> Bool
+isMatch page = Menu.href >> (==) page.path
 
-breadcrumb : MenuI18n -> MenuModel.Menu -> Static.Page -> Maybe Breadcrumb
+breadcrumb : MenuI18n -> Menu.Menu -> Static.Page -> Maybe Breadcrumb
 breadcrumb i18n menu page =
   let
     find parent =
@@ -101,7 +100,7 @@ breadcrumb i18n menu page =
                 if item |> isMatch page
                   then stack |> found
                   else
-                    case item |> MenuModel.children |> find (stack |> into) of
+                    case item |> Menu.children |> find (stack |> into) of
                       ( True,  result ) -> ( True,  result )
                       ( False, result ) -> ( False, result |> List.drop 1 )
         )
@@ -116,7 +115,7 @@ breadcrumb i18n menu page =
       )
     |> List.head
 
-toBreadcrumb : MenuI18n -> String -> ( Bool, List MenuModel.Item ) -> Maybe Breadcrumb
+toBreadcrumb : MenuI18n -> String -> ( Bool, List Menu.Item ) -> Maybe Breadcrumb
 toBreadcrumb i18n group result =
   case result of
     (True,entries) ->
@@ -126,9 +125,9 @@ toBreadcrumb i18n group result =
           |> List.reverse
           |> List.map
             (\item ->
-              { title = item |> MenuModel.href |> i18n.title
-              , href  = item |> MenuModel.href
-              , icon  = item |> MenuModel.icon
+              { title = item |> Menu.href |> i18n.title
+              , href  = item |> Menu.href
+              , icon  = item |> Menu.icon
               }
             )
         )

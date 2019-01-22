@@ -1,6 +1,6 @@
-module GettoUpload.Layout.View.MenuTest exposing (..)
-import GettoUpload.Layout.View.Menu as Menu
-import GettoUpload.Layout.Menu.Model as Model
+module GettoUpload.Layout.Frame.View.MenuTest exposing (..)
+import GettoUpload.Layout.Frame.View.Menu as Menu
+import GettoUpload.Layout.Menu as Model
 import GettoUpload.Layout.Fa as Fa
 
 import Expect exposing (Expectation)

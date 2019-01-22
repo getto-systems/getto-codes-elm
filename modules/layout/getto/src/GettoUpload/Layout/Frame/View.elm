@@ -1,15 +1,15 @@
-module GettoUpload.Layout.View exposing
+module GettoUpload.Layout.Frame.View exposing
   ( documentTitle
   , mobileHeader
   , navAddress
   , articleHeader
   , articleFooter
   )
+import GettoUpload.Layout.Frame.View.Menu as MenuView
+import GettoUpload.Layout.Frame.Menu as Menu
+import GettoUpload.Layout.Frame.Store.Menu as MenuStore
 import GettoUpload.Layout.Command.Static     as Static
 import GettoUpload.Layout.Command.Credential as Credential
-import GettoUpload.Layout.Store.Menu as MenuStore
-import GettoUpload.Layout.View.Menu as MenuView
-import GettoUpload.Layout.Menu as Menu
 import GettoUpload.Layout.Version as Version
 import GettoUpload.I18n.App as I18n
 
