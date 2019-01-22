@@ -2,6 +2,7 @@ port module GettoUpload.Layout.Command.Credential exposing
   ( Flags
   , Model
   , init
+  , subscriptions
   , exec
   , changed
   , token
@@ -10,6 +11,8 @@ port module GettoUpload.Layout.Command.Credential exposing
   )
 
 port clearCredential : () -> Cmd msg
+
+port onCredentialChanged : (Flags -> msg) -> Sub msg
 
 type alias Flags =
   { token : String
@@ -33,6 +36,9 @@ init flags =
     { credential = flags
     , cmd        = None
     }
+
+subscriptions : (Flags -> msg) -> Sub msg
+subscriptions msg = onCredentialChanged msg
 
 exec : Model -> ( Model, Cmd msg )
 exec (Model model) =

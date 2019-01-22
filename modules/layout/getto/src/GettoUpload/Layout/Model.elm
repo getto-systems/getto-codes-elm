@@ -6,9 +6,9 @@ module GettoUpload.Layout.Model exposing
   , Project
   , Page
   )
+import GettoUpload.Layout.Command.Credential as Credential
 import GettoUpload.Layout.Command.Store      as Store
 import GettoUpload.Layout.Command.Search     as Search
-import GettoUpload.Layout.Command.Credential as Credential
 import GettoUpload.Layout.Store as LayoutStore
 
 
