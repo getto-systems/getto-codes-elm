@@ -6,7 +6,7 @@ module GettoUpload.Layout.Frame exposing
   , subscriptions
   , update
   , storeLayout
-  , storePage
+  , storeApp
   , pushUrl
   , mapHtml
   , documentTitle
@@ -38,16 +38,16 @@ import Html.Events as E
 import Html.Lazy as L
 
 type Msg msg
-  = Frame FrameMsg
-  | Page msg
+  = Layout LayoutMsg
+  | App msg
 
-type FrameMsg
+type LayoutMsg
   = UrlRequest Browser.UrlRequest
   | UrlChange Url
   | ToggleMenu String
 
-onUrlRequest = UrlRequest >> Frame
-onUrlChange  = UrlChange  >> Frame
+onUrlRequest = UrlRequest >> Layout
+onUrlChange  = UrlChange  >> Layout
 
 
 type alias InitPlugin storage query = ( InitStorage storage, InitQuery query )
@@ -56,9 +56,9 @@ type alias InitQuery   query   = ( List String -> query, query -> QueryEncode.Va
 type alias InitModel   storage query model = Model.Init storage query -> ( model, Model.Init storage query )
 
 init : InitPlugin storage query -> InitModel storage query model -> Model.Flags -> Url -> Navigation.Key -> ( Model.Model storage query model, Cmd (Msg msg) )
-init (initStorageTuple,initQueryTuple) initPage flags url key =
+init (initStorageTuple,initQueryTuple) initApp flags url key =
   let
-    (page,model) =
+    (app,model) =
       { static =
         { project = flags.project
         , path    = flags.path
@@ -77,26 +77,26 @@ init (initStorageTuple,initQueryTuple) initPage flags url key =
         , search = SearchCommand.init
         }
       }
-      |> initPage
+      |> initApp
   in
     { static  = model.static
     , layout  = model.layout
     , plugin  = model.plugin
     , command = model.command
-    , page    = page
+    , app     = app
     }
     |> done
 
 initStorage : InitStorage storage -> Model.Flags -> Model.Storage storage
 initStorage (decode,encode) flags =
   { layout = flags.storage.layout |> Storage.decode
-  , page   = flags.storage.page   |> decode
+  , app    = flags.storage.app    |> decode
   , encode = encode
   }
 
 initQuery : InitQuery query -> Url -> Model.Query query
 initQuery (decode,encode) url =
-  { page   = url.query |> Maybe.map QueryDecode.split |> Maybe.withDefault [] |> decode
+  { app    = url.query |> Maybe.map QueryDecode.split |> Maybe.withDefault [] |> decode
   , encode = encode
   }
 
@@ -110,14 +110,14 @@ type alias Update storage query model msg = msg -> Model.Model storage query mod
 update : Update storage query model msg -> Msg msg -> Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
 update up msg model =
   case msg of
-    Page sub -> model |> up sub |> done
+    App sub -> model |> up sub |> done
 
-    Frame (UrlRequest urlRequest) ->
+    Layout (UrlRequest urlRequest) ->
       case urlRequest of
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
         Browser.External href -> ( model, href |> Navigation.load )
 
-    Frame (UrlChange url) ->
+    Layout (UrlChange url) ->
       let
         layout = model.layout
       in
@@ -125,7 +125,7 @@ update up msg model =
         , Cmd.none
         )
 
-    Frame (ToggleMenu name) -> ( model, Cmd.none )
+    Layout (ToggleMenu name) -> ( model, Cmd.none )
 
 
 done : Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
@@ -150,7 +150,7 @@ storeExec model =
       command.store
       |> StoreCommand.exec
         { layout = model.plugin.storage.layout |> Storage.encode
-        , page   = model.plugin.storage.page   |> model.plugin.storage.encode
+        , app    = model.plugin.storage.app    |> model.plugin.storage.encode
         }
   in
     ( { model | command = { command | store = store } }
@@ -167,8 +167,8 @@ storeCmd f model =
 storeLayout : Model.Model storage query model -> Model.Model storage query model
 storeLayout = storeCmd StoreCommand.layout
 
-storePage : Model.Model storage query model -> Model.Model storage query model
-storePage = storeCmd StoreCommand.page
+storeApp : Model.Model storage query model -> Model.Model storage query model
+storeApp = storeCmd StoreCommand.app
 
 
 searchExec : Model.Model storage query model -> ( Model.Model storage query model, Cmd (Msg msg) )
@@ -191,11 +191,11 @@ searchCmd f model =
     { model | command = { command | search = command.search |> f } }
 
 pushUrl : Model.Model storage query model -> Model.Model storage query model
-pushUrl model = model |> searchCmd (SearchCommand.pushUrl (model.plugin.query.page |> model.plugin.query.encode))
+pushUrl model = model |> searchCmd (SearchCommand.pushUrl (model.plugin.query.app |> model.plugin.query.encode))
 
 
 mapHtml : (sub -> msg) -> List (Html sub) -> List (Html (Msg msg))
-mapHtml msg = List.map (H.map (msg >> Page))
+mapHtml msg = List.map (H.map (msg >> App))
 
 
 title : Model.Model storage query model -> String
@@ -286,7 +286,7 @@ navBody model =
     [ H.ul []
       [ H.li []
         [ H.b []
-          [ H.a [ A.href "#", E.onClick (ToggleMenu "MAIN" |> Frame) ]
+          [ H.a [ A.href "#", E.onClick (ToggleMenu "MAIN" |> Layout) ]
             [ "MAIN" |> H.text
             , " " |> H.text
             , H.em [ A.class "badge is-danger is-small" ] [ "4" |> H.text ]
@@ -308,7 +308,7 @@ navBody model =
     , H.ul []
       [ H.li []
         [ H.b []
-          [ H.a [ A.href "#", E.onClick (ToggleMenu "DATA" |> Frame) ]
+          [ H.a [ A.href "#", E.onClick (ToggleMenu "DATA" |> Layout) ]
             [ "DATA" |> H.text
             , " " |> H.text
             , H.i [ A.class "fas fa-caret-down" ] []

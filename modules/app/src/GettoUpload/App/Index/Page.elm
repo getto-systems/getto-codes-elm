@@ -17,20 +17,20 @@ main = Browser.application
   , view          = view
   }
 
-type alias Model = Model.Model Page
-type alias Page = {}
+type alias Model = Model.Model App
+type alias App = {}
 
-type alias Msg = Frame.Msg PageMsg
-type PageMsg
+type alias Msg = Frame.Msg AppMsg
+type AppMsg
   = Dashboard Dashboard.Msg
 
-init : Model.Init -> ( Page, Model.Init )
+init : Model.Init -> ( App, Model.Init )
 init model =
   ( {}
   , model
   )
 
-update : PageMsg -> Model -> Model
+update : AppMsg -> Model -> Model
 update msg model =
   case msg of
     Dashboard sub -> model |> Dashboard.update sub

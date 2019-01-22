@@ -162,7 +162,7 @@ try {
   })(config);
 
   var LayoutStorage = Storage("_layout");
-  var PageStorage = Storage(config.path);
+  var AppStorage = Storage(config.path);
 
   var App = (function(config){
     var current_page = config.page;
@@ -182,7 +182,7 @@ try {
             credential: credential,
             storage: {
               layout: LayoutStorage.load(),
-              page: PageStorage.load(),
+              app:    AppStorage.load(),
             },
           },
         });
@@ -199,9 +199,9 @@ try {
         ports.send("onLayoutStorageChanged",value);
       };
 
-      var onPageStorageChanged = function(value) {
+      var onAppStorageChanged = function(value) {
         // value: obj
-        ports.send("onPageStorageChanged",value);
+        ports.send("onAppStorageChanged",value);
       };
 
       Auth.setUpdateCredentialInterval(function(credential){
@@ -223,13 +223,13 @@ try {
       });
 
       // value: obj
-      ports.subscribe("storePage", function(value) {
-        PageStorage.store(value);
-        setTimeout(function(){ onPageStorageChanged(value); }, 0);
+      ports.subscribe("storeApp", function(value) {
+        AppStorage.store(value);
+        setTimeout(function(){ onAppStorageChanged(value); }, 0);
       });
 
-      PageStorage.addChangedListener(function(value){
-        onPageStorageChanged(value);
+      AppStorage.addChangedListener(function(value){
+        onAppStorageChanged(value);
       });
 
       ports.subscribe("fixedMidashi", function(_params) {

@@ -28,7 +28,7 @@ type alias Flags =
   , credential : Credential
   , storage :
     { layout : Decode.Value
-    , page   : Decode.Value
+    , app    : Decode.Value
     }
   }
 
@@ -54,11 +54,11 @@ type alias Init storage query =
     }
   }
 
-type alias Model storage query page =
+type alias Model storage query app =
   { static : Static
   , layout : Layout
   , plugin : Plugin storage query
-  , page   : page
+  , app    : app
   , command :
     { store  : StoreCommand.Model
     , search : SearchCommand.Model
@@ -83,11 +83,11 @@ type alias Plugin storage query =
 
 type alias Storage storage =
   { layout : Storage.Model
-  , page   : storage
+  , app    : storage
   , encode : storage -> Encode.Value
   }
 
 type alias Query query =
-  { page   : query
+  { app    : query
   , encode : query -> QueryEncode.Value
   }
