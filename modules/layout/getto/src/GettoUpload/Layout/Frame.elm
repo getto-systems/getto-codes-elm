@@ -61,7 +61,9 @@ init (initStorageTuple,initQueryTuple) initApp flags url key =
     (app,model) =
       { static =
         { project = flags.project
-        , path    = flags.path
+        , page    =
+          { path = flags.path
+          }
         , key     = key
         }
       , layout =
@@ -199,7 +201,7 @@ mapHtml msg = List.map (H.map (msg >> App))
 
 
 title : Model.Model storage query model -> String
-title model = model.static.path |> I18n.title
+title model = model.static.page.path |> I18n.title
 
 documentTitle : Model.Model storage query model -> String
 documentTitle model =
