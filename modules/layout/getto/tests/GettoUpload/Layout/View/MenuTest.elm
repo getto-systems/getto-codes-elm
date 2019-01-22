@@ -46,7 +46,7 @@ suite =
           { path = "home.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
-              ( "main"
+              ( "MAIN"
               , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
                 ]
               )
@@ -57,7 +57,7 @@ suite =
           { path = "home/file.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
-              ( "main"
+              ( "MAIN"
               , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
                 , { title = "home/file.html", icon = Fa.solid "file", href = "home/file.html" }
                 ]
@@ -69,7 +69,7 @@ suite =
           { path = "home/file/edit.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
-              ( "main"
+              ( "MAIN"
               , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
                 , { title = "home/file.html", icon = Fa.solid "file", href = "home/file.html" }
                 , { title = "home/file/edit.html", icon = Fa.solid "pencil", href = "home/file/edit.html" }
@@ -82,7 +82,7 @@ suite =
           { path = "master/file/edit.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
-              ( "data"
+              ( "DATA"
               , [ { title = "master.html", icon = Fa.solid "home", href = "master.html" }
                 , { title = "master/file.html", icon = Fa.solid "file", href = "master/file.html" }
                 , { title = "master/file/edit.html", icon = Fa.solid "pencil", href = "master/file/edit.html" }
@@ -95,7 +95,7 @@ suite =
           { path = "upload.html" } |> Menu.breadcrumb menu
           |> Expect.equal
             (Just
-              ( "data"
+              ( "DATA"
               , [ { title = "upload.html", icon = Fa.solid "data", href = "upload.html" }
                 ]
               )
