@@ -189,46 +189,35 @@ try {
     };
 
     var setupPorts = function(ports){
-      var onTokenChanged = function(credential){
-        // credential: { token: "access token", roles: ["role"] }
-        ports.send("onTokenChanged",credential);
-      };
-
-      var onLayoutStoreChanged = function(value) {
-        // value: obj
-        ports.send("onLayoutStoreChanged",value);
-      };
-
-      var onAppStoreChanged = function(value) {
-        // value: obj
-        ports.send("onAppStoreChanged",value);
-      };
+      /*** Auth ***/
 
       Auth.setUpdateCredentialInterval(function(credential){
-        onTokenChanged(credential);
+        ports.send("onCredentialChanged",credential);
       });
 
-      ports.subscribe("logout", function(_params){
+      ports.subscribe("clearCredential", function(_params){
         Auth.logout();
       });
 
-      // value: obj
+      /*** Store ***/
+
       ports.subscribe("storeLayout", function(value) {
         LayoutStore.store(value);
       });
 
       LayoutStore.addChangedListener(function(value){
-        onLayoutStoreChanged(value);
+        ports.send("onLayoutStoreChanged",value);
       });
 
-      // value: obj
       ports.subscribe("storeApp", function(value) {
         AppStore.store(value);
       });
 
       AppStore.addChangedListener(function(value){
-        onAppStoreChanged(value);
+        ports.send("onAppStoreChanged",value);
       });
+
+      /*** FixedMidashi ***/
 
       ports.subscribe("fixedMidashi", function(_params) {
         setTimeout(function(){

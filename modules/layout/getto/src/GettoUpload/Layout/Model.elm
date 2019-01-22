@@ -5,23 +5,23 @@ module GettoUpload.Layout.Model exposing
   , Static
   , Project
   , Page
-  , Credential
   )
-import GettoUpload.Layout.Command.Store  as Store
-import GettoUpload.Layout.Command.Search as Search
+import GettoUpload.Layout.Command.Credential as Credential
+import GettoUpload.Layout.Command.Store      as Store
+import GettoUpload.Layout.Command.Search     as Search
 import GettoUpload.Layout.Store as LayoutStore
 
 
 type alias Flags =
   { static     : Static
-  , credential : Credential
+  , credential : Credential.Flags
   , store      : Store.Flags
   }
 
 type alias Base store search a =
   { a
   | static     : Static
-  , credential : Credential
+  , credential : Credential.Model
   , store      : Store.Model LayoutStore.Model store
   , search     : Search.Model search
   }
@@ -43,9 +43,4 @@ type alias Project =
 
 type alias Page =
   { path : String
-  }
-
-type alias Credential =
-  { token : String
-  , roles : List String
   }
