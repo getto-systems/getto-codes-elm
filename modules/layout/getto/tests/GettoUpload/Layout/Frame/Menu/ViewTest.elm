@@ -1,5 +1,5 @@
-module GettoUpload.Layout.Frame.View.MenuTest exposing (..)
-import GettoUpload.Layout.Frame.View.Menu as Menu
+module GettoUpload.Layout.Frame.Menu.ViewTest exposing (..)
+import GettoUpload.Layout.Frame.Menu.View as Menu
 import GettoUpload.Layout.Menu as Model
 import GettoUpload.Layout.Fa as Fa
 
