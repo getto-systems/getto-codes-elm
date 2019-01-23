@@ -5,9 +5,10 @@ module GettoUpload.Layout.Frame.View exposing
   , articleHeader
   , articleFooter
   )
-import GettoUpload.Layout.Frame.View.Menu as MenuView
 import GettoUpload.Layout.Frame.Menu as Menu
-import GettoUpload.Layout.Frame.Store.Menu as MenuStore
+import GettoUpload.Layout.Frame.Menu.View  as MenuView
+import GettoUpload.Layout.Frame.Menu.Store as MenuStore
+import GettoUpload.Layout.Frame.Menu.Http  as MenuHttp
 import GettoUpload.Layout.Command.Static     as Static
 import GettoUpload.Layout.Command.Credential as Credential
 import GettoUpload.Layout.Version as Version
@@ -43,9 +44,9 @@ navAddress credential =
   , roles = credential |> Credential.roles
   }
 
-navBody : ( Static.Page, Credential.Model, MenuStore.Model ) -> { menu : List MenuView.Side }
+navBody : { page : Static.Page, credential : Credential.Model, store : MenuStore.Model, http : MenuHttp.Model } -> { menu : List MenuView.Side }
 navBody model =
-  { menu = model |> MenuView.side menuI18n Menu.menu
+  { menu = model |> MenuView.side menuI18n Menu.menu Menu.allow Menu.badges
   }
 
 navFooter : () -> { version : String }
