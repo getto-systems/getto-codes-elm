@@ -1,5 +1,6 @@
 module GettoUpload.Layout.Command.Search exposing
   ( Model
+  , Init
   , init
   , exec
   , changed

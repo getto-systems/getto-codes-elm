@@ -1,5 +1,7 @@
 module GettoUpload.Env.App exposing
-  ( root
+  ( hrefRoot
+  , apiRoot
   )
 
-root = "/dist/"
+hrefRoot = "/dist/"
+apiRoot  = "http://getto.workstation:30080/"
