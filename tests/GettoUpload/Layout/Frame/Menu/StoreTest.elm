@@ -1,5 +1,5 @@
-module GettoUpload.Layout.Storage.MenuTest exposing (..)
-import GettoUpload.Layout.Storage.Menu as Menu
+module GettoUpload.Layout.Frame.Menu.StoreTest exposing (..)
+import GettoUpload.Layout.Frame.Menu.Store as Menu
 
 import Set
 
