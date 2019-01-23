@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Frame.View.Menu exposing
+module GettoUpload.Layout.Frame.Menu.View exposing
   ( Side
   , Breadcrumb
   , MenuI18n
