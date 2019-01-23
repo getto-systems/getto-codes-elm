@@ -15,7 +15,7 @@ type alias Init       = Frame.Init  Store.Model Search.Model Http.Model
 type alias Msg msg = Frame.Msg Http.Model msg
 
 init =
-  ( Store.init
-  , Search.init
+  ( Search.init
+  , Store.init
   , Http.init
   )
