@@ -49,7 +49,7 @@ type alias Flags =
   , store      : Store.Flags
   }
 
-type alias Base store search http a =
+type alias Base search store http a =
   { a
   | static     : Static.Flags
   , credential : Credential.Model
@@ -58,8 +58,8 @@ type alias Base store search http a =
   , http       : Http.Model FrameHttp.Model http
   }
 
-type alias Init  store search http     = Base store search http {}
-type alias Model store search http app = Base store search http { app : app }
+type alias Init  search store http     = Base search store http {}
+type alias Model search store http app = Base search store http { app : app }
 
 type Msg http msg
   = Layout (LayoutMsg http)
@@ -79,36 +79,36 @@ onUrlRequest = UrlRequest >> Layout
 onUrlChange  = UrlChange  >> Layout
 
 
-type alias InitCommand store search http =
-  ( Store.Init store
-  , Search.Init search
+type alias InitCommand search store http =
+  ( Search.Init search
+  , Store.Init store
   , Http.Init http
   )
-type alias InitModel store search http model = Init store search http -> ( model, Init store search http )
+type alias InitModel search store http model = Init search store http -> ( model, Init search store http )
 
-init : InitCommand store search http -> InitModel store search http model -> Flags -> Url -> Navigation.Key -> ( Model store search http model, Cmd (Msg http msg) )
-init (initStore,initSearch,initHttp) initApp flags url key =
+init : InitCommand search store http -> InitModel search store http model -> Flags -> Url -> Navigation.Key -> ( Model search store http model, Cmd (Msg http msg) )
+init (initSearch,initStore,initHttp) initApp flags url key =
   let
     (app,model) =
       { static     = flags.static
       , credential = flags.credential |> Credential.init
-      , store      = flags.store |> Store.init (FrameStore.init,initStore)
       , search     = (url,key) |> Search.init initSearch
+      , store      = flags.store |> Store.init (FrameStore.init,initStore)
       , http       = () |> Http.init (FrameHttp.init,initHttp)
       }
       |> initApp
   in
     { static     = model.static
     , credential = model.credential
-    , store      = model.store
     , search     = model.search
+    , store      = model.store
     , http       = model.http
     , app        = app
     }
     |> done
 
 
-subscriptions : Model store search http model -> Sub (Msg http msg)
+subscriptions : Model search store http model -> Sub (Msg http msg)
 subscriptions model =
   Sub.batch
     [ (LayoutStoreChanged >> Layout,AppStoreChanged >> Layout) |> Store.subscriptions
@@ -116,9 +116,9 @@ subscriptions model =
     ]
 
 
-type alias Update store search http model msg = msg -> Model store search http model -> Model store search http model
+type alias Update search store http model msg = msg -> Model search store http model -> Model search store http model
 
-update : Update store search http model msg -> Msg http msg -> Model store search http model -> ( Model store search http model, Cmd (Msg http msg) )
+update : Update search store http model msg -> Msg http msg -> Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
 update updateApp msg model =
   case msg of
     App sub -> model |> updateApp sub |> done
@@ -146,12 +146,12 @@ update updateApp msg model =
 
     Layout (ToggleMenu name) -> ( model, Cmd.none )
 
-done : Model store search http model -> ( Model store search http model, Cmd (Msg http msg) )
+done : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
 done model =
   ( model, Cmd.none )
-  |> andThen storeExec
-  |> andThen searchExec
   |> andThen credentialExec
+  |> andThen searchExec
+  |> andThen storeExec
   |> andThen httpExec
 
 andThen : (model -> ( model, Cmd msg )) -> ( model, Cmd msg ) -> ( model, Cmd msg )
@@ -162,28 +162,28 @@ andThen f (model,cmd) =
     ( newModel, Cmd.batch [ cmd, newCmd ] )
 
 
-storeExec : Model store search http model -> ( Model store search http model, Cmd (Msg http msg) )
+storeExec : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
 storeExec model =
   let
     (store,cmd) = model.store |> Store.exec
   in
     ( { model | store = store }, cmd )
 
-searchExec : Model store search http model -> ( Model store search http model, Cmd (Msg http msg) )
+searchExec : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
 searchExec model =
   let
     (search,cmd) = model.search |> Search.exec
   in
     ( { model | search = search }, cmd )
 
-credentialExec : Model store search http model -> ( Model store search http model, Cmd (Msg http msg) )
+credentialExec : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
 credentialExec model =
   let
     (credential,cmd) = model.credential |> Credential.exec
   in
     ( { model | credential = credential }, cmd )
 
-httpExec : Model store search http model -> ( Model store search http model, Cmd (Msg http msg) )
+httpExec : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
 httpExec model =
   let
     (http,cmd) =
@@ -194,16 +194,16 @@ httpExec model =
     ( { model | http = http }, cmd |> Cmd.map Layout )
 
 
-logout : Model store search http model -> Model store search http model
+logout : Model search store http model -> Model search store http model
 logout model = { model | credential = model.credential |> Credential.logout }
 
-updateLayoutStore : (FrameStore.Model -> FrameStore.Model) -> Model store search http model -> Model store search http model
+updateLayoutStore : (FrameStore.Model -> FrameStore.Model) -> Model search store http model -> Model search store http model
 updateLayoutStore f model = { model | store = model.store |> Store.updateLayout f }
 
-updateAppStore : (store -> store) -> Model store search http model -> Model store search http model
+updateAppStore : (store -> store) -> Model search store http model -> Model search store http model
 updateAppStore f model = { model | store = model.store |> Store.updateApp f }
 
-updateQuery : (search -> search) -> Model store search http model -> Model store search http model
+updateQuery : (search -> search) -> Model search store http model -> Model search store http model
 updateQuery f model = { model | search = model.search |> Search.update f }
 
 
@@ -211,10 +211,10 @@ mapHtml : (sub -> msg) -> List (Html sub) -> List (Html (Msg http msg))
 mapHtml msg = List.map (H.map (msg >> App))
 
 
-title : Model store search http model -> String
+title : Model search store http model -> String
 title model = model.static.page.path |> I18n.title
 
-documentTitle : Model store search http model -> String
+documentTitle : Model search store http model -> String
 documentTitle model =
   (model |> title)
   ++ " | "
@@ -222,7 +222,7 @@ documentTitle model =
   ++ " "
   ++ model.static.project.title
 
-mobileHeader : Model store search http model -> Html (Msg http msg)
+mobileHeader : Model search store http model -> Html (Msg http msg)
 mobileHeader model =
   H.header []
     [ H.p []
@@ -236,7 +236,7 @@ mobileHeader model =
       ]
     ]
 
-navHeader : Model store search http model -> Html (Msg http msg)
+navHeader : Model search store http model -> Html (Msg http msg)
 navHeader model =
   H.header []
     [ H.p []
@@ -248,7 +248,7 @@ navHeader model =
       ]
     ]
 
-nav : Model store search http model -> Html (Msg http msg)
+nav : Model search store http model -> Html (Msg http msg)
 nav model =
   H.nav []
     [ model |> navHeader
@@ -257,7 +257,7 @@ nav model =
     , model |> navFooter
     ]
 
-navAddress : Model store search http model -> Html (Msg http msg)
+navAddress : Model search store http model -> Html (Msg http msg)
 navAddress model =
   H.address []
     [ H.a [ A.href HomeHref.index ]
@@ -293,7 +293,7 @@ navAddress model =
       ]
     ]
 
-navBody : Model store search http model -> Html (Msg http msg)
+navBody : Model search store http model -> Html (Msg http msg)
 navBody model =
   H.section []
     [ H.ul []
@@ -338,11 +338,11 @@ navBody model =
       ]
     ]
 
-navFooter : Model store search http model -> Html (Msg http msg)
+navFooter : Model search store http model -> Html (Msg http msg)
 navFooter model =
   H.footer [] [ H.p [] [ "version : " ++ Version.version |> H.text ] ]
 
-articleHeader : Model store search http model -> Html (Msg http msg)
+articleHeader : Model search store http model -> Html (Msg http msg)
 articleHeader model =
   H.header []
     [ H.h1 [] [ model |> title |> H.text ]
@@ -358,7 +358,7 @@ articleHeader model =
       ]
     ]
 
-articleFooter : Model store search http model -> Html (Msg http msg)
+articleFooter : Model search store http model -> Html (Msg http msg)
 articleFooter model =
   H.footer []
     [ H.p []
