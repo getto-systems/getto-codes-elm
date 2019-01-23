@@ -1,6 +1,7 @@
 port module GettoUpload.Layout.Command.Store exposing
   ( Flags
   , Model
+  , Init
   , init
   , subscriptions
   , exec

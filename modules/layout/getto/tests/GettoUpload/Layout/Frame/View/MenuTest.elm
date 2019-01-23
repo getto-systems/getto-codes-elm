@@ -45,6 +45,21 @@ i18n =
 suite : Test
 suite =
   describe "Menu"
+    {-
+    [ describe "side"
+      [ test "should return side menu" <|
+        \_ ->
+          { path = "home.html" } |> Menu.side i18n menu
+          |> Expect.equal
+            (Just
+              ( "main"
+              , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
+                ]
+              )
+            )
+      ]
+    -}
+
     [ describe "breadcrumb"
       [ test "should return breadcrumbs" <|
         \_ ->
