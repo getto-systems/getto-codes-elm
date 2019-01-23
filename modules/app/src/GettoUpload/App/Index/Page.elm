@@ -20,7 +20,7 @@ main = Browser.application
 type alias Model = Model.Model App
 type alias App = {}
 
-type alias Msg = Frame.Msg AppMsg
+type alias Msg = Model.Msg AppMsg
 type AppMsg
   = Dashboard Dashboard.Msg
 
