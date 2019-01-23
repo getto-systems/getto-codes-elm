@@ -70,6 +70,6 @@ pageTitle page = page.path |> I18n.title
 
 menuI18n : MenuView.MenuI18n
 menuI18n =
-  { menu = I18n.menu
+  { menu  = I18n.menu
   , title = I18n.title
   }
