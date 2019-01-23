@@ -5,7 +5,7 @@ module GettoUpload.Layout.Frame.Menu.View exposing
   , side
   , breadcrumb
   )
-import GettoUpload.Layout.Frame.Store.Menu as MenuStore
+import GettoUpload.Layout.Frame.Menu.Store as MenuStore
 import GettoUpload.Layout.Command.Static     as Static
 import GettoUpload.Layout.Command.Credential as Credential
 import GettoUpload.Layout.Menu as Menu
