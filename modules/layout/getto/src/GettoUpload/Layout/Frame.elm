@@ -32,7 +32,7 @@ import GettoUpload.Layout.Href.Home as HomeHref
 import GettoUpload.Layout.Version as Version
 import GettoUpload.I18n.App as I18n
 
-import Getto.Command.Transit as Transit
+import Getto.Command.Transition as Transition
 import Getto.Url.Query.Encode as QueryEncode
 
 import Browser
@@ -124,12 +124,12 @@ init (appSearch,appStore) constructApp initApp flags url key =
         , app    = Store.init Store.App    appStore
         }
       }
-    |> Transit.none
-    |> Transit.andThen (layoutStoreChanged flags.store.layout >> Transit.none)
-    |> Transit.andThen (appStoreChanged    flags.store.app    >> Transit.none)
-    |> Transit.andThen (searchChanged url)
-    --|> Transit.andThen (initLayout >> Transit.map Layout)
-    |> Transit.andThen (initApp >> Transit.map App)
+    |> Transition.none
+    |> Transition.andThen (layoutStoreChanged flags.store.layout >> Transition.none)
+    |> Transition.andThen (appStoreChanged    flags.store.app    >> Transition.none)
+    |> Transition.andThen (searchChanged url)
+    --|> Transition.andThen (initLayout >> Transition.map Layout)
+    |> Transition.andThen (initApp >> Transition.map App)
 
 constructLayout : Construct LayoutModel
 constructLayout model =
@@ -144,7 +144,7 @@ layoutStore =
   , \value model ->
     model
     {-
-    Transit.compose LayoutModel
+    Transition.compose LayoutModel
       (model.menu |> Menu.storeChanged (value |> SafeDecode.valueAt ["menu"]))
     -}
   )
@@ -169,10 +169,10 @@ update appUpdater msg model =
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
         Browser.External href -> ( model, href |> Navigation.load )
 
-    CredentialChanged value -> model |> credentialChanged value |> Transit.none
+    CredentialChanged value -> model |> credentialChanged value |> Transition.none
 
-    LayoutStoreChanged value -> model |> layoutStoreChanged value |> Transit.none
-    AppStoreChanged    value -> model |> appStoreChanged    value |> Transit.none
+    LayoutStoreChanged value -> model |> layoutStoreChanged value |> Transition.none
+    AppStoreChanged    value -> model |> appStoreChanged    value |> Transition.none
 
 {-
     HttpResponse data result ->
@@ -180,8 +180,8 @@ update appUpdater msg model =
 -}
 
 
-    App    sub -> model |> appUpdater   sub |> Transit.map App
-    Layout sub -> model |> updateLayout sub |> Transit.map Layout
+    App    sub -> model |> appUpdater   sub |> Transition.map App
+    Layout sub -> model |> updateLayout sub |> Transition.map Layout
 
 updateLayout : LayoutMsg -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
 updateLayout msg model =

@@ -4,7 +4,7 @@ import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Command.Search as Search
 import GettoUpload.Layout.Command.Store  as Store
 
-import Getto.Command.Transit as Transit
+import Getto.Command.Transition as Transition
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Json.SafeDecode as SafeDecode
@@ -41,8 +41,8 @@ construct model =
   }
 
 init : FrameModel -> ( FrameModel, Cmd Msg )
-init = Transit.none
-  >> Transit.andThen (Dashboard.init >> Transit.map Dashboard)
+init = Transition.none
+  >> Transition.andThen (Dashboard.init >> Transition.map Dashboard)
 
 search : Search.Init Model Msg
 search =
@@ -50,8 +50,8 @@ search =
     [ ( "dashboard", model.dashboard |> Dashboard.search )
     ] |> QueryEncode.object
   , \value model ->
-    Transit.compose Model
-      (model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transit.map Dashboard)
+    Transition.compose Model
+      (model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transition.map Dashboard)
   )
 
 store : Store.Init Model
@@ -74,7 +74,7 @@ subscriptions model =
 update : Msg -> FrameModel -> ( FrameModel, Cmd Msg )
 update message model =
   case message of
-    Dashboard msg -> model |> Dashboard.update msg |> Transit.map Dashboard
+    Dashboard msg -> model |> Dashboard.update msg |> Transition.map Dashboard
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =

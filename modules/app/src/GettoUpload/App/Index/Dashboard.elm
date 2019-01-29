@@ -15,7 +15,7 @@ module GettoUpload.App.Index.Dashboard exposing
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Href.Home as HomeHref
 
-import Getto.Command.Transit as Transit
+import Getto.Command.Transition as Transition
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 
@@ -36,7 +36,7 @@ construct : Frame.InitModel -> Model
 construct model = {}
 
 init : FrameModel a msg -> ( FrameModel a msg, Cmd Msg )
-init = Transit.none
+init = Transition.none
 
 search : Model -> QueryEncode.Value
 search model = QueryEncode.empty

@@ -1,4 +1,4 @@
-module Getto.Command.Transit exposing
+module Getto.Command.Transition exposing
   ( none
   , map
   , andThen
