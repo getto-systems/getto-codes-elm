@@ -88,12 +88,12 @@ onUrlChange  = UrlChange
 
 type alias SetupLayout layout app appMsg layoutMsg =
   { store : Store.Init layout
-  , init  : InitModel -> ( layout, Transition.Update (Model layout app appMsg) layoutMsg )
+  , init  : InitModel -> ( layout, Transition.Command (Model layout app appMsg) layoutMsg )
   }
 type alias SetupApp layout app appMsg =
   { search : Search.Init app (Model layout app appMsg) appMsg
   , store  : Store.Init app
-  , init   : InitModel -> ( app, Transition.Update (Model layout app appMsg) appMsg )
+  , init   : InitModel -> ( app, Transition.Command (Model layout app appMsg) appMsg )
   }
 
 init : SetupLayout layout app appMsg layoutMsg -> SetupApp layout app appMsg -> Flags -> Url -> Navigation.Key -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
@@ -118,12 +118,12 @@ init setupLayout setupApp flags url key =
         , app    = Store.init Store.App    setupApp.store
         }
       }
-    |> Transition.none
-    |> Transition.andThen (layoutStoreChanged flags.store.layout >> Transition.none)
-    |> Transition.andThen (appStoreChanged    flags.store.app    >> Transition.none)
+    |> Transition.empty
+    |> Transition.andThen (layoutStoreChanged flags.store.layout >> Transition.empty)
+    |> Transition.andThen (appStoreChanged    flags.store.app    >> Transition.empty)
     |> Transition.andThen (searchChanged url)
-    |> Transition.andThen (layoutCmd >> Transition.map Layout)
-    |> Transition.andThen (appCmd    >> Transition.map App)
+    |> Transition.andThen (Transition.exec layoutCmd >> Transition.map Layout)
+    |> Transition.andThen (Transition.exec appCmd    >> Transition.map App)
 
 
 subscriptions : (layout -> Sub layoutMsg) -> (app -> Sub appMsg) -> Model layout app appMsg -> Sub (Msg layoutMsg appMsg)
@@ -137,8 +137,8 @@ subscriptions layoutSubscriptions appSubscriptions (Model model) = Sub.batch
   ]
 
 
-type alias LayoutUpdater layout app appMsg layoutMsg = (layoutMsg -> layout -> ( layout, Transition.Update (Model layout app appMsg) layoutMsg ))
-type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition.Update (Model layout app appMsg) appMsg ))
+type alias LayoutUpdater layout app appMsg layoutMsg = (layoutMsg -> layout -> ( layout, Transition.Command (Model layout app appMsg) layoutMsg ))
+type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition.Command (Model layout app appMsg) appMsg ))
 
 update : LayoutUpdater layout app appMsg layoutMsg -> AppUpdater layout app appMsg -> Msg layoutMsg appMsg  -> Model layout app appMsg -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
 update layoutUpdater appUpdater message model =
@@ -149,10 +149,10 @@ update layoutUpdater appUpdater message model =
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
         Browser.External href -> ( model, href |> Navigation.load )
 
-    CredentialChanged value -> model |> credentialChanged value |> Transition.none
+    CredentialChanged value -> model |> credentialChanged value |> Transition.empty
 
-    LayoutStoreChanged value -> model |> layoutStoreChanged value |> Transition.none
-    AppStoreChanged    value -> model |> appStoreChanged    value |> Transition.none
+    LayoutStoreChanged value -> model |> layoutStoreChanged value |> Transition.empty
+    AppStoreChanged    value -> model |> appStoreChanged    value |> Transition.empty
 
 {-
     HttpResponse data result ->
@@ -166,7 +166,7 @@ update layoutUpdater appUpdater message model =
           let
             (newApp,f) = m.app |> appUpdater msg
           in
-            Model { m | app = newApp } |> f |> Transition.map App
+            Model { m | app = newApp } |> Transition.exec f |> Transition.map App
 
     Layout msg ->
       case model of
@@ -174,7 +174,7 @@ update layoutUpdater appUpdater message model =
           let
             (newLayout,f) = m.layout |> layoutUpdater msg
           in
-            Model { m | layout = newLayout } |> f |> Transition.map Layout
+            Model { m | layout = newLayout } |> Transition.exec f |> Transition.map Layout
 
 
 credentialChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
@@ -186,7 +186,7 @@ searchChanged url (Model model) =
   let
     (newApp,f) = model.app |> Search.changed model.search url
   in
-    Model { model | app = newApp } |> f |> Transition.map App
+    Model { model | app = newApp } |> Transition.exec f |> Transition.map App
 
 layoutStoreChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
 layoutStoreChanged value (Model model) =

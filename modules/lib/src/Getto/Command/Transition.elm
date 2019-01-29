@@ -1,10 +1,12 @@
 module Getto.Command.Transition exposing
-  ( Update
+  ( Command
+  , empty
   , none
+  , exec
   , batch
   , update
   , map
-  , mapUpdate
+  , mapCommand
   , andThen
   , compose
   , compose2
@@ -16,15 +18,25 @@ module Getto.Command.Transition exposing
   , compose8
   )
 
+type alias Command model msg = model -> Cmd msg
 type alias Update model msg = model -> ( model, Cmd msg )
 
-none : Update model msg
-none model = ( model, Cmd.none )
+empty : Update model msg
+empty = exec none
 
-batch : List (Update model msg) -> Update model msg
-batch list model = list |> List.foldl andThen ( model, Cmd.none )
+none : Command model msg
+none = always Cmd.none
 
-update : (big -> small) -> (small -> big -> big) -> (small -> ( small, Update model msg )) -> (big -> ( big, Update model msg ))
+exec : Command model msg -> model -> ( model, Cmd msg )
+exec f model = ( model, model |> f )
+
+batch : List (Command model msg) -> Command model msg
+batch list model =
+  list
+  |> List.map (\f -> model |> f)
+  |> Cmd.batch
+
+update : (big -> small) -> (small -> big -> big) -> (small -> ( small, Command model msg )) -> (big -> ( big, Command model msg ))
 update get set updateSmall model =
   model |> get |> updateSmall
   |> Tuple.mapFirst (\small -> model |> set small)
@@ -32,8 +44,8 @@ update get set updateSmall model =
 map : (msg -> super) -> ( model, Cmd msg ) -> ( model, Cmd super )
 map = Cmd.map >> Tuple.mapSecond
 
-mapUpdate : (msg -> super) -> ( model, Update m msg ) -> ( model, Update m super )
-mapUpdate super = Tuple.mapSecond (\f -> f >> map super)
+mapCommand : (msg -> super) -> ( model, Command m msg ) -> ( model, Command m super )
+mapCommand super = Tuple.mapSecond (\f -> f >> Cmd.map super)
 
 andThen : Update model msg -> ( model, Cmd msg ) -> ( model, Cmd msg )
 andThen f (model,cmd) =

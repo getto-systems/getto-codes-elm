@@ -28,7 +28,7 @@ main = Browser.application
   }
 
 type alias FrameModel = Frame.Model Layout.Model Model Msg
-type alias Update = Transition.Update FrameModel Msg
+type alias Command    = Transition.Command FrameModel Msg
 type alias Model =
   { dashboard : Dashboard.Model
   }
@@ -44,10 +44,10 @@ setup =
   , init   = init
   }
 
-init : Frame.InitModel -> ( Model, Update )
+init : Frame.InitModel -> ( Model, Command )
 init model =
   Transition.compose Transition.batch Model
-    (model |> Dashboard.init |> Transition.mapUpdate Dashboard)
+    (model |> Dashboard.init |> Transition.mapCommand Dashboard)
 
 search : Search.Init Model FrameModel Msg
 search =
@@ -56,7 +56,7 @@ search =
     ] |> QueryEncode.object
   , \value model ->
     Transition.compose Transition.batch Model
-      (model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transition.mapUpdate Dashboard)
+      (model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transition.mapCommand Dashboard)
   )
 
 store : Store.Init Model
@@ -74,13 +74,13 @@ subscriptions model =
   [ model.dashboard |> Dashboard.subscriptions |> Sub.map Dashboard
   ] |> Sub.batch
 
-update : Msg -> Model -> ( Model, Update )
+update : Msg -> Model -> ( Model, Command )
 update message =
   case message of
     Dashboard msg ->
       Transition.update
         .dashboard (\dashboard m -> { m | dashboard = dashboard })
-        (Dashboard.update msg >> Transition.mapUpdate Dashboard)
+        (Dashboard.update msg >> Transition.mapCommand Dashboard)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =

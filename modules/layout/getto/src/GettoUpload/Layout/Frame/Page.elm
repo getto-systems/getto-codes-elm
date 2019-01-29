@@ -27,7 +27,7 @@ import Html.Events as E
 import Html.Lazy as L
 
 type alias FrameModel app appMsg = Frame.Model Model app appMsg
-type alias Update     app appMsg = Transition.Update (FrameModel app appMsg) Msg
+type alias Command    app appMsg = Transition.Command (FrameModel app appMsg) Msg
 type Model = Model Inner
 type alias Inner =
   { --menu : Menu.Model
@@ -42,7 +42,7 @@ setup =
   , init  = init
   }
 
-init : Frame.InitModel -> ( Model, Update app appMsg )
+init : Frame.InitModel -> ( Model, Command app appMsg )
 init model =
   ( Model
     { --menu = Menu.init
@@ -68,7 +68,7 @@ subscriptions model =
   [ --model.menu |> Menu.subscriptions |> Sub.map Menu
   ] |> Sub.batch
 
-update : Msg -> Model -> ( Model, Update app appMsg )
+update : Msg -> Model -> ( Model, Command app appMsg )
 update msg model =
   case msg of
     ToggleMenu name -> ( model, Transition.none )
