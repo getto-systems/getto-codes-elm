@@ -1,48 +1,92 @@
 module GettoUpload.App.Index.Page exposing ( main )
-import GettoUpload.App.Index.Model as Model
 import GettoUpload.App.Index.Dashboard as Dashboard
 import GettoUpload.Layout.Frame as Frame
+import GettoUpload.Layout.Command.Search as Search
+import GettoUpload.Layout.Command.Store  as Store
 
+import Getto.Command.Transit as Transit
+import Getto.Url.Query.Encode as QueryEncode
+import Getto.Url.Query.Decode as QueryDecode
+import Getto.Json.SafeDecode as SafeDecode
+
+import Json.Encode as Encode
+import Json.Decode as Decode
+import Url exposing ( Url )
 import Browser
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
 
 main = Browser.application
-  { init          = Frame.init Model.init init
-  , subscriptions = Frame.subscriptions
+  { init          = Frame.init (search,store) construct init
+  , subscriptions = Frame.subscriptions subscriptions
   , onUrlRequest  = Frame.onUrlRequest
-  , onUrlChange   = Frame.onUrlChange
+  , onUrlChange   = UrlChange >> Frame.App
   , update        = Frame.update update
   , view          = document
   }
 
-type alias Model = Model.Model App
-type alias App = {}
+type alias FrameModel = Frame.Model Model Msg
+type alias Model =
+  { dashboard : Dashboard.Model
+  }
 
-type alias Msg = Model.Msg AppMsg
-type AppMsg
-  = Dashboard Dashboard.Msg
+type alias FrameMsg = Frame.Msg Msg
+type Msg
+  = UrlChange Url
+  | Dashboard Dashboard.Msg
 
-init : Model.Init -> ( App, Model.Init )
-init model =
-  ( {}
-  , model
+construct : Frame.InitModel -> Model
+construct model =
+  { dashboard = model |> Dashboard.construct
+  }
+
+init : Url -> FrameModel -> ( FrameModel, Cmd Msg )
+init url = Transit.none
+  >> Transit.andThen (Frame.searchChanged url)
+  >> Transit.andThen (Dashboard.init >> Transit.map Dashboard)
+
+search : Search.Init Model Msg
+search =
+  ( \model ->
+    [ ( "dashboard", model.dashboard |> Dashboard.search )
+    ] |> QueryEncode.object
+  , \value model ->
+    Transit.compose Model
+      (model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transit.map Dashboard)
   )
 
-update : AppMsg -> Model -> Model
-update msg model =
-  case msg of
-    Dashboard sub -> model |> Dashboard.update sub
-      |> (\m -> model)
+store : Store.Init Model
+store =
+  ( \model ->
+    [ ( "dashboard", model.dashboard |> Dashboard.store )
+    ] |> Encode.object
+  , \value model ->
+    { model
+    | dashboard = model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"])
+    }
+  )
 
-document : Model -> Browser.Document Msg
+subscriptions : FrameModel -> Sub Msg
+subscriptions model =
+  [ Sub.none
+  , model |> Dashboard.subscriptions |> Sub.map Dashboard
+  ] |> Sub.batch
+
+update : Msg -> FrameModel -> ( FrameModel, Cmd Msg )
+update message model =
+  case message of
+    UrlChange url -> model |> Frame.searchChanged url
+
+    Dashboard msg -> model |> Dashboard.update msg |> Transit.map Dashboard
+
+document : FrameModel -> Browser.Document FrameMsg
 document model =
   { title = model |> Frame.documentTitle
   , body = [ model |> L.lazy content ]
   }
 
-content : Model -> Html Msg
+content : FrameModel -> Html FrameMsg
 content model =
   H.section [ A.class "MainLayout" ] <|
     [ model |> Frame.mobileHeader

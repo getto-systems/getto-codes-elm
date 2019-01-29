@@ -1,35 +1,55 @@
 module GettoUpload.Layout.Command.Http exposing
-  ( State(..)
+  ( Model
   , Init
-  , Model
-  , Entry
-  , Response
+  , Request
   , init
-  , entry
-  , get
-  , post
-  , put
-  , delete
-  , upload
-  , requestLayout
-  , requestApp
-  , execLayout
-  , execApp
-  , layoutResponse
-  , appResponse
-  , layoutState
-  , appState
+  , exec
+  , prop
   )
-import GettoUpload.Env.App as Env
+import GettoUpload.Layout.Command.Http.Entry as Entry
+import GettoUpload.Layout.Http as Http
 
-import Getto.Prop as Prop exposing ( Prop )
-import Getto.Url.Query.Encode as QueryEncode
+import Getto.Prop as Prop
+import Getto.Http
 
-import Json.Encode as Encode
 import Json.Decode as Decode
-import File exposing ( File )
-import Http
 
+type Model data struct = Model (Inner data struct)
+type alias Inner data struct =
+  { struct : struct
+  , exec   : Exec data struct
+  }
+
+type alias Exec data struct = data -> struct -> ( struct, Request struct )
+type alias Request struct = List ( Prop struct, Getto.Http.Request )
+
+type alias Prop struct = Prop.Prop struct State
+type alias State = Entry.State Decode.Value
+
+type alias Init data struct = ( struct, Exec data struct )
+
+init : Init data struct -> Model data struct
+init (struct,f) = Model
+  { struct = struct
+  , exec   = f
+  }
+
+exec : data -> (Prop struct -> Getto.Http.Response -> msg) -> Model data struct -> ( Model data struct, Cmd msg )
+exec data msg (Model model) =
+  let
+    (newStruct,request) = model.struct |> model.exec data
+  in
+    ( Model { model | struct = newStruct }
+    , request |> List.map (\(p,req) -> req |> Http.request (msg p)) |> Cmd.batch
+    )
+
+prop : Prop.Getter struct (Entry.Model data request response) -> Prop.Updater struct (Entry.Model data request response) -> Prop struct
+prop getter updater =
+  Prop.create (getter >> Entry.raw) (Entry.updateState >> updater)
+
+andThen : Prop struct -> 
+
+{-
 timeout =
   { get    = 10 * 1000
   , post   = 60 * 1000
@@ -312,3 +332,4 @@ state decoder (Entry m) =
       case res |> Decode.decodeValue decoder of
         Ok  value -> Done value
         Err error -> error |> Decode.errorToString |> Http.BadBody |> Error
+-}

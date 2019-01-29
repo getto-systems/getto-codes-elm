@@ -1,5 +1,6 @@
 module Getto.Url.Query.Decode exposing
-  ( Decoder
+  ( Value
+  , Decoder
   , string
   , int
   , entryAt
@@ -11,7 +12,9 @@ import Getto.Url.Query.Encode as Encode
 
 import Url
 
-type alias Decoder a = List String -> a
+type alias Value = List String
+
+type alias Decoder a = Value -> a
 type alias ValueDecoder a = Maybe String -> a
 
 string : String -> ValueDecoder String
@@ -47,5 +50,5 @@ filter names suffix =
           else Nothing
       )
 
-split : String -> List String
+split : String -> Value
 split = String.split "&"

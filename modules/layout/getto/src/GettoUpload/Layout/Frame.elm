@@ -1,16 +1,19 @@
 module GettoUpload.Layout.Frame exposing
-  ( Init
+  ( InitModel
   , Model
-  , Msg
+  , Msg(..)
   , init
   , onUrlRequest
-  , onUrlChange
   , subscriptions
   , update
+  , layout
+  , app
+  , updateApp
   , logout
-  , updateLayoutStore
-  , updateAppStore
-  , updateQuery
+  , storeLayout
+  , storeApp
+  , search
+  , searchChanged
   , mapHtml
   , documentTitle
   , mobileHeader
@@ -19,18 +22,17 @@ module GettoUpload.Layout.Frame exposing
   , articleHeader
   , articleFooter
   )
-import GettoUpload.Layout.Command.Static     as Static
-import GettoUpload.Layout.Command.Credential as Credential
-import GettoUpload.Layout.Command.Store      as Store
-import GettoUpload.Layout.Command.Search     as Search
-import GettoUpload.Layout.Command.Http       as Http
-import GettoUpload.Layout.Frame.Store as FrameStore
-import GettoUpload.Layout.Frame.Http  as FrameHttp
+import GettoUpload.Layout.Command.Auth   as Auth
+import GettoUpload.Layout.Command.Store  as Store
+import GettoUpload.Layout.Command.Search as Search
+--import GettoUpload.Layout.Command.Http   as Http
+import GettoUpload.Layout.Frame.Static     as Static
+import GettoUpload.Layout.Frame.Credential as Credential
 import GettoUpload.Layout.Href.Home as HomeHref
 import GettoUpload.Layout.Version as Version
 import GettoUpload.I18n.App as I18n
 
-import Getto.Prop as Prop exposing ( Prop )
+import Getto.Command.Transit as Transit
 import Getto.Url.Query.Encode as QueryEncode
 
 import Browser
@@ -45,210 +47,238 @@ import Html.Lazy as L
 
 type alias Flags =
   { static     : Static.Flags
-  , credential : Credential.Flags
-  , store      : Store.Flags
+  , credential : Decode.Value
+  , store :
+    { layout : Decode.Value
+    , app    : Decode.Value
+    }
   }
 
-type alias Base search store http a =
+type Model model msg = Model (Inner model msg)
+type alias Inner model msg = Base
+  { layout : LayoutModel
+  , app : model
+  , search : Search.Model model msg
+  , store  :
+    { layout : Store.Model LayoutModel
+    , app    : Store.Model model
+    }
+  }
+
+type alias Base a =
   { a
-  | static     : Static.Flags
-  , credential : Credential.Model
-  , search     : Search.Model search
-  , store      : Store.Model FrameStore.Model store
-  , http       : Http.Model FrameHttp.Model http
+  | static : Static.Model
+  , auth   : Auth.Model Credential.Model
   }
 
-type alias Init  search store http     = Base search store http {}
-type alias Model search store http app = Base search store http { app : app }
+type alias InitModel = Base {}
 
-type Msg http msg
-  = Layout (LayoutMsg http)
+type alias LayoutModel =
+  { --menu : Menu.Model
+  }
+
+type Msg msg
+  = Layout LayoutMsg
   | App msg
 
-type LayoutMsg http
+type LayoutMsg
   = UrlRequest Browser.UrlRequest
-  | UrlChange Url
-  | CredentialChanged Credential.Flags
+  | CredentialChanged Decode.Value
   | LayoutStoreChanged Decode.Value
   | AppStoreChanged Decode.Value
-  | LayoutHttpResponse (Prop FrameHttp.Model Http.Entry) Http.Response
-  | AppHttpResponse (Prop http Http.Entry) Http.Response
+  --| HttpProgress Data Http.Progress
+  --| HttpResponse Data Http.Response
   | ToggleMenu String
 
 onUrlRequest = UrlRequest >> Layout
-onUrlChange  = UrlChange  >> Layout
 
 
-type alias InitCommand search store http =
-  ( Search.Init search
-  , Store.Init store
-  , Http.Init http
+type alias InitCommand model msg =
+  ( Search.Init model msg
+  , Store.Init  model
   )
-type alias InitModel search store http model = Init search store http -> ( model, Init search store http )
+type alias Construct model = InitModel -> model
+type alias Init model msg = Url -> Model model msg -> ( Model model msg, Cmd msg )
 
-init : InitCommand search store http -> InitModel search store http model -> Flags -> Url -> Navigation.Key -> ( Model search store http model, Cmd (Msg http msg) )
-init (initSearch,initStore,initHttp) initApp flags url key =
+init : InitCommand model msg -> Construct model -> Init model msg -> Flags -> Url -> Navigation.Key -> ( Model model msg, Cmd (Msg msg) )
+init (appSearch,appStore) constructApp initApp flags url key =
   let
-    (app,model) =
-      { static     = flags.static
-      , credential = flags.credential |> Credential.init
-      , search     = (url,key) |> Search.init initSearch
-      , store      = flags.store |> Store.init (FrameStore.init,initStore)
-      , http       = () |> Http.init (FrameHttp.init,initHttp)
+    model =
+      { static = flags.static     |> Static.init Version.data
+      , auth   = flags.credential |> Auth.init Credential.init
       }
-      |> initApp
+
+    newLayout = model |> constructLayout
+    newApp    = model |> constructApp
   in
-    { static     = model.static
-    , credential = model.credential
-    , search     = model.search
-    , store      = model.store
-    , http       = model.http
-    , app        = app
-    }
-    |> done
+    Model
+      { static = model.static
+      , auth   = model.auth
+      , layout = newLayout
+      , app    = newApp
+      , search = Search.init key appSearch
+      , store  =
+        { layout = Store.init Store.Layout layoutStore
+        , app    = Store.init Store.App    appStore
+        }
+      }
+    |> Transit.none
+    |> Transit.andThen (layoutStoreChanged flags.store.layout >> Transit.map Layout)
+    |> Transit.andThen (appStoreChanged    flags.store.app    >> Transit.map Layout)
+    |> Transit.andThen (initApp url >> Transit.map App)
+
+constructLayout : Construct LayoutModel
+constructLayout model =
+  { --menu = Menu.init
+  }
+
+layoutStore : Store.Init LayoutModel
+layoutStore =
+  ( \model ->
+    [ --( "menu", model.menu |> Menu.store )
+    ] |> Encode.object
+  , \value model ->
+    model
+    {-
+    Transit.compose LayoutModel
+      (model.menu |> Menu.storeChanged (value |> SafeDecode.valueAt ["menu"]))
+    -}
+  )
 
 
-subscriptions : Model search store http model -> Sub (Msg http msg)
-subscriptions model =
-  Sub.batch
-    [ (LayoutStoreChanged >> Layout,AppStoreChanged >> Layout) |> Store.subscriptions
-    , (CredentialChanged >> Layout) |> Credential.subscriptions
-    ]
+subscriptions : (Model model msg -> Sub msg) -> Model model msg -> Sub (Msg msg)
+subscriptions sub (Model model) = Sub.batch
+  [ [ (CredentialChanged)  |> Auth.subscriptions  model.auth
+    , (LayoutStoreChanged) |> Store.subscriptions model.store.layout
+    , (AppStoreChanged)    |> Store.subscriptions model.store.app
+    ] |> Sub.batch |> Sub.map Layout
+  , Model model |> sub |> Sub.map App
+  ]
 
 
-type alias Update search store http model msg = msg -> Model search store http model -> Model search store http model
-
-update : Update search store http model msg -> Msg http msg -> Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
-update updateApp msg model =
+update : (msg -> Model model msg -> ( Model model msg, Cmd msg )) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+update appUpdater msg model =
   case msg of
-    App sub -> model |> updateApp sub |> done
+    App    sub -> model |> appUpdater   sub |> Transit.map App
+    Layout sub -> model |> updateLayout sub |> Transit.map Layout
 
-    Layout (UrlRequest urlRequest) ->
+updateLayout : LayoutMsg -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
+updateLayout msg model =
+  case msg of
+    UrlRequest urlRequest ->
       case urlRequest of
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
         Browser.External href -> ( model, href |> Navigation.load )
 
-    Layout (UrlChange url) ->
-      ( { model | search = model.search |> Search.changed url }, Cmd.none )
+    CredentialChanged value -> model |> credentialChanged value
 
-    Layout (CredentialChanged flags) ->
-      ( { model | credential = model.credential |> Credential.changed flags }, Cmd.none )
+    LayoutStoreChanged value -> model |> layoutStoreChanged value
+    AppStoreChanged    value -> model |> appStoreChanged    value
 
-    Layout (LayoutStoreChanged value) ->
-      ( { model | store = model.store |> Store.layoutChanged value }, Cmd.none )
-    Layout (AppStoreChanged value) ->
-      ( { model | store = model.store |> Store.appChanged value }, Cmd.none )
-
-    Layout (LayoutHttpResponse prop result) ->
+{-
+    HttpResponse data result ->
       ( { model | http = model.http |> Http.layoutResponse prop result }, Cmd.none )
-    Layout (AppHttpResponse prop result) ->
-      ( { model | http = model.http |> Http.appResponse prop result }, Cmd.none )
+-}
 
-    Layout (ToggleMenu name) -> ( model, Cmd.none )
+    ToggleMenu name -> ( model, Cmd.none )
 
-done : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
-done model =
-  ( model, Cmd.none )
-  |> andThen credentialExec
-  |> andThen searchExec
-  |> andThen storeExec
-  |> andThen httpExec
+credentialChanged : Decode.Value -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
+credentialChanged value (Model model) =
+  ( Model { model | auth = model.auth |> Auth.changed value }
+  , Cmd.none
+  )
 
-andThen : (model -> ( model, Cmd msg )) -> ( model, Cmd msg ) -> ( model, Cmd msg )
-andThen f (model,cmd) =
+layoutStoreChanged : Decode.Value -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
+layoutStoreChanged value (Model model) =
+  ( Model { model | layout = model.layout |> Store.changed model.store.layout value }
+  , Cmd.none
+  )
+
+appStoreChanged : Decode.Value -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
+appStoreChanged value (Model model) =
+  ( Model { model | app = model.app |> Store.changed model.store.app value }
+  , Cmd.none
+  )
+
+
+layout : Model model msg -> LayoutModel
+layout (Model model) = model.layout
+
+app : Model model msg -> model
+app (Model model) = model.app
+
+updateApp : (model -> ( model, Cmd msg )) -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+updateApp f (Model model) =
   let
-    (newModel,newCmd) = model |> f
+    (newApp,cmd) = model.app |> f
   in
-    ( newModel, Cmd.batch [ cmd, newCmd ] )
+    ( Model { model | app = newApp }, cmd |> Cmd.map App )
 
 
-storeExec : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
-storeExec model =
+logout : Model model msg -> ( Model model msg, Cmd (Msg msg) )
+logout (Model model) = ( Model model, model.auth |> Auth.logout |> Cmd.map Layout )
+
+storeLayout : Model model msg -> ( Model model msg, Cmd (Msg msg) )
+storeLayout (Model model) = ( Model model, model.layout |> Store.store model.store.layout |> Cmd.map Layout )
+
+storeApp : Model model msg -> ( Model model msg, Cmd (Msg msg) )
+storeApp (Model model) = ( Model model, model.app |> Store.store model.store.app |> Cmd.map Layout )
+
+search : Model model msg -> ( Model model msg, Cmd (Msg msg) )
+search (Model model) = ( Model model, model.app |> Search.search model.search |> Cmd.map App )
+
+searchChanged : Url -> Model model msg -> ( Model model msg, Cmd msg )
+searchChanged url (Model model) =
   let
-    (store,cmd) = model.store |> Store.exec
+    (newApp,cmd) = model.app |> Search.changed model.search url
   in
-    ( { model | store = store }, cmd )
-
-searchExec : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
-searchExec model =
-  let
-    (search,cmd) = model.search |> Search.exec
-  in
-    ( { model | search = search }, cmd )
-
-credentialExec : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
-credentialExec model =
-  let
-    (credential,cmd) = model.credential |> Credential.exec
-  in
-    ( { model | credential = credential }, cmd )
-
-httpExec : Model search store http model -> ( Model search store http model, Cmd (Msg http msg) )
-httpExec model =
-  let
-    (http,cmd) =
-      ( model.http, Cmd.none )
-      |> andThen (Http.execLayout LayoutHttpResponse)
-      |> andThen (Http.execApp    AppHttpResponse)
-  in
-    ( { model | http = http }, cmd |> Cmd.map Layout )
+    ( Model { model | app = newApp }
+    , cmd
+    )
 
 
-logout : Model search store http model -> Model search store http model
-logout model = { model | credential = model.credential |> Credential.logout }
-
-updateLayoutStore : (FrameStore.Model -> FrameStore.Model) -> Model search store http model -> Model search store http model
-updateLayoutStore f model = { model | store = model.store |> Store.updateLayout f }
-
-updateAppStore : (store -> store) -> Model search store http model -> Model search store http model
-updateAppStore f model = { model | store = model.store |> Store.updateApp f }
-
-updateQuery : (search -> search) -> Model search store http model -> Model search store http model
-updateQuery f model = { model | search = model.search |> Search.update f }
-
-
-mapHtml : (sub -> msg) -> List (Html sub) -> List (Html (Msg http msg))
+mapHtml : (sub -> msg) -> List (Html sub) -> List (Html (Msg msg))
 mapHtml msg = List.map (H.map (msg >> App))
 
 
-title : Model search store http model -> String
-title model = model.static.page.path |> I18n.title
+title : Inner model msg -> String
+title model = model.static |> Static.page |> .path |> I18n.title
 
-documentTitle : Model search store http model -> String
-documentTitle model =
+documentTitle : Model model msg -> String
+documentTitle (Model model) =
   (model |> title)
   ++ " | "
-  ++ model.static.project.company
+  ++ (model.static |> Static.project |> .company)
   ++ " "
-  ++ model.static.project.title
+  ++ (model.static |> Static.project |> .title)
 
-mobileHeader : Model search store http model -> Html (Msg http msg)
-mobileHeader model =
+mobileHeader : Model model msg -> Html (Msg msg)
+mobileHeader (Model model) =
   H.header []
     [ H.p []
-      [ H.small [] [ model.static.project.company |> H.text ]
+      [ H.small [] [ model.static |> Static.project |> .company |> H.text ]
       , H.wbr [] []
       , " " |> H.text
-      , model.static.project.title |> H.text
+      , model.static |> Static.project |> .title |> H.text
       , H.wbr [] []
       , " " |> H.text
-      , H.small [] [ H.small [] [ model.static.project.sub |> H.text ] ]
+      , H.small [] [ H.small [] [ model.static |> Static.project |> .sub |> H.text ] ]
       ]
     ]
 
-navHeader : Model search store http model -> Html (Msg http msg)
-navHeader model =
+navHeader : Model model msg -> Html (Msg msg)
+navHeader (Model model) =
   H.header []
     [ H.p []
-      [ H.small [] [ model.static.project.company |> H.text ]
+      [ H.small [] [ model.static |> Static.project |> .company |> H.text ]
       , H.br [] []
-      , model.static.project.title |> H.text
+      , model.static |> Static.project |> .title |> H.text
       , H.br [] []
-      , H.small [] [ H.small [] [ model.static.project.sub |> H.text ] ]
+      , H.small [] [ H.small [] [ model.static |> Static.project |> .sub |> H.text ] ]
       ]
     ]
 
-nav : Model search store http model -> Html (Msg http msg)
+nav : Model model msg -> Html (Msg msg)
 nav model =
   H.nav []
     [ model |> navHeader
@@ -257,8 +287,8 @@ nav model =
     , model |> navFooter
     ]
 
-navAddress : Model search store http model -> Html (Msg http msg)
-navAddress model =
+navAddress : Model model msg -> Html (Msg msg)
+navAddress (Model model) =
   H.address []
     [ H.a [ A.href HomeHref.index ]
       [ H.ul []
@@ -293,8 +323,8 @@ navAddress model =
       ]
     ]
 
-navBody : Model search store http model -> Html (Msg http msg)
-navBody model =
+navBody : Model model msg -> Html (Msg msg)
+navBody (Model model) =
   H.section []
     [ H.ul []
       [ H.li []
@@ -338,12 +368,15 @@ navBody model =
       ]
     ]
 
-navFooter : Model search store http model -> Html (Msg http msg)
-navFooter model =
-  H.footer [] [ H.p [] [ "version : " ++ Version.version |> H.text ] ]
+navFooter : Model model msg -> Html (Msg msg)
+navFooter (Model model) =
+  let
+    data = Version.data
+  in
+    H.footer [] [ H.p [] [ "version : " ++ data.version |> H.text ] ]
 
-articleHeader : Model search store http model -> Html (Msg http msg)
-articleHeader model =
+articleHeader : Model model msg -> Html (Msg msg)
+articleHeader (Model model) =
   H.header []
     [ H.h1 [] [ model |> title |> H.text ]
     , H.ul []
@@ -358,12 +391,15 @@ articleHeader model =
       ]
     ]
 
-articleFooter : Model search store http model -> Html (Msg http msg)
-articleFooter model =
-  H.footer []
-    [ H.p []
-      [ H.i [ A.class "far fa-copyright" ] []
-      , " " |> H.text
-      , Version.copyright |> H.text
+articleFooter : Model model msg -> Html (Msg msg)
+articleFooter (Model model) =
+  let
+    data = Version.data
+  in
+    H.footer []
+      [ H.p []
+        [ H.i [ A.class "far fa-copyright" ] []
+        , " " |> H.text
+        , data.copyright |> H.text
+        ]
       ]
-    ]

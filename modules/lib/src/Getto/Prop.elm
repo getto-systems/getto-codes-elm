@@ -1,5 +1,7 @@
 module Getto.Prop exposing
   ( Prop
+  , Getter
+  , Updater
   , create
   , get
   , set
