@@ -21,7 +21,7 @@ main = Browser.application
   { init          = Frame.init (search,store) construct init
   , subscriptions = Frame.subscriptions subscriptions
   , onUrlRequest  = Frame.onUrlRequest
-  , onUrlChange   = UrlChange >> Frame.App
+  , onUrlChange   = Frame.onUrlChange
   , update        = Frame.update update
   , view          = document
   }
@@ -33,17 +33,15 @@ type alias Model =
 
 type alias FrameMsg = Frame.Msg Msg
 type Msg
-  = UrlChange Url
-  | Dashboard Dashboard.Msg
+  = Dashboard Dashboard.Msg
 
 construct : Frame.InitModel -> Model
 construct model =
   { dashboard = model |> Dashboard.construct
   }
 
-init : Url -> FrameModel -> ( FrameModel, Cmd Msg )
-init url = Transit.none
-  >> Transit.andThen (Frame.searchChanged url)
+init : FrameModel -> ( FrameModel, Cmd Msg )
+init = Transit.none
   >> Transit.andThen (Dashboard.init >> Transit.map Dashboard)
 
 search : Search.Init Model Msg
@@ -76,8 +74,6 @@ subscriptions model =
 update : Msg -> FrameModel -> ( FrameModel, Cmd Msg )
 update message model =
   case message of
-    UrlChange url -> model |> Frame.searchChanged url
-
     Dashboard msg -> model |> Dashboard.update msg |> Transit.map Dashboard
 
 document : FrameModel -> Browser.Document FrameMsg

@@ -4,6 +4,7 @@ module GettoUpload.Layout.Frame exposing
   , Msg(..)
   , init
   , onUrlRequest
+  , onUrlChange
   , subscriptions
   , update
   , layout
@@ -13,7 +14,6 @@ module GettoUpload.Layout.Frame exposing
   , storeLayout
   , storeApp
   , search
-  , searchChanged
   , mapHtml
   , documentTitle
   , mobileHeader
@@ -78,19 +78,21 @@ type alias LayoutModel =
   }
 
 type Msg msg
-  = Layout LayoutMsg
-  | App msg
-
-type LayoutMsg
   = UrlRequest Browser.UrlRequest
+  | UrlChange Url
   | CredentialChanged Decode.Value
   | LayoutStoreChanged Decode.Value
   | AppStoreChanged Decode.Value
   --| HttpProgress Data Http.Progress
   --| HttpResponse Data Http.Response
-  | ToggleMenu String
+  | Layout LayoutMsg
+  | App msg
 
-onUrlRequest = UrlRequest >> Layout
+type LayoutMsg
+  = ToggleMenu String
+
+onUrlRequest = UrlRequest
+onUrlChange  = UrlChange
 
 
 type alias InitCommand model msg =
@@ -98,7 +100,7 @@ type alias InitCommand model msg =
   , Store.Init  model
   )
 type alias Construct model = InitModel -> model
-type alias Init model msg = Url -> Model model msg -> ( Model model msg, Cmd msg )
+type alias Init model msg = Model model msg -> ( Model model msg, Cmd msg )
 
 init : InitCommand model msg -> Construct model -> Init model msg -> Flags -> Url -> Navigation.Key -> ( Model model msg, Cmd (Msg msg) )
 init (appSearch,appStore) constructApp initApp flags url key =
@@ -123,9 +125,11 @@ init (appSearch,appStore) constructApp initApp flags url key =
         }
       }
     |> Transit.none
-    |> Transit.andThen (layoutStoreChanged flags.store.layout >> Transit.map Layout)
-    |> Transit.andThen (appStoreChanged    flags.store.app    >> Transit.map Layout)
-    |> Transit.andThen (initApp url >> Transit.map App)
+    |> Transit.andThen (layoutStoreChanged flags.store.layout >> Transit.none)
+    |> Transit.andThen (appStoreChanged    flags.store.app    >> Transit.none)
+    |> Transit.andThen (searchChanged url)
+    --|> Transit.andThen (initLayout >> Transit.map Layout)
+    |> Transit.andThen (initApp >> Transit.map App)
 
 constructLayout : Construct LayoutModel
 constructLayout model =
@@ -148,10 +152,10 @@ layoutStore =
 
 subscriptions : (Model model msg -> Sub msg) -> Model model msg -> Sub (Msg msg)
 subscriptions sub (Model model) = Sub.batch
-  [ [ (CredentialChanged)  |> Auth.subscriptions  model.auth
-    , (LayoutStoreChanged) |> Store.subscriptions model.store.layout
-    , (AppStoreChanged)    |> Store.subscriptions model.store.app
-    ] |> Sub.batch |> Sub.map Layout
+  [ [ CredentialChanged  |> Auth.subscriptions  model.auth
+    , LayoutStoreChanged |> Store.subscriptions model.store.layout
+    , AppStoreChanged    |> Store.subscriptions model.store.app
+    ] |> Sub.batch
   , Model model |> sub |> Sub.map App
   ]
 
@@ -159,46 +163,42 @@ subscriptions sub (Model model) = Sub.batch
 update : (msg -> Model model msg -> ( Model model msg, Cmd msg )) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 update appUpdater msg model =
   case msg of
-    App    sub -> model |> appUpdater   sub |> Transit.map App
-    Layout sub -> model |> updateLayout sub |> Transit.map Layout
-
-updateLayout : LayoutMsg -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
-updateLayout msg model =
-  case msg of
+    UrlChange url -> model |> searchChanged url
     UrlRequest urlRequest ->
       case urlRequest of
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
         Browser.External href -> ( model, href |> Navigation.load )
 
-    CredentialChanged value -> model |> credentialChanged value
+    CredentialChanged value -> model |> credentialChanged value |> Transit.none
 
-    LayoutStoreChanged value -> model |> layoutStoreChanged value
-    AppStoreChanged    value -> model |> appStoreChanged    value
+    LayoutStoreChanged value -> model |> layoutStoreChanged value |> Transit.none
+    AppStoreChanged    value -> model |> appStoreChanged    value |> Transit.none
 
 {-
     HttpResponse data result ->
       ( { model | http = model.http |> Http.layoutResponse prop result }, Cmd.none )
 -}
 
+
+    App    sub -> model |> appUpdater   sub |> Transit.map App
+    Layout sub -> model |> updateLayout sub |> Transit.map Layout
+
+updateLayout : LayoutMsg -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
+updateLayout msg model =
+  case msg of
     ToggleMenu name -> ( model, Cmd.none )
 
-credentialChanged : Decode.Value -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
+credentialChanged : Decode.Value -> Model model msg -> Model model msg
 credentialChanged value (Model model) =
-  ( Model { model | auth = model.auth |> Auth.changed value }
-  , Cmd.none
-  )
+  Model { model | auth = model.auth |> Auth.changed value }
 
-layoutStoreChanged : Decode.Value -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
+layoutStoreChanged : Decode.Value -> Model model msg -> Model model msg
 layoutStoreChanged value (Model model) =
-  ( Model { model | layout = model.layout |> Store.changed model.store.layout value }
-  , Cmd.none
-  )
+  Model { model | layout = model.layout |> Store.changed model.store.layout value }
 
-appStoreChanged : Decode.Value -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
+appStoreChanged : Decode.Value -> Model model msg -> Model model msg
 appStoreChanged value (Model model) =
-  ( Model { model | app = model.app |> Store.changed model.store.app value }
-  , Cmd.none
-  )
+  Model { model | app = model.app |> Store.changed model.store.app value }
 
 
 layout : Model model msg -> LayoutModel
@@ -227,13 +227,13 @@ storeApp (Model model) = ( Model model, model.app |> Store.store model.store.app
 search : Model model msg -> ( Model model msg, Cmd (Msg msg) )
 search (Model model) = ( Model model, model.app |> Search.search model.search |> Cmd.map App )
 
-searchChanged : Url -> Model model msg -> ( Model model msg, Cmd msg )
+searchChanged : Url -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 searchChanged url (Model model) =
   let
     (newApp,cmd) = model.app |> Search.changed model.search url
   in
     ( Model { model | app = newApp }
-    , cmd
+    , cmd |> Cmd.map App
     )
 
 
