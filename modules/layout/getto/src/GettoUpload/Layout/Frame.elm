@@ -1,5 +1,7 @@
 module GettoUpload.Layout.Frame exposing
-  ( InitModel
+  ( SetupLayout
+  , SetupApp
+  , InitModel
   , Model
   , Msg(..)
   , init
@@ -7,20 +9,16 @@ module GettoUpload.Layout.Frame exposing
   , onUrlChange
   , subscriptions
   , update
+  , static
+  , auth
   , layout
   , app
-  , updateApp
   , logout
   , storeLayout
   , storeApp
   , search
-  , mapHtml
-  , documentTitle
-  , mobileHeader
-  , nav
-  , navAddress
-  , articleHeader
-  , articleFooter
+  , mapLayout
+  , mapApp
   )
 import GettoUpload.Layout.Command.Auth   as Auth
 import GettoUpload.Layout.Command.Store  as Store
@@ -54,14 +52,14 @@ type alias Flags =
     }
   }
 
-type Model model msg = Model (Inner model msg)
-type alias Inner model msg = Base
-  { layout : LayoutModel
-  , app : model
-  , search : Search.Model model (Model model msg) msg
+type Model layout app appMsg = Model (Inner layout app appMsg)
+type alias Inner layout app appMsg = Base
+  { layout : layout
+  , app : app
+  , search : Search.Model app (Model layout app appMsg) appMsg
   , store  :
-    { layout : Store.Model LayoutModel
-    , app    : Store.Model model
+    { layout : Store.Model layout
+    , app    : Store.Model app
     }
   }
 
@@ -73,11 +71,7 @@ type alias Base a =
 
 type alias InitModel = Base {}
 
-type alias LayoutModel =
-  { --menu : Menu.Model
-  }
-
-type Msg msg
+type Msg layoutMsg appMsg
   = UrlRequest Browser.UrlRequest
   | UrlChange Url
   | CredentialChanged Decode.Value
@@ -85,42 +79,43 @@ type Msg msg
   | AppStoreChanged Decode.Value
   --| HttpProgress Data Http.Progress
   --| HttpResponse Data Http.Response
-  | Layout LayoutMsg
-  | App msg
-
-type LayoutMsg
-  = ToggleMenu String
+  | Layout layoutMsg
+  | App appMsg
 
 onUrlRequest = UrlRequest
 onUrlChange  = UrlChange
 
 
-type alias InitCommand model msg =
-  ( Search.Init model (Model model msg) msg
-  , Store.Init  model
-  )
-type alias Init model msg app appMsg = InitModel -> ( model, Transition.Update (Model app appMsg) msg )
+type alias SetupLayout layout app appMsg layoutMsg =
+  { store : Store.Init layout
+  , init  : InitModel -> ( layout, Transition.Update (Model layout app appMsg) layoutMsg )
+  }
+type alias SetupApp layout app appMsg =
+  { search : Search.Init app (Model layout app appMsg) appMsg
+  , store  : Store.Init app
+  , init   : InitModel -> ( app, Transition.Update (Model layout app appMsg) appMsg )
+  }
 
-init : InitCommand model msg -> Init model msg model msg -> Flags -> Url -> Navigation.Key -> ( Model model msg, Cmd (Msg msg) )
-init (appSearch,appStore) initApp flags url key =
+init : SetupLayout layout app appMsg layoutMsg -> SetupApp layout app appMsg -> Flags -> Url -> Navigation.Key -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
+init setupLayout setupApp flags url key =
   let
     model =
       { static = flags.static     |> Static.init Version.data
       , auth   = flags.credential |> Auth.init Credential.init
       }
 
-    (newLayout,layoutCmd) = model |> initLayout
-    (newApp,   appCmd)    = model |> initApp
+    (newLayout,layoutCmd) = model |> setupLayout.init
+    (newApp,   appCmd)    = model |> setupApp.init
   in
     Model
       { static = model.static
       , auth   = model.auth
       , layout = newLayout
       , app    = newApp
-      , search = Search.init key appSearch
+      , search = Search.init key setupApp.search
       , store  =
-        { layout = Store.init Store.Layout layoutStore
-        , app    = Store.init Store.App    appStore
+        { layout = Store.init Store.Layout setupLayout.store
+        , app    = Store.init Store.App    setupApp.store
         }
       }
     |> Transition.none
@@ -130,39 +125,23 @@ init (appSearch,appStore) initApp flags url key =
     |> Transition.andThen (layoutCmd >> Transition.map Layout)
     |> Transition.andThen (appCmd    >> Transition.map App)
 
-initLayout : Init LayoutModel LayoutMsg model msg
-initLayout model =
-  ( { --menu = Menu.init
-    }
-  , Transition.none
-  )
 
-layoutStore : Store.Init LayoutModel
-layoutStore =
-  ( \model ->
-    [ --( "menu", model.menu |> Menu.store )
-    ] |> Encode.object
-  , \value model ->
-    model
-    {-
-    Transition.compose Cmd.batch LayoutModel
-      (model.menu |> Menu.storeChanged (value |> SafeDecode.valueAt ["menu"]))
-    -}
-  )
-
-
-subscriptions : (model -> Sub msg) -> Model model msg -> Sub (Msg msg)
-subscriptions sub (Model model) = Sub.batch
+subscriptions : (layout -> Sub layoutMsg) -> (app -> Sub appMsg) -> Model layout app appMsg -> Sub (Msg layoutMsg appMsg)
+subscriptions layoutSubscriptions appSubscriptions (Model model) = Sub.batch
   [ [ CredentialChanged  |> Auth.subscriptions  model.auth
     , LayoutStoreChanged |> Store.subscriptions model.store.layout
     , AppStoreChanged    |> Store.subscriptions model.store.app
     ] |> Sub.batch
-  , model.app |> sub |> Sub.map App
+  , model.layout |> layoutSubscriptions |> Sub.map Layout
+  , model.app    |> appSubscriptions    |> Sub.map App
   ]
 
 
-update : (msg -> model -> ( model, Transition.Update (Model model msg) msg )) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
-update appUpdater message model =
+type alias LayoutUpdater layout app appMsg layoutMsg = (layoutMsg -> layout -> ( layout, Transition.Update (Model layout app appMsg) layoutMsg ))
+type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition.Update (Model layout app appMsg) appMsg ))
+
+update : LayoutUpdater layout app appMsg layoutMsg -> AppUpdater layout app appMsg -> Msg layoutMsg appMsg  -> Model layout app appMsg -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
+update layoutUpdater appUpdater message model =
   case message of
     UrlChange url -> model |> searchChanged url
     UrlRequest urlRequest ->
@@ -193,225 +172,59 @@ update appUpdater message model =
       case model of
         Model m ->
           let
-            (newLayout,f) = m.layout |> updateLayout msg
+            (newLayout,f) = m.layout |> layoutUpdater msg
           in
             Model { m | layout = newLayout } |> f |> Transition.map Layout
 
-updateLayout : LayoutMsg -> LayoutModel -> ( LayoutModel, Transition.Update (Model model msg) LayoutMsg )
-updateLayout msg model =
-  case msg of
-    ToggleMenu name -> ( model, Transition.none )
 
-credentialChanged : Decode.Value -> Model model msg -> Model model msg
+credentialChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
 credentialChanged value (Model model) =
   Model { model | auth = model.auth |> Auth.changed value }
 
-layoutStoreChanged : Decode.Value -> Model model msg -> Model model msg
-layoutStoreChanged value (Model model) =
-  Model { model | layout = model.layout |> Store.changed model.store.layout value }
-
-appStoreChanged : Decode.Value -> Model model msg -> Model model msg
-appStoreChanged value (Model model) =
-  Model { model | app = model.app |> Store.changed model.store.app value }
-
-
-layout : Model model msg -> LayoutModel
-layout (Model model) = model.layout
-
-app : Model model msg -> model
-app (Model model) = model.app
-
-updateApp : (model -> ( model, Cmd msg )) -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
-updateApp f (Model model) =
-  let
-    (newApp,cmd) = model.app |> f
-  in
-    ( Model { model | app = newApp }, cmd |> Cmd.map App )
-
-
-logout : Model model msg -> ( Model model msg, Cmd (Msg msg) )
-logout (Model model) = ( Model model, model.auth |> Auth.logout |> Cmd.map Layout )
-
-storeLayout : Model model msg -> ( Model model msg, Cmd (Msg msg) )
-storeLayout (Model model) = ( Model model, model.layout |> Store.store model.store.layout |> Cmd.map Layout )
-
-storeApp : Model model msg -> ( Model model msg, Cmd (Msg msg) )
-storeApp (Model model) = ( Model model, model.app |> Store.store model.store.app |> Cmd.map Layout )
-
-search : Model model msg -> ( Model model msg, Cmd (Msg msg) )
-search (Model model) = ( Model model, model.app |> Search.search model.search |> Cmd.map App )
-
-searchChanged : Url -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+searchChanged : Url -> Model layout app appMsg -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
 searchChanged url (Model model) =
   let
     (newApp,f) = model.app |> Search.changed model.search url
   in
     Model { model | app = newApp } |> f |> Transition.map App
 
+layoutStoreChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
+layoutStoreChanged value (Model model) =
+  Model { model | layout = model.layout |> Store.changed model.store.layout value }
 
-mapHtml : (sub -> msg) -> List (Html sub) -> List (Html (Msg msg))
-mapHtml msg = List.map (H.map (msg >> App))
+appStoreChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
+appStoreChanged value (Model model) =
+  Model { model | app = model.app |> Store.changed model.store.app value }
 
 
-title : Inner model msg -> String
-title model = model.static |> Static.page |> .path |> I18n.title
+static : Model layout app appMsg -> Static.Model
+static (Model model) = model.static
 
-documentTitle : Model model msg -> String
-documentTitle (Model model) =
-  (model |> title)
-  ++ " | "
-  ++ (model.static |> Static.project |> .company)
-  ++ " "
-  ++ (model.static |> Static.project |> .title)
+auth : Model layout app appMsg -> Auth.Model Credential.Model
+auth (Model model) = model.auth
 
-mobileHeader : Model model msg -> Html (Msg msg)
-mobileHeader (Model model) =
-  H.header []
-    [ H.p []
-      [ H.small [] [ model.static |> Static.project |> .company |> H.text ]
-      , H.wbr [] []
-      , " " |> H.text
-      , model.static |> Static.project |> .title |> H.text
-      , H.wbr [] []
-      , " " |> H.text
-      , H.small [] [ H.small [] [ model.static |> Static.project |> .sub |> H.text ] ]
-      ]
-    ]
+layout : Model layout app appMsg -> layout
+layout (Model model) = model.layout
 
-navHeader : Model model msg -> Html (Msg msg)
-navHeader (Model model) =
-  H.header []
-    [ H.p []
-      [ H.small [] [ model.static |> Static.project |> .company |> H.text ]
-      , H.br [] []
-      , model.static |> Static.project |> .title |> H.text
-      , H.br [] []
-      , H.small [] [ H.small [] [ model.static |> Static.project |> .sub |> H.text ] ]
-      ]
-    ]
+app : Model layout app appMsg -> app
+app (Model model) = model.app
 
-nav : Model model msg -> Html (Msg msg)
-nav model =
-  H.nav []
-    [ model |> navHeader
-    , model |> navAddress
-    , model |> navBody
-    , model |> navFooter
-    ]
 
-navAddress : Model model msg -> Html (Msg msg)
-navAddress (Model model) =
-  H.address []
-    [ H.a [ A.href HomeHref.index ]
-      [ H.ul []
-        [ H.li [ A.class "header" ] [ H.span [] [ "Upload" |> H.text ] ]
-        , H.li []
-          [ H.span [ A.class "success" ]
-            [ H.i [ A.class "fas fa-circle" ] []
-            , " " |> H.text
-            , "mode1" |> H.text
-            ]
-          ]
-        , H.li []
-          [ H.span [ A.class "gray" ]
-            [ H.i [ A.class "fas fa-circle" ] []
-            , " " |> H.text
-            , "mode2" |> H.text
-            ]
-          ]
-        ]
-      ]
-    , H.footer []
-      [ H.a [ A.href HomeHref.index ]
-        [ H.em [ A.class "badge is-small is-danger" ]
-          [ "Error" |> H.text ] -- TODO ここに state の取得ステータスを表示
-        ]
-      , " " |> H.text
-      , H.a [ A.href HomeHref.index ]
-        [ H.i [ A.class "fas fa-user-circle" ] []
-        , " " |> H.text
-        , "manager" |> H.text
-        ]
-      ]
-    ]
+logout : Model layout app appMsg -> ( Model layout app appMsg, Cmd annonymous )
+logout (Model model) = ( Model model, model.auth |> Auth.logout )
 
-navBody : Model model msg -> Html (Msg msg)
-navBody (Model model) =
-  H.section []
-    [ H.ul []
-      [ H.li []
-        [ H.b []
-          [ H.a [ A.href "#", E.onClick (ToggleMenu "MAIN" |> Layout) ]
-            [ "MAIN" |> H.text
-            , " " |> H.text
-            , H.em [ A.class "badge is-danger is-small" ] [ "4" |> H.text ]
-            , " " |> H.text
-            , H.i [ A.class "fas fa-caret-down" ] []
-            ]
-          ]
-        ]
-      , H.li [ A.class "is-active" ]
-        [ H.a [ A.href HomeHref.index ]
-          [ H.i [ A.class "fas fa-fw fa-home" ] []
-          , " " |> H.text
-          , "Home" |> H.text
-          , " " |> H.text
-          , H.em [ A.class "badge is-danger is-small" ] [ "4" |> H.text ]
-          ]
-        ]
-      ]
-    , H.ul []
-      [ H.li []
-        [ H.b []
-          [ H.a [ A.href "#", E.onClick (ToggleMenu "DATA" |> Layout) ]
-            [ "DATA" |> H.text
-            , " " |> H.text
-            , H.i [ A.class "fas fa-caret-down" ] []
-            ]
-          ]
-        ]
-      , H.li []
-        [ H.a [ A.href HomeHref.index ]
-          [ H.i [ A.class "fas fa-fw fa-home" ] []
-          , " " |> H.text
-          , "Home" |> H.text
-          ]
-        ]
-      ]
-    ]
+storeLayout : Model layout app appMsg -> ( Model layout app appMsg, Cmd annonymous )
+storeLayout (Model model) = ( Model model, model.layout |> Store.store model.store.layout )
 
-navFooter : Model model msg -> Html (Msg msg)
-navFooter (Model model) =
-  let
-    data = Version.data
-  in
-    H.footer [] [ H.p [] [ "version : " ++ data.version |> H.text ] ]
+storeApp : Model layout app appMsg -> ( Model layout app appMsg, Cmd annonymous )
+storeApp (Model model) = ( Model model, model.app |> Store.store model.store.app )
 
-articleHeader : Model model msg -> Html (Msg msg)
-articleHeader (Model model) =
-  H.header []
-    [ H.h1 [] [ model |> title |> H.text ]
-    , H.ul []
-      [ H.li [] [ "MAIN" |> H.text ]
-      , H.li []
-        [ H.a [ A.href HomeHref.index ]
-          [ H.i [ A.class "fas fa-home" ] []
-          , " " |> H.text
-          , "Home" |> H.text
-          ]
-        ]
-      ]
-    ]
+search : Model layout app appMsg -> ( Model layout app appMsg, Cmd annonymous )
+search (Model model) = ( Model model, model.app |> Search.search model.search )
 
-articleFooter : Model model msg -> Html (Msg msg)
-articleFooter (Model model) =
-  let
-    data = Version.data
-  in
-    H.footer []
-      [ H.p []
-        [ H.i [ A.class "far fa-copyright" ] []
-        , " " |> H.text
-        , data.copyright |> H.text
-        ]
-      ]
+
+mapLayout : Html layoutMsg -> Html (Msg layoutMsg appMsg)
+mapLayout = H.map Layout
+
+mapApp : (app -> appMsg) -> List (Html app) -> List (Html (Msg layoutMsg appMsg))
+mapApp msg = List.map (H.map (msg >> App))

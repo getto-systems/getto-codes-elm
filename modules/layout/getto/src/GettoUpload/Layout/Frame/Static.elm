@@ -44,10 +44,10 @@ init versionData flags = Model
   }
 
 project : Model -> Project
-project (Model data) = data.project
+project (Model model) = model.project
 
 page : Model -> Page
-page (Model data) = data.page
+page (Model model) = model.page
 
 version : Model -> Version
-version (Model data) = data.version
+version (Model model) = model.version

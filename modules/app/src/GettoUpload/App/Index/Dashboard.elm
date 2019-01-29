@@ -12,6 +12,7 @@ module GettoUpload.App.Index.Dashboard exposing
   , dialogs
   )
 import GettoUpload.Layout.Frame as Frame
+import GettoUpload.Layout.Frame.Page as Layout
 import GettoUpload.Layout.Href.Home as HomeHref
 
 import Getto.Command.Transition as Transition
@@ -25,7 +26,7 @@ import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-type alias FrameModel a msg = Frame.Model { a | dashboard : Model } msg
+type alias FrameModel a msg = Frame.Model Layout.Model { a | dashboard : Model } msg
 type alias Update     a msg = Transition.Update (FrameModel a msg) Msg
 type alias Model = {}
 

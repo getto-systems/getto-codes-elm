@@ -1,6 +1,7 @@
 module GettoUpload.App.Index.Page exposing ( main )
 import GettoUpload.App.Index.Dashboard as Dashboard
 import GettoUpload.Layout.Frame as Frame
+import GettoUpload.Layout.Frame.Page as Layout
 import GettoUpload.Layout.Command.Search as Search
 import GettoUpload.Layout.Command.Store  as Store
 
@@ -18,23 +19,30 @@ import Html.Attributes as A
 import Html.Lazy as L
 
 main = Browser.application
-  { init          = Frame.init (search,store) init
-  , subscriptions = Frame.subscriptions subscriptions
+  { init          = Frame.init Layout.setup setup
+  , subscriptions = Frame.subscriptions Layout.subscriptions subscriptions
   , onUrlRequest  = Frame.onUrlRequest
   , onUrlChange   = Frame.onUrlChange
-  , update        = Frame.update update
+  , update        = Frame.update Layout.update update
   , view          = document
   }
 
-type alias FrameModel = Frame.Model Model Msg
+type alias FrameModel = Frame.Model Layout.Model Model Msg
 type alias Update = Transition.Update FrameModel Msg
 type alias Model =
   { dashboard : Dashboard.Model
   }
 
-type alias FrameMsg = Frame.Msg Msg
+type alias FrameMsg = Frame.Msg Layout.Msg Msg
 type Msg
   = Dashboard Dashboard.Msg
+
+setup : Frame.SetupApp Layout.Model Model Msg
+setup =
+  { search = search
+  , store  = store
+  , init   = init
+  }
 
 init : Frame.InitModel -> ( Model, Update )
 init model =
@@ -76,19 +84,19 @@ update message =
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =
-  { title = model |> Frame.documentTitle
+  { title = model |> Layout.documentTitle
   , body = [ model |> L.lazy content ]
   }
 
 content : FrameModel -> Html FrameMsg
 content model =
   H.section [ A.class "MainLayout" ] <|
-    [ model |> Frame.mobileHeader
-    , model |> Frame.navAddress
+    [ model |> Layout.mobileHeader |> Frame.mapLayout
+    , model |> Layout.navAddress   |> Frame.mapLayout
     , H.article [] <|
-      [ model |> Frame.articleHeader ] ++
-      ( model |> Dashboard.contents |> Frame.mapHtml Dashboard ) ++
-      [ model |> Frame.articleFooter ]
-    , model |> Frame.nav
+      [ model |> Layout.articleHeader |> Frame.mapLayout ] ++
+      ( model |> Dashboard.contents |> Frame.mapApp Dashboard ) ++
+      [ model |> Layout.articleFooter |> Frame.mapLayout ]
+    , model |> Layout.nav |> Frame.mapLayout
     ] ++
-    ( model |> Dashboard.dialogs |> Frame.mapHtml Dashboard )
+    ( model |> Dashboard.dialogs |> Frame.mapApp Dashboard )
