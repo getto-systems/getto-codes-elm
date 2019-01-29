@@ -19,9 +19,8 @@ module Getto.Command.Transition exposing
   )
 
 type alias Command model msg = model -> Cmd msg
-type alias Update model msg = model -> ( model, Cmd msg )
 
-empty : Update model msg
+empty : model -> ( model, Cmd msg )
 empty = exec none
 
 none : Command model msg
@@ -36,7 +35,7 @@ batch list model =
   |> List.map (\f -> model |> f)
   |> Cmd.batch
 
-update : (big -> small) -> (small -> big -> big) -> (small -> ( small, Command model msg )) -> (big -> ( big, Command model msg ))
+update : (big -> small) -> (small -> big -> big) -> (small -> ( small, msg )) -> big -> ( big, msg )
 update get set updateSmall model =
   model |> get |> updateSmall
   |> Tuple.mapFirst (\small -> model |> set small)
@@ -47,12 +46,12 @@ map = Cmd.map >> Tuple.mapSecond
 mapCommand : (msg -> super) -> ( model, Command m msg ) -> ( model, Command m super )
 mapCommand super = Tuple.mapSecond (\f -> f >> Cmd.map super)
 
-andThen : Update model msg -> ( model, Cmd msg ) -> ( model, Cmd msg )
+andThen : (model -> ( model, Cmd msg )) -> ( model, Cmd msg ) -> ( model, Cmd msg )
 andThen f (model,cmd) =
   model |> f |> Tuple.mapSecond (\newCmd -> [cmd,newCmd] |> Cmd.batch)
 
 compose : (List msg -> msg) -> (a -> model) -> ( a, msg ) -> ( model, msg )
-compose batchMsg model (a,msgA) = ( model a, [msgA] |> batchMsg )
+compose batchMsg model (a,msgA) = ( model a, msgA )
 
 compose2 : (List msg -> msg) -> (a -> b -> model) -> ( a, msg ) -> ( b, msg ) -> ( model, msg )
 compose2 batchMsg model (a,msgA) (b,msgB) = ( model a b, [msgA,msgB] |> batchMsg )
