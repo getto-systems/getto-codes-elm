@@ -1,7 +1,6 @@
 module GettoUpload.App.Index.Dashboard exposing
   ( Model
   , Msg
-  , construct
   , init
   , search
   , searchChanged
@@ -27,22 +26,20 @@ import Html.Events as E
 import Html.Lazy as L
 
 type alias FrameModel a msg = Frame.Model { a | dashboard : Model } msg
+type alias Update     a msg = Transition.Update (FrameModel a msg) Msg
 type alias Model = {}
 
 type Msg
   = HelloWorld
 
-construct : Frame.InitModel -> Model
-construct model = {}
-
-init : FrameModel a msg -> ( FrameModel a msg, Cmd Msg )
-init = Transition.none
+init : Frame.InitModel -> ( Model, Update a msg )
+init model = ( {}, Transition.none )
 
 search : Model -> QueryEncode.Value
 search model = QueryEncode.empty
 
-searchChanged : List String -> QueryDecode.Value -> Model -> ( Model, Cmd Msg )
-searchChanged names value model = ( model, Cmd.none )
+searchChanged : List String -> QueryDecode.Value -> Model -> ( Model, Update a msg )
+searchChanged names value model = ( model, Transition.none )
 
 store : Model -> Encode.Value
 store model = Encode.null
@@ -50,13 +47,13 @@ store model = Encode.null
 storeChanged : Decode.Value -> Model -> Model
 storeChanged value model = model
 
-subscriptions : FrameModel a msg -> Sub Msg
+subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none
 
-update : Msg -> FrameModel a msg -> ( FrameModel a msg, Cmd Msg )
+update : Msg -> Model -> ( Model, Update a msg )
 update msg model =
   case msg of
-    HelloWorld -> ( model, Cmd.none )
+    HelloWorld -> ( model, Transition.none )
 
 contents : FrameModel a msg -> List (Html Msg)
 contents model =

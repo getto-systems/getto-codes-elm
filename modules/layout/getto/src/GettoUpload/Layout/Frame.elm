@@ -58,7 +58,7 @@ type Model model msg = Model (Inner model msg)
 type alias Inner model msg = Base
   { layout : LayoutModel
   , app : model
-  , search : Search.Model model msg
+  , search : Search.Model model (Model model msg) msg
   , store  :
     { layout : Store.Model LayoutModel
     , app    : Store.Model model
@@ -96,22 +96,21 @@ onUrlChange  = UrlChange
 
 
 type alias InitCommand model msg =
-  ( Search.Init model msg
+  ( Search.Init model (Model model msg) msg
   , Store.Init  model
   )
-type alias Construct model = InitModel -> model
-type alias Init model msg = Model model msg -> ( Model model msg, Cmd msg )
+type alias Init model msg app appMsg = InitModel -> ( model, Transition.Update (Model app appMsg) msg )
 
-init : InitCommand model msg -> Construct model -> Init model msg -> Flags -> Url -> Navigation.Key -> ( Model model msg, Cmd (Msg msg) )
-init (appSearch,appStore) constructApp initApp flags url key =
+init : InitCommand model msg -> Init model msg model msg -> Flags -> Url -> Navigation.Key -> ( Model model msg, Cmd (Msg msg) )
+init (appSearch,appStore) initApp flags url key =
   let
     model =
       { static = flags.static     |> Static.init Version.data
       , auth   = flags.credential |> Auth.init Credential.init
       }
 
-    newLayout = model |> constructLayout
-    newApp    = model |> constructApp
+    (newLayout,layoutCmd) = model |> initLayout
+    (newApp,   appCmd)    = model |> initApp
   in
     Model
       { static = model.static
@@ -128,13 +127,15 @@ init (appSearch,appStore) constructApp initApp flags url key =
     |> Transition.andThen (layoutStoreChanged flags.store.layout >> Transition.none)
     |> Transition.andThen (appStoreChanged    flags.store.app    >> Transition.none)
     |> Transition.andThen (searchChanged url)
-    --|> Transition.andThen (initLayout >> Transition.map Layout)
-    |> Transition.andThen (initApp >> Transition.map App)
+    |> Transition.andThen (layoutCmd >> Transition.map Layout)
+    |> Transition.andThen (appCmd    >> Transition.map App)
 
-constructLayout : Construct LayoutModel
-constructLayout model =
-  { --menu = Menu.init
-  }
+initLayout : Init LayoutModel LayoutMsg model msg
+initLayout model =
+  ( { --menu = Menu.init
+    }
+  , Transition.none
+  )
 
 layoutStore : Store.Init LayoutModel
 layoutStore =
@@ -144,25 +145,25 @@ layoutStore =
   , \value model ->
     model
     {-
-    Transition.compose LayoutModel
+    Transition.compose Cmd.batch LayoutModel
       (model.menu |> Menu.storeChanged (value |> SafeDecode.valueAt ["menu"]))
     -}
   )
 
 
-subscriptions : (Model model msg -> Sub msg) -> Model model msg -> Sub (Msg msg)
+subscriptions : (model -> Sub msg) -> Model model msg -> Sub (Msg msg)
 subscriptions sub (Model model) = Sub.batch
   [ [ CredentialChanged  |> Auth.subscriptions  model.auth
     , LayoutStoreChanged |> Store.subscriptions model.store.layout
     , AppStoreChanged    |> Store.subscriptions model.store.app
     ] |> Sub.batch
-  , Model model |> sub |> Sub.map App
+  , model.app |> sub |> Sub.map App
   ]
 
 
-update : (msg -> Model model msg -> ( Model model msg, Cmd msg )) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
-update appUpdater msg model =
-  case msg of
+update : (msg -> model -> ( model, Transition.Update (Model model msg) msg )) -> Msg msg -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
+update appUpdater message model =
+  case message of
     UrlChange url -> model |> searchChanged url
     UrlRequest urlRequest ->
       case urlRequest of
@@ -180,13 +181,26 @@ update appUpdater msg model =
 -}
 
 
-    App    sub -> model |> appUpdater   sub |> Transition.map App
-    Layout sub -> model |> updateLayout sub |> Transition.map Layout
+    App msg ->
+      case model of
+        Model m ->
+          let
+            (newApp,f) = m.app |> appUpdater msg
+          in
+            Model { m | app = newApp } |> f |> Transition.map App
 
-updateLayout : LayoutMsg -> Model model msg -> ( Model model msg, Cmd LayoutMsg )
+    Layout msg ->
+      case model of
+        Model m ->
+          let
+            (newLayout,f) = m.layout |> updateLayout msg
+          in
+            Model { m | layout = newLayout } |> f |> Transition.map Layout
+
+updateLayout : LayoutMsg -> LayoutModel -> ( LayoutModel, Transition.Update (Model model msg) LayoutMsg )
 updateLayout msg model =
   case msg of
-    ToggleMenu name -> ( model, Cmd.none )
+    ToggleMenu name -> ( model, Transition.none )
 
 credentialChanged : Decode.Value -> Model model msg -> Model model msg
 credentialChanged value (Model model) =
@@ -230,11 +244,9 @@ search (Model model) = ( Model model, model.app |> Search.search model.search |>
 searchChanged : Url -> Model model msg -> ( Model model msg, Cmd (Msg msg) )
 searchChanged url (Model model) =
   let
-    (newApp,cmd) = model.app |> Search.changed model.search url
+    (newApp,f) = model.app |> Search.changed model.search url
   in
-    ( Model { model | app = newApp }
-    , cmd |> Cmd.map App
-    )
+    Model { model | app = newApp } |> f |> Transition.map App
 
 
 mapHtml : (sub -> msg) -> List (Html sub) -> List (Html (Msg msg))

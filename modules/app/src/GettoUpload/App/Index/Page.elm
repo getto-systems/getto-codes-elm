@@ -18,7 +18,7 @@ import Html.Attributes as A
 import Html.Lazy as L
 
 main = Browser.application
-  { init          = Frame.init (search,store) construct init
+  { init          = Frame.init (search,store) init
   , subscriptions = Frame.subscriptions subscriptions
   , onUrlRequest  = Frame.onUrlRequest
   , onUrlChange   = Frame.onUrlChange
@@ -27,6 +27,7 @@ main = Browser.application
   }
 
 type alias FrameModel = Frame.Model Model Msg
+type alias Update = Transition.Update FrameModel Msg
 type alias Model =
   { dashboard : Dashboard.Model
   }
@@ -35,23 +36,19 @@ type alias FrameMsg = Frame.Msg Msg
 type Msg
   = Dashboard Dashboard.Msg
 
-construct : Frame.InitModel -> Model
-construct model =
-  { dashboard = model |> Dashboard.construct
-  }
+init : Frame.InitModel -> ( Model, Update )
+init model =
+  Transition.compose Transition.batch Model
+    (model |> Dashboard.init |> Transition.mapUpdate Dashboard)
 
-init : FrameModel -> ( FrameModel, Cmd Msg )
-init = Transition.none
-  >> Transition.andThen (Dashboard.init >> Transition.map Dashboard)
-
-search : Search.Init Model Msg
+search : Search.Init Model FrameModel Msg
 search =
   ( \model ->
     [ ( "dashboard", model.dashboard |> Dashboard.search )
     ] |> QueryEncode.object
   , \value model ->
-    Transition.compose Model
-      (model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transition.map Dashboard)
+    Transition.compose Transition.batch Model
+      (model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transition.mapUpdate Dashboard)
   )
 
 store : Store.Init Model
@@ -60,21 +57,22 @@ store =
     [ ( "dashboard", model.dashboard |> Dashboard.store )
     ] |> Encode.object
   , \value model ->
-    { model
-    | dashboard = model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"])
-    }
+    Model
+      (model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]))
   )
 
-subscriptions : FrameModel -> Sub Msg
+subscriptions : Model -> Sub Msg
 subscriptions model =
-  [ Sub.none
-  , model |> Dashboard.subscriptions |> Sub.map Dashboard
+  [ model.dashboard |> Dashboard.subscriptions |> Sub.map Dashboard
   ] |> Sub.batch
 
-update : Msg -> FrameModel -> ( FrameModel, Cmd Msg )
-update message model =
+update : Msg -> Model -> ( Model, Update )
+update message =
   case message of
-    Dashboard msg -> model |> Dashboard.update msg |> Transition.map Dashboard
+    Dashboard msg ->
+      Transition.update
+        .dashboard (\dashboard m -> { m | dashboard = dashboard })
+        (Dashboard.update msg >> Transition.mapUpdate Dashboard)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =
