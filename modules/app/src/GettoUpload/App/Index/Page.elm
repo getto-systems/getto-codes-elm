@@ -2,8 +2,6 @@ module GettoUpload.App.Index.Page exposing ( main )
 import GettoUpload.App.Index.Dashboard as Dashboard
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Page as Layout
-import GettoUpload.Layout.Command.Search as Search
-import GettoUpload.Layout.Command.Store  as Store
 
 import Getto.Command.Transition as Transition
 import Getto.Url.Query.Encode as QueryEncode
@@ -38,37 +36,31 @@ type Msg
 
 setup : Frame.SetupApp Layout.Model Model Msg
 setup =
-  { search = search
-  , store  = store
-  , init   = init
+  { search =
+    ( \model -> QueryEncode.object
+      [ ( "dashboard", model.dashboard |> Dashboard.search )
+      ]
+    , \value model ->
+      Transition.compose Transition.batch Model
+        ( model.dashboard |> Dashboard.searchChanged ["dashboard"] value
+          |> Transition.mapCommand Dashboard
+        )
+    )
+  , store =
+    ( \model -> Encode.object
+      [ ( "dashboard", model.dashboard |> Dashboard.store )
+      ]
+    , \value model ->
+      Model
+        (model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]))
+    )
+  , init = init
   }
 
 init : Frame.InitModel -> ( Model, Command )
 init model =
   Transition.compose Transition.batch Model
     (model |> Dashboard.init |> Transition.mapCommand Dashboard)
-
-search : Search.Init Model FrameModel Msg
-search =
-  ( \model ->
-    [ ( "dashboard", model.dashboard |> Dashboard.search )
-    ] |> QueryEncode.object
-  , \value model ->
-    Transition.compose Transition.batch Model
-      ( model.dashboard |> Dashboard.searchChanged ["dashboard"] value
-        |> Transition.mapCommand Dashboard
-      )
-  )
-
-store : Store.Init Model
-store =
-  ( \model ->
-    [ ( "dashboard", model.dashboard |> Dashboard.store )
-    ] |> Encode.object
-  , \value model ->
-    Model
-      (model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]))
-  )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
