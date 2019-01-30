@@ -1,7 +1,15 @@
 module GettoUpload.Layout.Version exposing
-  ( copyright
-  , version
+  ( Data
+  , data
   )
 
-copyright = "GETTO systems"
-version = "0.1.0"
+type alias Data =
+  { copyright : String
+  , version   : String
+  }
+
+data : Data
+data =
+  { copyright = "GETTO systems"
+  , version = "0.1.0"
+  }

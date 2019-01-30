@@ -1,314 +1,190 @@
 module GettoUpload.Layout.Command.Http exposing
-  ( State(..)
-  , Init
-  , Model
-  , Entry
-  , Response
-  , init
-  , entry
+  ( Entry
+  , State
+  , Request
+  , Header
+  , empty
+  , stateTo
+  , clear
+  , request
+  , track
   , get
   , post
   , put
   , delete
   , upload
-  , requestLayout
-  , requestApp
-  , execLayout
-  , execApp
-  , layoutResponse
-  , appResponse
-  , layoutState
-  , appState
   )
-import GettoUpload.Env.App as Env
+import GettoUpload.Layout.Command.Http.Mock as Mock
 
-import Getto.Prop as Prop exposing ( Prop )
 import Getto.Url.Query.Encode as QueryEncode
+import Getto.Http.Part as Part
 
 import Json.Encode as Encode
 import Json.Decode as Decode
-import File exposing ( File )
 import Http
 
-timeout =
-  { get    = 10 * 1000
-  , post   = 60 * 1000
-  , put    = 60 * 1000
-  , delete = 60 * 1000
-  , upload = 30 * 60 * 1000
+type Entry data = Entry
+  { state : State data
+  , data  : Maybe data
   }
 
-type Model layout app = Model (Struct layout app)
-
-type alias Struct layout app =
-  { layout : StructInfo layout
-  , app    : StructInfo app
-  }
-
-type alias StructInfo struct =
-  { struct : struct
-  , props  : Props struct
-  }
-
-type alias Props struct = List (Prop struct Entry)
-
-type Entry = Entry Info
-
-type alias Info =
-  { state : State Decode.Value
-  , cmd   : Request
-  }
-
-type State response
+type State data
   = Empty
-  | Connecting
-  | Done response
-  | Error Http.Error
+  | Loading
+  | Progress Http.Progress
+  | Success data
+  | Failure Http.Error
 
-type Request
-  = None
-  | Get    RequestStruct
-  | Post   RequestStruct
-  | Put    RequestStruct
-  | Delete RequestStruct
-  | Upload RequestStruct
+type Request model data
+  = Get    (RequestInner model data QueryEncode.Value)
+  | Post   (RequestInner model data Encode.Value)
+  | Put    (RequestInner model data Encode.Value)
+  | Delete (RequestInner model data Encode.Value)
+  | Upload (RequestInner model data Part.Value)
 
-type alias RequestStruct =
-  { headers : Headers
+type alias RequestInner model data params =
+  { url     : String
+  , headers : model -> List Header
+  , params  : model -> params
+  , decoder : Decode.Decoder data
+  , timeout : Float
+  , tracker : Maybe String
+  }
+
+type alias Header = ( String, String )
+
+type alias RequestData data msg =
+  { method  : String
+  , headers : List Http.Header
   , url     : String
   , body    : Http.Body
+  , decoder : Decode.Decoder data
+  , timeout : Maybe Float
+  , tracker : Maybe String
+  , msg     : Result Http.Error data -> msg
   }
 
-type alias Headers = List Http.Header
+empty : Entry model
+empty = Entry
+  { state = Empty
+  , data  = Nothing
+  }
 
-type alias Response = Result Http.Error Decode.Value
+stateTo : State model -> Entry model -> Entry model
+stateTo state (Entry entry) =
+  case state of
+    Success data -> Entry { entry | state = state, data = Just data }
+    _            -> Entry { entry | state = state }
 
-type alias Init struct = ( struct, Props struct )
+clear : Entry model -> Entry model
+clear (Entry entry) = Entry { entry | data = Nothing }
 
-init : (Init layout,Init app) -> () -> Model layout app
-init ((layout,layoutProps),(app,appProps)) _ =
-  Model
-    { layout =
-      { struct = layout
-      , props  = layoutProps
-      }
-    , app =
-      { struct = app
-      , props  = appProps
-      }
-    }
-
-entry : Entry
-entry =
-  Entry
-    { state = Empty
-    , cmd   = None
-    }
-
-type alias RawHeaders = List ( String, String )
-
-get : RawHeaders -> String -> QueryEncode.Value -> Request
-get headers path query =
-  ( headers
-  , path ++ (query |> QueryEncode.encode)
-  , Http.emptyBody
-  )
-  |> request Get
-
-post : RawHeaders -> String -> Encode.Value -> Request
-post headers path data =
-  ( headers
-  , path
-  , data |> Http.jsonBody
-  )
-  |> request Post
-
-put : RawHeaders -> String -> Encode.Value -> Request
-put headers path data =
-  ( headers
-  , path
-  , data |> Http.jsonBody
-  )
-  |> request Put
-
-delete : RawHeaders -> String -> Encode.Value -> Request
-delete headers path data =
-  ( headers
-  , path
-  , data |> Http.jsonBody
-  )
-  |> request Delete
-
-upload : RawHeaders -> String -> File -> Request
-upload headers path data =
-  ( headers
-  , path
-  , data |> Http.fileBody
-  )
-  |> request Upload
-
-request : (RequestStruct -> Request) -> ( RawHeaders, String, Http.Body ) -> Request
-request req (headers,path,body) =
-  req
-    { headers = headers |> List.map (\(key,value) -> Http.header key value)
-    , url     = Env.apiRoot ++ path
-    , body    = body
-    }
-
-requestLayout : Prop layout Entry -> Request -> Model layout app -> Model layout app
-requestLayout prop req (Model m) =
+request : Request model data -> (State data -> msg) -> model -> Cmd msg
+request req msg model =
   let
-    layout = m.layout
+    headers data = model |> data.headers |> List.map (\(key,value) -> Http.header key value)
+    query   data = model |> data.params |> QueryEncode.encode
+    json    data = model |> data.params |> Http.jsonBody
+    part    data = model |> data.params |> Part.toBody
+    requestMsg = toState >> msg
   in
-    Model { m | layout = { layout | struct = layout.struct |> Prop.update prop (setCmd req) } }
+    Mock.request <| -- httpRequest <|
+      case req of
+        Get data ->
+          { method  = "GET"
+          , headers = data |> headers
+          , url     = data.url ++ (data |> query)
+          , body    = Http.emptyBody
+          , decoder = data.decoder
+          , timeout = Just data.timeout
+          , tracker = data.tracker
+          , msg     = requestMsg
+          }
+        Post data ->
+          { method  = "POST"
+          , headers = data |> headers
+          , url     = data.url
+          , body    = data |> json
+          , decoder = data.decoder
+          , timeout = Just data.timeout
+          , tracker = data.tracker
+          , msg     = requestMsg
+          }
+        Put data ->
+          { method  = "PUT"
+          , headers = data |> headers
+          , url     = data.url
+          , body    = data |> json
+          , decoder = data.decoder
+          , timeout = Just data.timeout
+          , tracker = data.tracker
+          , msg     = requestMsg
+          }
+        Delete data ->
+          { method  = "DELETE"
+          , headers = data |> headers
+          , url     = data.url
+          , body    = data |> json
+          , decoder = data.decoder
+          , timeout = Just data.timeout
+          , tracker = data.tracker
+          , msg     = requestMsg
+          }
+        Upload data ->
+          { method  = "POST"
+          , headers = data |> headers
+          , url     = data.url
+          , body    = data |> part
+          , decoder = data.decoder
+          , timeout = Just data.timeout
+          , tracker = data.tracker
+          , msg     = requestMsg
+          }
 
-requestApp : Prop app Entry -> Request -> Model layout app -> Model layout app
-requestApp prop req (Model m) =
-  let
-    app = m.app
-  in
-    Model { m | app = { app | struct = app.struct |> Prop.update prop (setCmd req) } }
-
-setCmd : Request -> Entry -> Entry
-setCmd req (Entry m) = Entry { m | cmd = req }
-
-execLayout : (Prop layout Entry -> Response -> msg) -> Model layout app -> ( Model layout app, Cmd msg )
-execLayout msg (Model m) =
-  m.layout
-  |> execProps msg
-  |>
-    (\(struct,cmds) ->
-      ( Model { m | layout = struct }
-      , Cmd.batch cmds
-      )
-    )
-
-execApp : (Prop app Entry -> Response -> msg) -> Model layout app -> ( Model layout app, Cmd msg )
-execApp msg (Model m) =
-  m.app
-  |> execProps msg
-  |>
-    (\(struct,cmds) ->
-      ( Model { m | app = struct }
-      , Cmd.batch cmds
-      )
-    )
-
-execProps : (Prop struct Entry -> Response -> msg) -> StructInfo struct -> ( StructInfo struct, List (Cmd msg) )
-execProps msg struct =
-  struct.props
-  |> List.foldl
-    (\prop (acc,cmds) ->
-      let
-        (newEntry,cmd) = acc.struct |> Prop.get prop |> exec (msg prop)
-      in
-        ( { acc | struct = acc.struct |> Prop.set prop newEntry }
-        , cmd :: cmds
-        )
-    )
-    (struct,[])
-
-exec : (Response -> msg) -> Entry -> ( Entry, Cmd msg )
-exec msg (Entry m) =
-  case m.cmd of
-    None  -> ( Entry m, Cmd.none )
-    Get struct ->
-      ( Entry (m |> execState)
-      , Http.request
-        { method  = "GET"
-        , headers = struct.headers
-        , url     = struct.url
-        , body    = struct.body
-        , expect  = Decode.value |> Http.expectJson msg
-        , timeout = Just timeout.get
-        , tracker = Nothing
-        }
-      )
-    Post struct ->
-      ( Entry (m |> execState)
-      , Http.request
-        { method  = "POST"
-        , headers = struct.headers
-        , url     = struct.url
-        , body    = struct.body
-        , expect  = Decode.value |> Http.expectJson msg
-        , timeout = Just timeout.post
-        , tracker = Nothing
-        }
-      )
-    Put struct ->
-      ( Entry (m |> execState)
-      , Http.request
-        { method  = "PUT"
-        , headers = struct.headers
-        , url     = struct.url
-        , body    = struct.body
-        , expect  = Decode.value |> Http.expectJson msg
-        , timeout = Just timeout.put
-        , tracker = Nothing
-        }
-      )
-    Delete struct ->
-      ( Entry (m |> execState)
-      , Http.request
-        { method  = "DELETE"
-        , headers = struct.headers
-        , url     = struct.url
-        , body    = struct.body
-        , expect  = Decode.value |> Http.expectJson msg
-        , timeout = Just timeout.delete
-        , tracker = Nothing
-        }
-      )
-    Upload struct ->
-      ( Entry (m |> execState)
-      , Http.request
-        { method  = "POST"
-        , headers = struct.headers
-        , url     = struct.url
-        , body    = struct.body
-        , expect  = Decode.value |> Http.expectJson msg
-        , timeout = Just timeout.upload
-        , tracker = Nothing
-        }
-      )
-
-execState : Info -> Info
-execState m = { m | state = Connecting, cmd = None }
-
-layoutResponse : Prop layout Entry -> Response -> Model layout app -> Model layout app
-layoutResponse prop result (Model m) =
-  let
-    layout = m.layout
-  in
-    Model { m | layout = { layout | struct = layout.struct |> Prop.update prop (response result) } }
-
-appResponse : Prop app Entry -> Response -> Model layout app -> Model layout app
-appResponse prop result (Model m) =
-  let
-    app = m.app
-  in
-    Model { m | app = { app | struct = app.struct |> Prop.update prop (response result) } }
-
-response : Response -> Entry -> Entry
-response result (Entry m) =
+toState : Result Http.Error data -> State data
+toState result =
   case result of
-    Ok  res   -> Entry { m | state = Done res }
-    Err error -> Entry { m | state = Error error }
+    Ok  data  -> Success data
+    Err error -> Failure error
 
-layoutState : Prop layout Entry -> Decode.Decoder response -> Model layout app -> State response
-layoutState prop decoder (Model m) = m.layout.struct |> Prop.get prop |> state decoder
+httpRequest : RequestData data msg -> Cmd msg
+httpRequest data =
+  Http.request
+    { method  = data.method
+    , headers = data.headers
+    , url     = data.url
+    , body    = data.body
+    , expect  = data.decoder |> Http.expectJson data.msg
+    , timeout = data.timeout
+    , tracker = data.tracker
+    }
 
-appState : Prop app Entry -> Decode.Decoder response -> Model layout app -> State response
-appState prop decoder (Model m) = m.app.struct |> Prop.get prop |> state decoder
+track : Request model data -> (State data -> msg) -> Sub msg
+track req msg =
+  let
+    trackerData =
+      case req of
+        Get    data -> data.tracker
+        Post   data -> data.tracker
+        Put    data -> data.tracker
+        Delete data -> data.tracker
+        Upload data -> data.tracker
+  in
+    case trackerData of
+      Nothing -> Sub.none
+      Just tracker -> (Progress >> msg) |> Http.track tracker
 
-state : Decode.Decoder response -> Entry -> State response
-state decoder (Entry m) =
-  case m.state of
-    Empty       -> Empty
-    Connecting  -> Connecting
-    Error error -> Error error
-    Done  res   ->
-      case res |> Decode.decodeValue decoder of
-        Ok  value -> Done value
-        Err error -> error |> Decode.errorToString |> Http.BadBody |> Error
+get : RequestInner model data QueryEncode.Value -> Request model data
+get = Get
+
+post : RequestInner model data Encode.Value -> Request model data
+post = Post
+
+put : RequestInner model data Encode.Value -> Request model data
+put = Put
+
+delete : RequestInner model data Encode.Value -> Request model data
+delete = Delete
+
+upload : RequestInner model data Part.Value -> Request model data
+upload = Upload

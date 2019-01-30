@@ -1,34 +1,67 @@
 module GettoUpload.App.Index.Dashboard exposing
   ( Model
   , Msg
+  , init
+  , search
+  , searchChanged
+  , store
+  , storeChanged
+  , subscriptions
   , update
   , contents
   , dialogs
   )
-import GettoUpload.App.Index.Model as Model
+import GettoUpload.Layout.Frame as Frame
+import GettoUpload.Layout.Frame.Page as Layout
 import GettoUpload.Layout.Href.Home as HomeHref
 
+import Getto.Command.Transition as Transition
+import Getto.Url.Query.Encode as QueryEncode
+import Getto.Url.Query.Decode as QueryDecode
+
+import Json.Encode as Encode
+import Json.Decode as Decode
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-type alias Model a = Model.Model a
+type alias FrameModel a msg = Frame.Model Layout.Model { a | dashboard : Model } msg
+type alias Command    a msg = Transition.Command (FrameModel a msg) Msg
+type alias Model = {}
 
 type Msg
   = HelloWorld
 
-update : Msg -> Model a -> Model a
+init : Frame.InitModel -> ( Model, Command a msg )
+init model = ( {}, Transition.none )
+
+search : Model -> QueryEncode.Value
+search model = QueryEncode.empty
+
+searchChanged : List String -> QueryDecode.Value -> Model -> ( Model, Command a msg )
+searchChanged names value model = ( model, Transition.none )
+
+store : Model -> Encode.Value
+store model = Encode.null
+
+storeChanged : Decode.Value -> Model -> Model
+storeChanged value model = model
+
+subscriptions : Model -> Sub Msg
+subscriptions model = Sub.none
+
+update : Msg -> Model -> ( Model, Command a msg )
 update msg model =
   case msg of
-    HelloWorld -> model
+    HelloWorld -> ( model, Transition.none )
 
-contents : Model a -> List (Html Msg)
+contents : FrameModel a msg -> List (Html Msg)
 contents model =
   [ model |> dashboard
   ]
 
-dashboard : Model a -> Html Msg
+dashboard : FrameModel a msg -> Html Msg
 dashboard model =
   H.section [ A.class "dashboard" ]
     [ H.dl []
@@ -61,5 +94,5 @@ dashboard model =
       ]
     ]
 
-dialogs : Model a -> List (Html Msg)
+dialogs : FrameModel a msg -> List (Html Msg)
 dialogs model = []

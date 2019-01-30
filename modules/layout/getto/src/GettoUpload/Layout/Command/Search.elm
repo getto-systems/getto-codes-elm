@@ -2,71 +2,44 @@ module GettoUpload.Layout.Command.Search exposing
   ( Model
   , Init
   , init
-  , exec
   , changed
-  , query
-  , update
+  , search
   )
 
+import Getto.Command.Transition as Transition
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 
 import Browser.Navigation as Navigation
 import Url exposing ( Url )
 
-type Model query = Model (Entry query)
-
-type alias Entry query =
+type Model model m msg = Model (Inner model m msg)
+type alias Inner model m msg =
   { key    : Navigation.Key
-  , query  : query
-  , encode : query -> QueryEncode.Value
-  , decode : List String -> query
-  , cmd    : PushUrl
+  , encode : Encode model
+  , decode : Decode model m msg
   }
 
-type PushUrl
-  = None
-  | PushUrl
+type alias Encode model = model -> QueryEncode.Value
+type alias Decode model m msg = QueryDecode.Value -> model -> ( model, Transition.Command m msg )
 
-type alias Init query = ( List String -> query, query -> QueryEncode.Value )
+type alias Init model m msg = ( Encode model, Decode model m msg )
 
-init : Init query -> ( Url, Navigation.Key ) -> Model query
-init (decode,encode) (url,key) =
-  Model
-    { key    = key
-    , query  = url |> decodeQuery decode
-    , encode = encode
-    , decode = decode
-    , cmd    = None
-    }
+init : Navigation.Key -> Init model m msg -> Model model m msg
+init key (encode,decode) = Model
+  { key    = key
+  , encode = encode
+  , decode = decode
+  }
 
-exec : Model query -> ( Model query, Cmd msg )
-exec (Model model) =
-  case model.cmd of
-    None    -> ( Model model, Cmd.none )
-    PushUrl ->
-      ( Model { model | cmd = None }
-      , model.query |> model.encode |> QueryEncode.encode |> Navigation.pushUrl model.key
-      )
+changed : Model model m msg -> Url -> model -> ( model, Transition.Command m msg )
+changed (Model model) = split >> model.decode
 
-changed : Url -> Model query -> Model query
-changed url (Model model) =
-  Model { model | query = url |> decodeQuery model.decode }
-
-decodeQuery : (List String -> query) -> Url -> query
-decodeQuery f url =
+split : Url -> QueryDecode.Value
+split url =
   url.query
   |> Maybe.map QueryDecode.split
   |> Maybe.withDefault []
-  |> f
 
-query : Model query -> query
-query (Model model) = model.query
-
-update : (query -> query) -> Model query -> Model query
-update f (Model model) =
-  Model
-    { model
-    | query = model.query |> f
-    , cmd   = PushUrl
-    }
+search : Model model m msg -> model -> Cmd annonymous
+search (Model model) = model.encode >> QueryEncode.encode >> Navigation.pushUrl model.key

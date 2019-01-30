@@ -1,56 +1,108 @@
 module GettoUpload.App.Index.Page exposing ( main )
-import GettoUpload.App.Index.Model as Model
 import GettoUpload.App.Index.Dashboard as Dashboard
 import GettoUpload.Layout.Frame as Frame
+import GettoUpload.Layout.Frame.Page as Layout
+import GettoUpload.Layout.Command.Search as Search
+import GettoUpload.Layout.Command.Store  as Store
 
+import Getto.Command.Transition as Transition
+import Getto.Url.Query.Encode as QueryEncode
+import Getto.Url.Query.Decode as QueryDecode
+import Getto.Json.SafeDecode as SafeDecode
+
+import Json.Encode as Encode
+import Json.Decode as Decode
 import Browser
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
 
 main = Browser.application
-  { init          = Frame.init Model.init init
-  , subscriptions = Frame.subscriptions
+  { init          = Frame.init Layout.setup setup
+  , subscriptions = Frame.subscriptions Layout.subscriptions subscriptions
   , onUrlRequest  = Frame.onUrlRequest
   , onUrlChange   = Frame.onUrlChange
-  , update        = Frame.update update
+  , update        = Frame.update Layout.update update
   , view          = document
   }
 
-type alias Model = Model.Model App
-type alias App = {}
+type alias FrameModel = Frame.Model Layout.Model Model Msg
+type alias Command    = Transition.Command FrameModel Msg
+type alias Model =
+  { dashboard : Dashboard.Model
+  }
 
-type alias Msg = Model.Msg AppMsg
-type AppMsg
+type alias FrameMsg = Frame.Msg Layout.Msg Msg
+type Msg
   = Dashboard Dashboard.Msg
 
-init : Model.Init -> ( App, Model.Init )
+setup : Frame.SetupApp Layout.Model Model Msg
+setup =
+  { search = search
+  , store  = store
+  , init   = init
+  }
+
+init : Frame.InitModel -> ( Model, Command )
 init model =
-  ( {}
-  , model
+  Transition.compose Transition.batch Model
+    (model |> Dashboard.init |> Transition.mapCommand Dashboard)
+
+search : Search.Init Model FrameModel Msg
+search =
+  ( \model ->
+    [ ( "dashboard", model.dashboard |> Dashboard.search )
+    ] |> QueryEncode.object
+  , \value model ->
+    Transition.compose Transition.batch Model
+      ( model.dashboard |> Dashboard.searchChanged ["dashboard"] value
+        |> Transition.mapCommand Dashboard
+      )
   )
 
-update : AppMsg -> Model -> Model
-update msg model =
-  case msg of
-    Dashboard sub -> model |> Dashboard.update sub
-      |> (\m -> model)
+store : Store.Init Model
+store =
+  ( \model ->
+    [ ( "dashboard", model.dashboard |> Dashboard.store )
+    ] |> Encode.object
+  , \value model ->
+    Model
+      (model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]))
+  )
 
-document : Model -> Browser.Document Msg
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  [ model.dashboard |> Dashboard.subscriptions |> Sub.map Dashboard
+  ] |> Sub.batch
+
+update : Msg -> Model -> ( Model, Command )
+update message =
+  case message of
+    Dashboard msg ->
+      Transition.update
+        .dashboard (\dashboard m -> { m | dashboard = dashboard })
+        (Dashboard.update msg >> Transition.mapCommand Dashboard)
+
+document : FrameModel -> Browser.Document FrameMsg
 document model =
-  { title = model |> Frame.documentTitle
+  { title = model |> Layout.documentTitle
   , body = [ model |> L.lazy content ]
   }
 
-content : Model -> Html Msg
+content : FrameModel -> Html FrameMsg
 content model =
   H.section [ A.class "MainLayout" ] <|
-    [ model |> Frame.mobileHeader
-    , model |> Frame.navAddress
+    [ model |> Layout.mobileHeader
+    , model |> Layout.mobileAddress
     , H.article [] <|
-      [ model |> Frame.articleHeader ] ++
-      ( model |> Dashboard.contents |> Frame.mapHtml Dashboard ) ++
-      [ model |> Frame.articleFooter ]
-    , model |> Frame.nav
+      [ model |> Layout.articleHeader ] ++
+      ( model |> Dashboard.contents |> Frame.mapApp Dashboard ) ++
+      [ model |> Layout.articleFooter ]
+    , H.nav []
+      [ model |> Layout.navHeader
+      , model |> Layout.navAddress
+      , model |> Layout.navBody
+      , model |> Layout.navFooter
+      ]
     ] ++
-    ( model |> Dashboard.dialogs |> Frame.mapHtml Dashboard )
+    ( model |> Dashboard.dialogs |> Frame.mapApp Dashboard )

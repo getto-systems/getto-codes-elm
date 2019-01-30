@@ -8,10 +8,11 @@ import Test exposing (..)
 suite : Test
 suite =
   describe "Version"
-    [ describe "copyright"
-      [ test "should equal to 'GETTO systems'" <|
+    [ describe "data"
+      [ test "should return version data" <|
         \_ ->
-          Version.copyright
+          Version.data
+          |> .copyright
           |> Expect.equal "GETTO systems"
       ]
     ]
