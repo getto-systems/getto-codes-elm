@@ -18,7 +18,6 @@ module GettoUpload.Layout.Frame.Page exposing
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Menu    as Menu
 import GettoUpload.Layout.Frame.Article as Article
-import GettoUpload.Layout.Command.Store as Store
 
 import Getto.Command.Transition as Transition
 import Getto.Json.SafeDecode as SafeDecode
@@ -44,7 +43,16 @@ type Msg
 
 setup : Frame.SetupLayout Model app appMsg Msg
 setup =
-  { store = store
+  { store =
+    ( \model -> Encode.object
+      [ ( "article", model.article |> Article.store )
+      , ( "menu",    model.menu    |> Menu.store )
+      ]
+    , \value model ->
+      Model
+        (model.article |> Article.storeChanged (value |> SafeDecode.valueAt ["article"]))
+        (model.menu    |> Menu.storeChanged    (value |> SafeDecode.valueAt ["menu"]))
+    )
   , init  = init
   }
 
@@ -53,18 +61,6 @@ init model =
   Transition.compose2 Transition.batch Model
     (model |> Article.init |> Transition.mapCommand Article)
     (model |> Menu.init    |> Transition.mapCommand Menu)
-
-store : Store.Init Model
-store =
-  ( \model ->
-    [ ( "article", model.article |> Article.store )
-    , ( "menu",    model.menu    |> Menu.store )
-    ] |> Encode.object
-  , \value model ->
-    Model
-      (model.article |> Article.storeChanged (value |> SafeDecode.valueAt ["article"]))
-      (model.menu    |> Menu.storeChanged    (value |> SafeDecode.valueAt ["menu"]))
-  )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
