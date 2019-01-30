@@ -3,7 +3,7 @@ module GettoUpload.Layout.Frame exposing
   , SetupApp
   , InitModel
   , Model
-  , Msg(..)
+  , Msg
   , init
   , onUrlRequest
   , onUrlChange

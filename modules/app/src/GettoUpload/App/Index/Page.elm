@@ -12,7 +12,6 @@ import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
 import Json.Decode as Decode
-import Url exposing ( Url )
 import Browser
 import Html as H exposing ( Html )
 import Html.Attributes as A
@@ -56,7 +55,9 @@ search =
     ] |> QueryEncode.object
   , \value model ->
     Transition.compose Transition.batch Model
-      (model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transition.mapCommand Dashboard)
+      ( model.dashboard |> Dashboard.searchChanged ["dashboard"] value
+        |> Transition.mapCommand Dashboard
+      )
   )
 
 store : Store.Init Model
@@ -91,12 +92,17 @@ document model =
 content : FrameModel -> Html FrameMsg
 content model =
   H.section [ A.class "MainLayout" ] <|
-    [ model |> Layout.mobileHeader |> Frame.mapLayout
-    , model |> Layout.navAddress   |> Frame.mapLayout
+    [ model |> Layout.mobileHeader
+    , model |> Layout.mobileAddress
     , H.article [] <|
-      [ model |> Layout.articleHeader |> Frame.mapLayout ] ++
+      [ model |> Layout.articleHeader ] ++
       ( model |> Dashboard.contents |> Frame.mapApp Dashboard ) ++
-      [ model |> Layout.articleFooter |> Frame.mapLayout ]
-    , model |> Layout.nav |> Frame.mapLayout
+      [ model |> Layout.articleFooter ]
+    , H.nav []
+      [ model |> Layout.navHeader
+      , model |> Layout.navAddress
+      , model |> Layout.navBody
+      , model |> Layout.navFooter
+      ]
     ] ++
     ( model |> Dashboard.dialogs |> Frame.mapApp Dashboard )

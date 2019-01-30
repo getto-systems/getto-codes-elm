@@ -3,7 +3,9 @@ module GettoUpload.Layout.Frame.Credential exposing
   , init
   , token
   , roles
+  , headers
   )
+import GettoUpload.Layout.Command.Http as Http
 
 import Getto.Json.SafeDecode as SafeDecode
 
@@ -26,3 +28,8 @@ token (Model model) = model.token
 
 roles : Model -> List String
 roles (Model model) = model.roles
+
+headers : Model -> List Http.Header
+headers (Model model) =
+  [ ( "Authorization", model.token )
+  ]

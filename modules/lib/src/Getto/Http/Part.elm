@@ -1,5 +1,5 @@
 module Getto.Http.Part exposing
-  ( Model
+  ( Value
   , string
   , file
   , bytes
@@ -14,40 +14,40 @@ import File exposing ( File )
 import Bytes exposing ( Bytes )
 import Http
 
-type Model
+type Value
   = StringPart String
   | FilePart File
   | BytesPart String Bytes
-  | ListPart (List Model)
-  | ObjectPart (List ( String, Model ))
+  | ListPart (List Value)
+  | ObjectPart (List ( String, Value ))
 
 type Entry
   = StringEntry String
   | FileEntry File
   | BytesEntry String Bytes
 
-string : String -> Model
+string : String -> Value
 string = StringPart
 
-file : File -> Model
+file : File -> Value
 file = FilePart
 
-bytes : String -> Bytes -> Model
+bytes : String -> Bytes -> Value
 bytes = BytesPart
 
-list : List Model -> Model
+list : List Value -> Value
 list = ListPart
 
-object : List ( String, Model ) -> Model
+object : List ( String, Value ) -> Value
 object = ObjectPart
 
-toBody : Model -> Http.Body
+toBody : Value -> Http.Body
 toBody =
   flatten []
   >> List.map toPart
   >> Http.multipartBody
 
-flatten : List String -> Model -> List ( List String, Entry )
+flatten : List String -> Value -> List ( List String, Entry )
 flatten current part =
   case part of
     StringPart            value -> [ ( current, value |> StringEntry ) ]

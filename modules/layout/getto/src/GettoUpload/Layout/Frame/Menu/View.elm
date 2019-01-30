@@ -5,30 +5,25 @@ module GettoUpload.Layout.Frame.Menu.View exposing
   , side
   , breadcrumb
   )
-import GettoUpload.Layout.Frame.Menu.Store as MenuStore
-import GettoUpload.Layout.Frame.Menu.Http  as MenuHttp
-import GettoUpload.Layout.Command.Static     as Static
-import GettoUpload.Layout.Command.Credential as Credential
 import GettoUpload.Layout.Menu as Menu
 import GettoUpload.Layout.Fa as Fa
 
 import Dict exposing ( Dict )
 
 type alias Side =
-  { title : String
-  , badge : Badge
-  , items : List SideEntry
+  { title     : String
+  , badge     : Maybe Int
+  , collapsed : Bool
+  , items     : List SideEntry
   }
 
 type alias SideEntry =
-  { isActive : Bool
-  , title    : String
-  , href     : String
-  , icon     : Fa.Icon
-  , badge    : Badge
+  { active : Bool
+  , title  : String
+  , href   : String
+  , icon   : Fa.Icon
+  , badge  : Maybe Int
   }
-
-type alias Badge = Maybe Int
 
 type alias Breadcrumb = ( String, List BreadcrumbEntry )
 
@@ -39,60 +34,83 @@ type alias BreadcrumbEntry =
   }
 
 type alias MenuI18n =
-  { menu  : I18n
-  , title : I18n
+  { menu  : String -> String
+  , title : String -> String
   }
-type alias I18n = String -> String
 
-type alias SideAllow = List String -> ( String, List Menu.Item ) -> Bool
-type alias SideBadge = Dict String (MenuHttp.Model -> Int)
 type alias SideModel =
-  { page       : Static.Page
-  , credential : Credential.Model
-  , store      : MenuStore.Model
-  , http       : MenuHttp.Model
+  { path       : String
+  , roles      : List String
+  , menu       : Menu.Menu
+  , allow      : List String -> ( String, List Menu.Item ) -> Bool
+  , collapsed  : String -> Bool
+  , badge      : String -> Maybe Int
+  , i18n       : MenuI18n
   }
 
-side : MenuI18n -> Menu.Menu -> SideAllow -> SideBadge -> SideModel -> List Side
-side i18n menu allow badge model =
-  menu
-  |> List.filter (allow (model.credential |> Credential.roles))
-  |> List.map
-    (\(group,items) ->
-      let
-        itemBadge item = badge |> Dict.get (item |> Menu.href) |> Maybe.map (\f -> model.http |> f)
-        sum list =
-          if list |> List.isEmpty
-            then Nothing
-            else list |> List.sum |> Just
-      in
-        { title = group |> i18n.menu
-        , badge = items |> List.filterMap itemBadge |> sum
-        , items =
-          if (model.store |> MenuStore.isCollapsed group) && (items |> List.any (isActive model.page) |> not)
-            then []
-            else items |> List.map
+side : SideModel -> List Side
+side model =
+  let
+    badge item =
+      item
+      |> Menu.children
+      |> List.foldl
+        (badge >> (::))
+        [item |> Menu.href |> model.badge]
+      |> List.filterMap identity
+      |> sum
+
+    active item =
+      (item |> match model.path) ||
+      (item |> Menu.children |> List.any active)
+  in
+    model.menu
+    |> List.filter (model.roles |> model.allow)
+    |> List.map
+      (\(group,items) ->
+        let
+          menu =
+            items |> List.map
               (\item ->
-                { isActive = item |> isActive model.page
-                , title    = item |> Menu.href |> i18n.title
-                , href     = item |> Menu.href
-                , icon     = item |> Menu.icon
-                , badge    = item |> itemBadge
+                { active = item |> active
+                , title  = item |> Menu.href |> model.i18n.title
+                , href   = item |> Menu.href
+                , icon   = item |> Menu.icon
+                , badge  = item |> badge
                 }
               )
-        }
-    )
 
-isActive : Static.Page -> Menu.Item -> Bool
-isActive page item =
-  (item |> isMatch page) ||
-  (item |> Menu.children |> List.any (isActive page))
+          collapsed =
+            (group |> model.collapsed) &&
+            (menu |> List.any .active |> not)
+        in
+          { title     = group |> model.i18n.menu
+          , badge     = menu |> List.filterMap .badge |> sum
+          , collapsed = collapsed
+          , items =
+            if collapsed
+              then []
+              else menu
+          }
+      )
 
-isMatch : Static.Page -> Menu.Item -> Bool
-isMatch page = Menu.href >> (==) page.path
+sum : List Int -> Maybe Int
+sum list =
+  if list |> List.isEmpty
+    then Nothing
+    else list |> List.sum |> Just
 
-breadcrumb : MenuI18n -> Menu.Menu -> Static.Page -> Maybe Breadcrumb
-breadcrumb i18n menu page =
+match : String -> Menu.Item -> Bool
+match path = Menu.href >> (==) path
+
+type alias BreadcrumbModel =
+  { path : String
+  , menu : Menu.Menu
+  , i18n : MenuI18n
+  }
+
+breadcrumb : BreadcrumbModel -> Maybe Breadcrumb
+breadcrumb model =
   let
     find parent =
       List.foldl
@@ -105,7 +123,7 @@ breadcrumb i18n menu page =
             case acc of
               ( True, _ ) -> acc
               ( False, stack ) ->
-                if item |> isMatch page
+                if item |> match model.path
                   then stack |> found
                   else
                     case item |> Menu.children |> find (stack |> into) of
@@ -114,12 +132,12 @@ breadcrumb i18n menu page =
         )
         parent
   in
-    menu
+    model.menu
     |> List.filterMap
       (\(group,items) ->
         items
         |> find (False,[])
-        |> toBreadcrumb i18n group
+        |> toBreadcrumb model.i18n group
       )
     |> List.head
 
