@@ -95,13 +95,17 @@ content model =
     [ model |> Layout.mobileHeader
     , model |> Layout.mobileAddress
     , H.article [] <|
-      [ model |> Layout.articleHeader ] ++
+      [ H.header []
+        [ model |> Layout.articleHeader
+        , model |> Layout.breadcrumb
+        ]
+      ] ++
       ( model |> Dashboard.contents |> Frame.mapApp Dashboard ) ++
       [ model |> Layout.articleFooter ]
     , H.nav []
       [ model |> Layout.navHeader
       , model |> Layout.navAddress
-      , model |> Layout.navBody
+      , model |> Layout.nav
       , model |> Layout.navFooter
       ]
     ] ++

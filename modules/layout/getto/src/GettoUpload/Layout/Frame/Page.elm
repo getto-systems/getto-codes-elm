@@ -9,9 +9,10 @@ module GettoUpload.Layout.Frame.Page exposing
   , articleFooter
   , mobileHeader
   , mobileAddress
+  , breadcrumb
   , navHeader
   , navAddress
-  , navBody
+  , nav
   , navFooter
   )
 import GettoUpload.Layout.Frame as Frame
@@ -100,14 +101,17 @@ mobileHeader = Menu.mobileHeader >> H.map Menu >> Frame.mapLayout
 mobileAddress : FrameModel app appMsg -> Html (FrameMsg appMsg)
 mobileAddress = Menu.navAddress >> H.map Menu >> Frame.mapLayout
 
+breadcrumb : FrameModel app appMsg -> Html (FrameMsg appMsg)
+breadcrumb = Menu.breadcrumb >> H.map Menu >> Frame.mapLayout
+
 navHeader : FrameModel app appMsg -> Html (FrameMsg appMsg)
 navHeader = Menu.navHeader >> H.map Menu >> Frame.mapLayout
 
 navAddress : FrameModel app appMsg -> Html (FrameMsg appMsg)
 navAddress = Menu.navAddress >> H.map Menu >> Frame.mapLayout
 
-navBody : FrameModel app appMsg -> Html (FrameMsg appMsg)
-navBody = Menu.navBody >> H.map Menu >> Frame.mapLayout
+nav : FrameModel app appMsg -> Html (FrameMsg appMsg)
+nav = Menu.nav >> H.map Menu >> Frame.mapLayout
 
 navFooter : FrameModel app appMsg -> Html (FrameMsg appMsg)
 navFooter = Menu.navFooter >> H.map Menu >> Frame.mapLayout

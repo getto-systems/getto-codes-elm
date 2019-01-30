@@ -8,9 +8,10 @@ module GettoUpload.Layout.Frame.Menu exposing
   , update
   , mobileHeader
   , mobileAddress
+  , breadcrumb
   , navHeader
   , navAddress
-  , navBody
+  , nav
   , navFooter
   )
 import GettoUpload.Layout.Frame as Frame
@@ -162,6 +163,19 @@ mobileHeader model =
 mobileAddress : FrameModel a app appMsg -> Html Msg
 mobileAddress = navAddress
 
+breadcrumb : FrameModel a app appMsg -> Html Msg
+breadcrumb model =
+  H.ul []
+    [ H.li [] [ "MAIN" |> H.text ]
+    , H.li []
+      [ H.a [ A.href Home.index ]
+        [ H.i [ A.class "fas fa-home" ] []
+        , " " |> H.text
+        , "Home" |> H.text
+        ]
+      ]
+    ]
+
 navHeader : FrameModel a app appMsg -> Html Msg
 navHeader model =
   let
@@ -213,8 +227,8 @@ navAddress model =
       ]
     ]
 
-navBody : FrameModel a app appMsg -> Html Msg
-navBody model =
+nav : FrameModel a app appMsg -> Html Msg
+nav model =
   H.section []
     [ H.ul []
       [ H.li []

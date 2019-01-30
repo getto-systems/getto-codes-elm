@@ -80,19 +80,7 @@ header model =
   let
     static = model |> Frame.static
   in
-    H.header []
-      [ H.h1 [] [ static |> title |> H.text ]
-      , H.ul []
-        [ H.li [] [ "MAIN" |> H.text ]
-        , H.li []
-          [ H.a [ A.href Home.index ]
-            [ H.i [ A.class "fas fa-home" ] []
-            , " " |> H.text
-            , "Home" |> H.text
-            ]
-          ]
-        ]
-      ]
+    H.h1 [] [ static |> title |> H.text ]
 
 footer : FrameModel a app appMsg -> Html Msg
 footer model =
