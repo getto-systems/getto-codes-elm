@@ -1,8 +1,8 @@
-module GettoUpload.Layout.Frame.Menu.View exposing
+module GettoUpload.Layout.Frame.Side.View exposing
   ( Side
   , Breadcrumb
   , MenuI18n
-  , side
+  , menu
   , breadcrumb
   )
 import GettoUpload.Layout.Menu as Menu
@@ -48,8 +48,8 @@ type alias SideModel =
   , i18n       : MenuI18n
   }
 
-side : SideModel -> List Side
-side model =
+menu : SideModel -> List Side
+menu model =
   let
     badge item =
       item
@@ -69,7 +69,7 @@ side model =
     |> List.map
       (\(group,items) ->
         let
-          menu =
+          entries =
             items |> List.map
               (\item ->
                 { active = item |> active
@@ -82,15 +82,15 @@ side model =
 
           collapsed =
             (group |> model.collapsed) &&
-            (menu |> List.any .active |> not)
+            (entries |> List.any .active |> not)
         in
           { title     = group |> model.i18n.menu
-          , badge     = menu |> List.filterMap .badge |> sum
+          , badge     = entries |> List.filterMap .badge |> sum
           , collapsed = collapsed
           , items =
             if collapsed
               then []
-              else menu
+              else entries
           }
       )
 

@@ -16,7 +16,7 @@ module GettoUpload.Layout.Frame.Page exposing
   , navFooter
   )
 import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Frame.Menu    as Menu
+import GettoUpload.Layout.Frame.Side    as Side
 import GettoUpload.Layout.Frame.Article as Article
 
 import Getto.Command.Transition as Transition exposing ( Transition )
@@ -33,25 +33,25 @@ type alias FrameModel app appMsg = Frame.Model Model app appMsg
 type alias FrameTransition app appMsg = Transition (FrameModel app appMsg) Msg
 type alias Model =
   { article : Article.Model
-  , menu    : Menu.Model
+  , side    : Side.Model
   }
 
 type alias FrameMsg appMsg = Frame.Msg Msg appMsg
 type Msg
   = Article Article.Msg
-  | Menu    Menu.Msg
+  | Side    Side.Msg
 
 setup : Frame.SetupLayout Model app appMsg Msg
 setup =
   { store =
     ( \model -> Encode.object
       [ ( "article", model.article |> Article.store )
-      , ( "menu",    model.menu    |> Menu.store )
+      , ( "side",    model.side    |> Side.store )
       ]
     , \value model ->
       Model
         (model.article |> Article.storeChanged (value |> SafeDecode.valueAt ["article"]))
-        (model.menu    |> Menu.storeChanged    (value |> SafeDecode.valueAt ["menu"]))
+        (model.side    |> Side.storeChanged    (value |> SafeDecode.valueAt ["side"]))
     )
   , init  = init
   }
@@ -60,12 +60,12 @@ init : Frame.InitModel -> ( Model, FrameTransition app appMsg )
 init model =
   Transition.compose2 Model
     (model |> Article.init |> Transition.map Article)
-    (model |> Menu.init    |> Transition.map Menu)
+    (model |> Side.init    |> Transition.map Side)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
   [ model.article |> Article.subscriptions |> Sub.map Article
-  , model.menu    |> Menu.subscriptions    |> Sub.map Menu
+  , model.side    |> Side.subscriptions    |> Sub.map Side
   ] |> Sub.batch
 
 update : Msg -> Model -> ( Model, FrameTransition app appMsg )
@@ -76,10 +76,10 @@ update message =
         .article (\article m -> { m | article = article })
         (Article.update msg >> Transition.map Article)
 
-    Menu msg ->
+    Side msg ->
       Transition.update
-        .menu (\menu m -> { m | menu = menu })
-        (Menu.update msg >> Transition.map Menu)
+        .side (\side m -> { m | side = side })
+        (Side.update msg >> Transition.map Side)
 
 
 documentTitle : FrameModel app appMsg -> String
@@ -92,22 +92,22 @@ articleFooter : FrameModel app appMsg -> Html (FrameMsg appMsg)
 articleFooter = Article.footer >> H.map Article >> Frame.mapLayout
 
 mobileHeader : FrameModel app appMsg -> Html (FrameMsg appMsg)
-mobileHeader = Menu.mobileHeader >> H.map Menu >> Frame.mapLayout
+mobileHeader = Side.mobileHeader >> H.map Side >> Frame.mapLayout
 
 mobileAddress : FrameModel app appMsg -> Html (FrameMsg appMsg)
-mobileAddress = Menu.navAddress >> H.map Menu >> Frame.mapLayout
+mobileAddress = Side.navAddress >> H.map Side >> Frame.mapLayout
 
 breadcrumb : FrameModel app appMsg -> Html (FrameMsg appMsg)
-breadcrumb = Menu.breadcrumb >> H.map Menu >> Frame.mapLayout
+breadcrumb = Side.breadcrumb >> H.map Side >> Frame.mapLayout
 
 navHeader : FrameModel app appMsg -> Html (FrameMsg appMsg)
-navHeader = Menu.navHeader >> H.map Menu >> Frame.mapLayout
+navHeader = Side.navHeader >> H.map Side >> Frame.mapLayout
 
 navAddress : FrameModel app appMsg -> Html (FrameMsg appMsg)
-navAddress = Menu.navAddress >> H.map Menu >> Frame.mapLayout
+navAddress = Side.navAddress >> H.map Side >> Frame.mapLayout
 
 nav : FrameModel app appMsg -> Html (FrameMsg appMsg)
-nav = Menu.nav >> H.map Menu >> Frame.mapLayout
+nav = Side.nav >> H.map Side >> Frame.mapLayout
 
 navFooter : FrameModel app appMsg -> Html (FrameMsg appMsg)
-navFooter = Menu.navFooter >> H.map Menu >> Frame.mapLayout
+navFooter = Side.navFooter >> H.map Side >> Frame.mapLayout

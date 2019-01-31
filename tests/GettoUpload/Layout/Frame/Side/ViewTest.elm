@@ -1,36 +1,36 @@
-module GettoUpload.Layout.Frame.Menu.ViewTest exposing (..)
-import GettoUpload.Layout.Frame.Menu.View as Menu
-import GettoUpload.Layout.Menu as Model
+module GettoUpload.Layout.Frame.Side.ViewTest exposing (..)
+import GettoUpload.Layout.Frame.Side.View as Side
+import GettoUpload.Layout.Menu as Menu
 import GettoUpload.Layout.Fa as Fa
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
 
-menu : Model.Menu
+menu : Menu.Menu
 menu =
   [ ( "main"
-    , [ Model.item (Fa.solid "home") "home.html"
-        [ Model.item (Fa.solid "file") "home/file.html"
-          [ Model.item (Fa.solid "pencil") "home/file/edit.html" []
+    , [ Menu.item (Fa.solid "home") "home.html"
+        [ Menu.item (Fa.solid "file") "home/file.html"
+          [ Menu.item (Fa.solid "pencil") "home/file/edit.html" []
           ]
         ]
-      , Model.item (Fa.solid "data") "data.html"
-        [ Model.item (Fa.solid "file") "data/file.html"
-          [ Model.item (Fa.solid "pencil") "data/file/edit.html" []
+      , Menu.item (Fa.solid "data") "data.html"
+        [ Menu.item (Fa.solid "file") "data/file.html"
+          [ Menu.item (Fa.solid "pencil") "data/file/edit.html" []
           ]
         ]
       ]
     )
   , ( "data"
-    , [ Model.item (Fa.solid "home") "master.html"
-        [ Model.item (Fa.solid "file") "master/file.html"
-          [ Model.item (Fa.solid "pencil") "master/file/edit.html" []
+    , [ Menu.item (Fa.solid "home") "master.html"
+        [ Menu.item (Fa.solid "file") "master/file.html"
+          [ Menu.item (Fa.solid "pencil") "master/file/edit.html" []
           ]
         ]
-      , Model.item (Fa.solid "data") "upload.html"
-        [ Model.item (Fa.solid "file") "upload/file.html"
-          [ Model.item (Fa.solid "pencil") "upload/file/edit.html" []
+      , Menu.item (Fa.solid "data") "upload.html"
+        [ Menu.item (Fa.solid "file") "upload/file.html"
+          [ Menu.item (Fa.solid "pencil") "upload/file/edit.html" []
           ]
         ]
       ]
@@ -44,12 +44,12 @@ i18n =
 
 suite : Test
 suite =
-  describe "Menu"
+  describe "Side"
     {-
     [ describe "side"
       [ test "should return side menu" <|
         \_ ->
-          { path = "home.html" } |> Menu.side i18n menu
+          { path = "home.html" } |> Side.menu i18n menu
           |> Expect.equal
             (Just
               ( "main"
@@ -63,7 +63,7 @@ suite =
     [ describe "breadcrumb"
       [ test "should return breadcrumbs" <|
         \_ ->
-          { path = "home.html", menu = menu, i18n = i18n } |> Menu.breadcrumb
+          { path = "home.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "main"
@@ -74,7 +74,7 @@ suite =
 
       , test "should return breadcrumbs at second level" <|
         \_ ->
-          { path = "home/file.html", menu = menu, i18n = i18n } |> Menu.breadcrumb
+          { path = "home/file.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "main"
@@ -86,7 +86,7 @@ suite =
 
       , test "should return breadcrumbs at therd level" <|
         \_ ->
-          { path = "home/file/edit.html", menu = menu, i18n = i18n } |> Menu.breadcrumb
+          { path = "home/file/edit.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "main"
@@ -99,7 +99,7 @@ suite =
 
       , test "should return breadcrumbs at therd level of 'data'" <|
         \_ ->
-          { path = "master/file/edit.html", menu = menu, i18n = i18n } |> Menu.breadcrumb
+          { path = "master/file/edit.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "data"
@@ -112,7 +112,7 @@ suite =
 
       , test "should return breadcrumbs at top level of another 'data'" <|
         \_ ->
-          { path = "upload.html", menu = menu, i18n = i18n } |> Menu.breadcrumb
+          { path = "upload.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "data"
