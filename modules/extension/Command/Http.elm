@@ -16,7 +16,7 @@ module GettoUpload.Extension.Command.Http exposing
   , upload
   )
 import GettoUpload.Extension.Command.Http.Mock as Mock
-import GettoUpload.Extension.View.Http as View
+import GettoUpload.Extension.View.Http as HttpView
 
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Http.Part as Part
@@ -26,7 +26,7 @@ import Json.Decode as Decode
 import Http
 
 type Entry data = Entry
-  { state    : View.State data
+  { state    : HttpView.State data
   , response : Maybe data
   }
 
@@ -61,26 +61,26 @@ type alias RequestData data msg =
 
 empty : Entry model
 empty = Entry
-  { state    = View.Empty
+  { state    = HttpView.Empty
   , response = Nothing
   }
 
-state : Entry model -> View.State model
+state : Entry model -> HttpView.State model
 state (Entry entry) = entry.state
 
 response : Entry model -> Maybe model
 response (Entry entry) = entry.response
 
-stateTo : View.State model -> Entry model -> Entry model
+stateTo : HttpView.State model -> Entry model -> Entry model
 stateTo value (Entry entry) =
   case value of
-    View.Success data -> Entry { entry | state = value, response = Just data }
-    _                 -> Entry { entry | state = value }
+    HttpView.Success data -> Entry { entry | state = value, response = Just data }
+    _                     -> Entry { entry | state = value }
 
 clear : Entry model -> Entry model
 clear (Entry entry) = Entry { entry | response = Nothing }
 
-request : Request model data -> (View.State data -> msg) -> model -> Cmd msg
+request : Request model data -> (HttpView.State data -> msg) -> model -> Cmd msg
 request req msg model =
   let
     headers data = model |> data.headers |> List.map (\(key,value) -> Http.header key value)
@@ -142,18 +142,18 @@ request req msg model =
           , msg     = requestMsg
           }
 
-toState : Result Http.Error data -> View.State data
+toState : Result Http.Error data -> HttpView.State data
 toState result =
   case result of
-    Ok  data  -> View.Success data
+    Ok  data  -> HttpView.Success data
     Err error ->
-      View.Failure <|
+      HttpView.Failure <|
         case error of
-          Http.BadUrl   message -> View.BadUrl message
-          Http.Timeout          -> View.Timeout
-          Http.NetworkError     -> View.NetworkError
-          Http.BadStatus status -> View.BadStatus status
-          Http.BadBody  message -> View.BadBody message
+          Http.BadUrl   message -> HttpView.BadUrl message
+          Http.Timeout          -> HttpView.Timeout
+          Http.NetworkError     -> HttpView.NetworkError
+          Http.BadStatus status -> HttpView.BadStatus status
+          Http.BadBody  message -> HttpView.BadBody message
 
 httpRequest : RequestData data msg -> Cmd msg
 httpRequest data =
@@ -167,7 +167,7 @@ httpRequest data =
     , tracker = data.tracker
     }
 
-track : Request model data -> (View.State data -> msg) -> Sub msg
+track : Request model data -> (HttpView.State data -> msg) -> Sub msg
 track req msg =
   let
     trackerData =
@@ -180,12 +180,12 @@ track req msg =
 
     toProgress progress =
       case progress of
-        Http.Sending   data -> View.Sending data
-        Http.Receiving data -> View.Receiving data
+        Http.Sending   data -> HttpView.Sending data
+        Http.Receiving data -> HttpView.Receiving data
   in
     case trackerData of
       Nothing -> Sub.none
-      Just tracker -> (toProgress >> View.Progress >> msg) |> Http.track tracker
+      Just tracker -> (toProgress >> HttpView.Progress >> msg) |> Http.track tracker
 
 get : RequestInner model data QueryEncode.Value -> Request model data
 get = Get
