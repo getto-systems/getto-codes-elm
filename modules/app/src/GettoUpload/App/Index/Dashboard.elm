@@ -14,6 +14,7 @@ module GettoUpload.App.Index.Dashboard exposing
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Href.Home as HomeHref
+import GettoUpload.Layout.Href as Href
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
@@ -83,7 +84,7 @@ dashboard model =
             ]
           , H.meter [ A.value "3", A.max "20" ] [ "15%" |> H.text ]
           , H.footer []
-            [ H.a [ A.href HomeHref.index ]
+            [ H.a [ HomeHref.index |> Href.toString |> A.href ]
               [ H.i [ A.class "fas fa-user" ] []
               , " " |> H.text
               , "User" |> H.text

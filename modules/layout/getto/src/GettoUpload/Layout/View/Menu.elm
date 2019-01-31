@@ -7,6 +7,7 @@ module GettoUpload.Layout.View.Menu exposing
   , children
   )
 import GettoUpload.Layout.View.Icon as Icon exposing ( Icon )
+import GettoUpload.Layout.Href as Href exposing ( Href )
 
 type alias Menu = List ( String, List Item )
 
@@ -14,10 +15,10 @@ type Item = Item Info (List Item)
 
 type alias Info =
   { icon : Icon
-  , href : String
+  , href : Href
   }
 
-item : Icon -> String -> List Item -> Item
+item : Icon -> Href -> List Item -> Item
 item iconData hrefData items =
   Item
     { icon = iconData
@@ -28,7 +29,7 @@ item iconData hrefData items =
 icon : Item -> Icon
 icon = info >> .icon
 
-href : Item -> String
+href : Item -> Href
 href = info >> .href
 
 info : Item -> Info

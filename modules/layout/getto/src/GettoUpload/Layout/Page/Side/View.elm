@@ -15,6 +15,7 @@ module GettoUpload.Layout.Page.Side.View exposing
 import GettoUpload.Layout.View.Menu as Menu
 import GettoUpload.Layout.View.Icon as Icon exposing ( Icon )
 import GettoUpload.Layout.View.Http as HttpView
+import GettoUpload.Layout.Href as Href exposing ( Href )
 
 type alias MobileHeader =
   { company : String
@@ -39,8 +40,8 @@ type alias NavAddress =
   , badge   : BadgeState
   , roles   : List String
   , href :
-    { config  : String
-    , profile : String
+    { config  : Href
+    , profile : Href
     }
   , i18n :
     { title : String -> String
@@ -58,7 +59,7 @@ type alias Breadcrumb = ( String, List BreadcrumbItem )
 type alias BreadcrumbItem =
   { title : String
   , icon  : Icon
-  , href  : String
+  , href  : Href
   }
 
 type alias Nav msg =
@@ -78,7 +79,7 @@ type alias Menu =
 type alias MenuItem =
   { active : Bool
   , title  : String
-  , href   : String
+  , href   : Href
   , icon   : Icon
   , badge  : Maybe Int
   }
@@ -157,7 +158,7 @@ toBreadcrumb i18n group result =
           |> List.reverse
           |> List.map
             (\item ->
-              { title = item |> Menu.href |> i18n.title
+              { title = item |> Menu.href |> Href.path |> i18n.title
               , href  = item |> Menu.href
               , icon  = item |> Menu.icon
               }
@@ -172,7 +173,7 @@ type alias MenuModel =
   , menu       : Menu.Menu
   , allow      : List String -> ( String, List Menu.Item ) -> Bool
   , collapsed  : String -> Bool
-  , badge      : String -> Maybe Int
+  , badge      : Href -> Maybe Int
   , i18n       : MenuI18n
   }
 
@@ -203,7 +204,7 @@ menu model =
             items |> List.map
               (\item ->
                 { active = item |> active
-                , title  = item |> Menu.href |> model.i18n.title
+                , title  = item |> Menu.href |> Href.path |> model.i18n.title
                 , href   = item |> Menu.href
                 , icon   = item |> Menu.icon
                 , badge  = item |> badge
@@ -229,4 +230,4 @@ sum list =
     else list |> List.sum |> Just
 
 match : String -> Menu.Item -> Bool
-match path = Menu.href >> (==) path
+match path = Menu.href >> Href.path >> (==) path

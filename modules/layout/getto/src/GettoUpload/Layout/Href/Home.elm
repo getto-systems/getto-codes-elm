@@ -3,4 +3,6 @@ module GettoUpload.Layout.Href.Home exposing
   )
 import GettoUpload.Layout.Href as Href
 
-index = "index.html" |> Href.prependRoot
+import Getto.Url.Query.Encode as QueryEncode
+
+index = "index.html" |> Href.href QueryEncode.empty
