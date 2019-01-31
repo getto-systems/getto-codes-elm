@@ -9,13 +9,14 @@ module GettoUpload.Layout.Page.Side.Html exposing
 import GettoUpload.Layout.Page.Side.View as View
 import GettoUpload.Extension.View.Icon as Icon
 import GettoUpload.Extension.View.Html as Html
-import GettoUpload.Extension.Href as Href
+import GettoUpload.Extension.Href as Href exposing ( Href )
 
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
 
-mobileHeader : View.MobileHeader -> Html msg
+
+mobileHeader : { company : String, title : String, sub : String } -> Html msg
 mobileHeader model =
   H.header []
     [ H.p []
@@ -29,7 +30,8 @@ mobileHeader model =
       ]
     ]
 
-navHeader : View.NavHeader -> Html msg
+
+navHeader : { company : String, title : String, sub : String } -> Html msg
 navHeader model =
   H.header []
     [ H.p []
@@ -41,11 +43,34 @@ navHeader model =
       ]
     ]
 
-navFooter : View.NavFooter -> Html msg
+
+navFooter : { version : String } -> Html msg
 navFooter model =
   H.footer [] [ H.p [] [ "version : " ++ model.version |> H.text ] ]
 
-navAddress : View.NavAddress -> Html msg
+
+type alias NavAddress =
+  { title   : String
+  , mode1   : NavAddressMode
+  , mode2   : NavAddressMode
+  , badge   : View.BadgeState
+  , roles   : List String
+  , href :
+    { config  : Href
+    , profile : Href
+    }
+  , i18n :
+    { title : String -> String
+    , mode  : String -> String
+    , role  : String -> String
+    }
+  }
+type alias NavAddressMode =
+  { title : String
+  , state : Bool
+  }
+
+navAddress : NavAddress -> Html msg
 navAddress model =
   let
     mode m =
@@ -55,13 +80,13 @@ navAddress model =
             then "success"
             else "gray"
       in
-          H.li []
-            [ H.span [ state |> A.class ]
-              [ Icon.fas "circle" |> Html.icon []
-              , " " |> H.text
-              , m.title |> model.i18n.mode |> H.text
-              ]
+        H.li []
+          [ H.span [ state |> A.class ]
+            [ Icon.fas "circle" |> Html.icon []
+            , " " |> H.text
+            , m.title |> model.i18n.mode |> H.text
             ]
+          ]
 
     badge =
       case model.badge of
@@ -89,6 +114,7 @@ navAddress model =
         ]
       ]
 
+
 breadcrumb : Maybe View.Breadcrumb -> Html msg
 breadcrumb data =
   case data of
@@ -108,7 +134,8 @@ breadcrumb data =
           )
         )
 
-nav : View.Nav msg -> Html msg
+
+nav : { open : String -> msg, close : String -> msg, menu : List View.Menu } -> Html msg
 nav model =
   let
     onClick item =
