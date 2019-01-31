@@ -3,7 +3,7 @@ import GettoUpload.App.Index.Dashboard as Dashboard
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Page as Layout
 
-import Getto.Command.Transition as Transition
+import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Json.SafeDecode as SafeDecode
@@ -25,7 +25,7 @@ main = Browser.application
   }
 
 type alias FrameModel = Frame.Model Layout.Model Model Msg
-type alias Command    = Transition.Command FrameModel Msg
+type alias FrameTransition = Transition FrameModel Msg
 type alias Model =
   { dashboard : Dashboard.Model
   }
@@ -41,9 +41,9 @@ setup =
       [ ( "dashboard", model.dashboard |> Dashboard.search )
       ]
     , \value model ->
-      Transition.compose Transition.batch Model
+      Transition.compose Model
         ( model.dashboard |> Dashboard.searchChanged ["dashboard"] value
-          |> Transition.mapCommand Dashboard
+          |> Transition.map Dashboard
         )
     )
   , store =
@@ -57,23 +57,23 @@ setup =
   , init = init
   }
 
-init : Frame.InitModel -> ( Model, Command )
+init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
-  Transition.compose Transition.batch Model
-    (model |> Dashboard.init |> Transition.mapCommand Dashboard)
+  Transition.compose Model
+    (model |> Dashboard.init |> Transition.map Dashboard)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
   [ model.dashboard |> Dashboard.subscriptions |> Sub.map Dashboard
   ] |> Sub.batch
 
-update : Msg -> Model -> ( Model, Command )
+update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
     Dashboard msg ->
       Transition.update
         .dashboard (\dashboard m -> { m | dashboard = dashboard })
-        (Dashboard.update msg >> Transition.mapCommand Dashboard)
+        (Dashboard.update msg >> Transition.map Dashboard)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =

@@ -6,7 +6,7 @@ module GettoUpload.Layout.Command.Search exposing
   , search
   )
 
-import Getto.Command.Transition as Transition
+import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 
@@ -21,7 +21,7 @@ type alias Inner model m msg =
   }
 
 type alias Encode model = model -> QueryEncode.Value
-type alias Decode model m msg = QueryDecode.Value -> model -> ( model, Transition.Command m msg )
+type alias Decode model m msg = QueryDecode.Value -> model -> ( model, Transition m msg )
 
 type alias Init model m msg = ( Encode model, Decode model m msg )
 
@@ -32,7 +32,7 @@ init key (encode,decode) = Model
   , decode = decode
   }
 
-changed : Model model m msg -> Url -> model -> ( model, Transition.Command m msg )
+changed : Model model m msg -> Url -> model -> ( model, Transition m msg )
 changed (Model model) = split >> model.decode
 
 split : Url -> QueryDecode.Value

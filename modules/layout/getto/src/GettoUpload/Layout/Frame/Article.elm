@@ -16,7 +16,7 @@ import GettoUpload.Layout.Href.Home as Home
 import GettoUpload.Layout.Fa as Fa -- TODO Icon.Fa -- Icon.Line も追加したいかも
 import GettoUpload.I18n.App as I18n
 
-import Getto.Command.Transition as Transition
+import Getto.Command.Transition as Transition exposing ( Transition )
 
 import Json.Encode as Encode
 import Json.Decode as Decode
@@ -26,13 +26,13 @@ import Html.Events as E
 import Html.Lazy as L
 
 type alias FrameModel a app appMsg = Frame.Model { a | article : Model } app appMsg
-type alias Command    a app appMsg = Transition.Command (FrameModel a app appMsg) Msg
+type alias FrameTransition a app appMsg = Transition (FrameModel a app appMsg) Msg
 type alias Model = {}
 
 type Msg
   = Noop
 
-init : Frame.InitModel -> ( Model, Command a app appMsg )
+init : Frame.InitModel -> ( Model, FrameTransition a app appMsg )
 init model =
   ( {}
   {-
@@ -55,7 +55,7 @@ storeChanged value model = model
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none
 
-update : Msg -> Model -> ( Model, Command a app appMsg )
+update : Msg -> Model -> ( Model, FrameTransition a app appMsg )
 update msg model =
   case msg of
     Noop -> ( model, Transition.none )

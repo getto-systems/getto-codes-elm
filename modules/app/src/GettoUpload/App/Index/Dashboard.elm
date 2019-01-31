@@ -15,7 +15,7 @@ import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Page as Layout
 import GettoUpload.Layout.Href.Home as HomeHref
 
-import Getto.Command.Transition as Transition
+import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 
@@ -27,19 +27,19 @@ import Html.Events as E
 import Html.Lazy as L
 
 type alias FrameModel a msg = Frame.Model Layout.Model { a | dashboard : Model } msg
-type alias Command    a msg = Transition.Command (FrameModel a msg) Msg
+type alias FrameTransition a msg = Transition (FrameModel a msg) Msg
 type alias Model = {}
 
 type Msg
   = HelloWorld
 
-init : Frame.InitModel -> ( Model, Command a msg )
+init : Frame.InitModel -> ( Model, FrameTransition a msg )
 init model = ( {}, Transition.none )
 
 search : Model -> QueryEncode.Value
 search model = QueryEncode.empty
 
-searchChanged : List String -> QueryDecode.Value -> Model -> ( Model, Command a msg )
+searchChanged : List String -> QueryDecode.Value -> Model -> ( Model, FrameTransition a msg )
 searchChanged names value model = ( model, Transition.none )
 
 store : Model -> Encode.Value
@@ -51,7 +51,7 @@ storeChanged value model = model
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none
 
-update : Msg -> Model -> ( Model, Command a msg )
+update : Msg -> Model -> ( Model, FrameTransition a msg )
 update msg model =
   case msg of
     HelloWorld -> ( model, Transition.none )

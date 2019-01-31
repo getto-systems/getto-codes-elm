@@ -19,7 +19,7 @@ import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Menu    as Menu
 import GettoUpload.Layout.Frame.Article as Article
 
-import Getto.Command.Transition as Transition
+import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
@@ -30,7 +30,7 @@ import Html.Events as E
 import Html.Lazy as L
 
 type alias FrameModel app appMsg = Frame.Model Model app appMsg
-type alias Command    app appMsg = Transition.Command (FrameModel app appMsg) Msg
+type alias FrameTransition app appMsg = Transition (FrameModel app appMsg) Msg
 type alias Model =
   { article : Article.Model
   , menu    : Menu.Model
@@ -56,11 +56,11 @@ setup =
   , init  = init
   }
 
-init : Frame.InitModel -> ( Model, Command app appMsg )
+init : Frame.InitModel -> ( Model, FrameTransition app appMsg )
 init model =
-  Transition.compose2 Transition.batch Model
-    (model |> Article.init |> Transition.mapCommand Article)
-    (model |> Menu.init    |> Transition.mapCommand Menu)
+  Transition.compose2 Model
+    (model |> Article.init |> Transition.map Article)
+    (model |> Menu.init    |> Transition.map Menu)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -68,18 +68,18 @@ subscriptions model =
   , model.menu    |> Menu.subscriptions    |> Sub.map Menu
   ] |> Sub.batch
 
-update : Msg -> Model -> ( Model, Command app appMsg )
+update : Msg -> Model -> ( Model, FrameTransition app appMsg )
 update message =
   case message of
     Article msg ->
       Transition.update
         .article (\article m -> { m | article = article })
-        (Article.update msg >> Transition.mapCommand Article)
+        (Article.update msg >> Transition.map Article)
 
     Menu msg ->
       Transition.update
         .menu (\menu m -> { m | menu = menu })
-        (Menu.update msg >> Transition.mapCommand Menu)
+        (Menu.update msg >> Transition.map Menu)
 
 
 documentTitle : FrameModel app appMsg -> String
