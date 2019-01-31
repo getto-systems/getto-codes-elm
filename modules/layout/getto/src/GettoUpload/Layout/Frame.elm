@@ -23,14 +23,14 @@ module GettoUpload.Layout.Frame exposing
 import GettoUpload.Layout.Command.Auth   as Auth
 import GettoUpload.Layout.Command.Store  as Store
 import GettoUpload.Layout.Command.Search as Search
---import GettoUpload.Layout.Command.Http   as Http
 import GettoUpload.Layout.Frame.Static     as Static
 import GettoUpload.Layout.Frame.Credential as Credential
 import GettoUpload.Layout.Href.Home as HomeHref
 import GettoUpload.Layout.Version as Version
 import GettoUpload.I18n.App as I18n
 
-import Getto.Command.Transition as Transition
+import Getto.Command as Command
+import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 
 import Browser
@@ -77,8 +77,6 @@ type Msg layoutMsg appMsg
   | CredentialChanged Decode.Value
   | LayoutStoreChanged Decode.Value
   | AppStoreChanged Decode.Value
-  --| HttpProgress Data Http.Progress
-  --| HttpResponse Data Http.Response
   | Layout layoutMsg
   | App appMsg
 
@@ -88,12 +86,12 @@ onUrlChange  = UrlChange
 
 type alias SetupLayout layout app appMsg layoutMsg =
   { store : Store.Init layout
-  , init  : InitModel -> ( layout, Transition.Command (Model layout app appMsg) layoutMsg )
+  , init  : InitModel -> ( layout, Transition (Model layout app appMsg) layoutMsg )
   }
 type alias SetupApp layout app appMsg =
   { search : Search.Init app (Model layout app appMsg) appMsg
   , store  : Store.Init app
-  , init   : InitModel -> ( app, Transition.Command (Model layout app appMsg) appMsg )
+  , init   : InitModel -> ( app, Transition (Model layout app appMsg) appMsg )
   }
 
 init : SetupLayout layout app appMsg layoutMsg -> SetupApp layout app appMsg -> Flags -> Url -> Navigation.Key -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
@@ -118,12 +116,12 @@ init setupLayout setupApp flags url key =
         , app    = Store.init Store.App    setupApp.store
         }
       }
-    |> Transition.empty
-    |> Transition.andThen (layoutStoreChanged flags.store.layout >> Transition.empty)
-    |> Transition.andThen (appStoreChanged    flags.store.app    >> Transition.empty)
-    |> Transition.andThen (searchChanged url)
-    |> Transition.andThen (Transition.exec layoutCmd >> Transition.map Layout)
-    |> Transition.andThen (Transition.exec appCmd    >> Transition.map App)
+    |> Command.none
+    |> Command.andThen (layoutStoreChanged flags.store.layout >> Command.none)
+    |> Command.andThen (appStoreChanged    flags.store.app    >> Command.none)
+    |> Command.andThen (searchChanged url)
+    |> Command.andThen (Transition.exec layoutCmd >> Command.map Layout)
+    |> Command.andThen (Transition.exec appCmd    >> Command.map App)
 
 
 subscriptions : (layout -> Sub layoutMsg) -> (app -> Sub appMsg) -> Model layout app appMsg -> Sub (Msg layoutMsg appMsg)
@@ -137,8 +135,8 @@ subscriptions layoutSubscriptions appSubscriptions (Model model) = Sub.batch
   ]
 
 
-type alias LayoutUpdater layout app appMsg layoutMsg = (layoutMsg -> layout -> ( layout, Transition.Command (Model layout app appMsg) layoutMsg ))
-type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition.Command (Model layout app appMsg) appMsg ))
+type alias LayoutUpdater layout app appMsg layoutMsg = (layoutMsg -> layout -> ( layout, Transition (Model layout app appMsg) layoutMsg ))
+type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition (Model layout app appMsg) appMsg ))
 
 update : LayoutUpdater layout app appMsg layoutMsg -> AppUpdater layout app appMsg -> Msg layoutMsg appMsg  -> Model layout app appMsg -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
 update layoutUpdater appUpdater message model =
@@ -149,10 +147,10 @@ update layoutUpdater appUpdater message model =
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
         Browser.External href -> ( model, href |> Navigation.load )
 
-    CredentialChanged value -> model |> credentialChanged value |> Transition.empty
+    CredentialChanged value -> model |> credentialChanged value |> Command.none
 
-    LayoutStoreChanged value -> model |> layoutStoreChanged value |> Transition.empty
-    AppStoreChanged    value -> model |> appStoreChanged    value |> Transition.empty
+    LayoutStoreChanged value -> model |> layoutStoreChanged value |> Command.none
+    AppStoreChanged    value -> model |> appStoreChanged    value |> Command.none
 
 {-
     HttpResponse data result ->
@@ -166,7 +164,7 @@ update layoutUpdater appUpdater message model =
           let
             (newApp,f) = m.app |> appUpdater msg
           in
-            Model { m | app = newApp } |> Transition.exec f |> Transition.map App
+            Model { m | app = newApp } |> Transition.exec f |> Command.map App
 
     Layout msg ->
       case model of
@@ -174,7 +172,7 @@ update layoutUpdater appUpdater message model =
           let
             (newLayout,f) = m.layout |> layoutUpdater msg
           in
-            Model { m | layout = newLayout } |> Transition.exec f |> Transition.map Layout
+            Model { m | layout = newLayout } |> Transition.exec f |> Command.map Layout
 
 
 credentialChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
@@ -186,7 +184,7 @@ searchChanged url (Model model) =
   let
     (newApp,f) = model.app |> Search.changed model.search url
   in
-    Model { model | app = newApp } |> Transition.exec f |> Transition.map App
+    Model { model | app = newApp } |> Transition.exec f |> Command.map App
 
 layoutStoreChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
 layoutStoreChanged value (Model model) =

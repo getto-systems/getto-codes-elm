@@ -24,7 +24,7 @@ import GettoUpload.Layout.Href.Home as Home
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Layout.Fa as Fa -- TODO Icon.Fa -- Icon.Line も追加したいかも
 
-import Getto.Command.Transition as Transition
+import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Url.Query.Encode as QueryEncode
 
@@ -38,7 +38,7 @@ import Html.Events as E
 import Html.Lazy as L
 
 type alias FrameModel a app appMsg = Frame.Model { a | menu : Model } app appMsg
-type alias Command    a app appMsg = Transition.Command (FrameModel a app appMsg) Msg
+type alias FrameTransition a app appMsg = Transition (FrameModel a app appMsg) Msg
 type alias Model =
   { menu       : Menu
   , badgeNames : Dict String String
@@ -55,21 +55,13 @@ type Msg
   | MenuOpen  String
   | MenuClose String
 
-init : Frame.InitModel -> ( Model, Command a app appMsg )
+init : Frame.InitModel -> ( Model, FrameTransition a app appMsg )
 init model =
   ( { menu       = menu
     , badgeNames = badgeNames
     , badge      = Http.empty
     , collapsed  = Set.empty
     }
-  {-
-  , { store = False
-    , search = False
-    , request =
-      [ ( badge, BadgeStateChanged )
-      ]
-    }
-  -}
   , Http.request badge BadgeStateChanged
   )
 
@@ -134,7 +126,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   Http.track badge BadgeStateChanged
 
-update : Msg -> Model -> ( Model, Command a app appMsg )
+update : Msg -> Model -> ( Model, FrameTransition a app appMsg )
 update msg model =
   case msg of
     BadgeStateChanged state -> ( { model | badge = model.badge |> Http.stateTo state }, Transition.none )
