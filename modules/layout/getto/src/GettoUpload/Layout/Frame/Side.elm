@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Frame.Menu exposing
+module GettoUpload.Layout.Frame.Side exposing
   ( Model
   , Msg
   , init
@@ -37,7 +37,7 @@ import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-type alias FrameModel a app appMsg = Frame.Model { a | menu : Model } app appMsg
+type alias FrameModel a app appMsg = Frame.Model { a | side : Model } app appMsg
 type alias FrameTransition a app appMsg = Transition (FrameModel a app appMsg) Msg
 type alias Model =
   { menu       : Menu
