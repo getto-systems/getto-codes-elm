@@ -78,7 +78,7 @@ update message =
 document : FrameModel -> Browser.Document FrameMsg
 document model =
   { title = model |> Layout.documentTitle
-  , body = [ model |> L.lazy content ]
+  , body = [ L.lazy content model ]
   }
 
 content : FrameModel -> Html FrameMsg

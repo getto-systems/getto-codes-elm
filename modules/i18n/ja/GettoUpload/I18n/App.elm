@@ -1,6 +1,7 @@
 module GettoUpload.I18n.App exposing
   ( title
   , menu
+  , role
   )
 
 menu : String -> String
@@ -12,3 +13,10 @@ title path =
     "index.html" -> "ホーム"
 
     _ -> path
+
+role : String -> String
+role name =
+  case name of
+    "admin" -> "管理"
+
+    _ -> name

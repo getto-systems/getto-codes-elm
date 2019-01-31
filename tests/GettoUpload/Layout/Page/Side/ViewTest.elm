@@ -56,7 +56,8 @@ suite =
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
-              [ { title     = "main"
+              [ { name      = "main"
+                , title     = "main"
                 , badge     = Nothing
                 , collapsed = False
                 , items =
@@ -74,7 +75,8 @@ suite =
                     }
                   ]
                 }
-              , { title     = "data"
+              , { name      = "data"
+                , title     = "data"
                 , badge     = Nothing
                 , collapsed = False
                 , items =
@@ -104,7 +106,8 @@ suite =
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
-              [ { title     = "main"
+              [ { name      = "main"
+                , title     = "main"
                 , badge     = Nothing
                 , collapsed = False
                 , items =
@@ -134,7 +137,8 @@ suite =
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
-              [ { title     = "main"
+              [ { name      = "main"
+                , title     = "main"
                 , badge     = Nothing
                 , collapsed = False
                 , items =
@@ -152,7 +156,8 @@ suite =
                     }
                   ]
                 }
-              , { title     = "data"
+              , { name      = "data"
+                , title     = "data"
                 , badge     = Nothing
                 , collapsed = False
                 , items =
@@ -182,7 +187,8 @@ suite =
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
-              [ { title     = "main"
+              [ { name      = "main"
+                , title     = "main"
                 , badge     = Nothing
                 , collapsed = False
                 , items =
@@ -200,7 +206,8 @@ suite =
                     }
                   ]
                 }
-              , { title     = "data"
+              , { name      = "data"
+                , title     = "data"
                 , badge     = Nothing
                 , collapsed = True
                 , items = []
@@ -217,7 +224,8 @@ suite =
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
-              [ { title     = "main"
+              [ { name      = "main"
+                , title     = "main"
                 , badge     = Nothing
                 , collapsed = True
                 , items =
@@ -229,7 +237,8 @@ suite =
                     }
                   ]
                 }
-              , { title     = "data"
+              , { name      = "data"
+                , title     = "data"
                 , badge     = Nothing
                 , collapsed = False
                 , items =
@@ -262,7 +271,8 @@ suite =
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
-              [ { title     = "main"
+              [ { name      = "main"
+                , title     = "main"
                 , badge     = Just 4
                 , collapsed = False
                 , items =
@@ -280,7 +290,8 @@ suite =
                     }
                   ]
                 }
-              , { title     = "data"
+              , { name      = "data"
+                , title     = "data"
                 , badge     = Nothing
                 , collapsed = False
                 , items =
@@ -314,7 +325,8 @@ suite =
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
-              [ { title     = "main"
+              [ { name      = "main"
+                , title     = "main"
                 , badge     = Just 7
                 , collapsed = False
                 , items =
@@ -332,7 +344,8 @@ suite =
                     }
                   ]
                 }
-              , { title     = "data"
+              , { name      = "data"
+                , title     = "data"
                 , badge     = Nothing
                 , collapsed = False
                 , items =
@@ -366,7 +379,8 @@ suite =
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
-              [ { title     = "main"
+              [ { name      = "main"
+                , title     = "main"
                 , badge     = Just 7
                 , collapsed = False
                 , items =
@@ -384,7 +398,8 @@ suite =
                     }
                   ]
                 }
-              , { title     = "data"
+              , { name      = "data"
+                , title     = "data"
                 , badge     = Nothing
                 , collapsed = False
                 , items =

@@ -14,6 +14,8 @@ module GettoUpload.Layout.Page.Side exposing
   , nav
   , navFooter
   )
+import GettoUpload.Layout.Page.Side.View as View
+import GettoUpload.Layout.Page.Side.Html as Html
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Static as Static
 import GettoUpload.Layout.Frame.Credential as Credential
@@ -21,8 +23,11 @@ import GettoUpload.Layout.Command.Auth as Auth
 import GettoUpload.Layout.Command.Http as Http
 import GettoUpload.Layout.Href.Home as Home
 import GettoUpload.Layout.Api as Api
+import GettoUpload.Layout.View.Http as HttpView
 import GettoUpload.Layout.View.Menu as Menu exposing ( Menu )
 import GettoUpload.Layout.View.Icon as Icon
+import GettoUpload.I18n.App  as I18n
+import GettoUpload.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
@@ -41,7 +46,6 @@ type alias FrameModel a app appMsg = Frame.Model { a | side : Model } app appMsg
 type alias FrameTransition a app appMsg = Transition (FrameModel a app appMsg) Msg
 type alias Model =
   { menu       : Menu
-  , badgeNames : Dict String String
   , badge      : Http.Entry Badge
   , collapsed  : Set String
   }
@@ -51,16 +55,15 @@ type alias Badge =
   }
 
 type Msg
-  = BadgeStateChanged (Http.State Badge)
+  = BadgeStateChanged (HttpView.State Badge)
   | MenuOpen  String
   | MenuClose String
 
 init : Frame.InitModel -> ( Model, FrameTransition a app appMsg )
 init model =
-  ( { menu       = menu
-    , badgeNames = badgeNames
-    , badge      = Http.empty
-    , collapsed  = Set.empty
+  ( { menu      = menu
+    , badge     = Http.empty
+    , collapsed = Set.empty
     }
   , Http.request badge BadgeStateChanged
   )
@@ -108,8 +111,8 @@ badgeNames = Dict.fromList
   [ ( Home.index, "home" )
   ]
 
-isCollapsed : String -> Model -> Bool
-isCollapsed name model = model.collapsed |> Set.member name
+collapsed : Set String -> String -> Bool
+collapsed data name = data |> Set.member name
 
 store : Model -> Encode.Value
 store model =
@@ -137,136 +140,120 @@ update msg model =
 
 mobileHeader : FrameModel a app appMsg -> Html Msg
 mobileHeader model =
-  let
-    static = model |> Frame.static
-  in
-    H.header []
-      [ H.p []
-        [ H.small [] [ static |> Static.project |> .company |> H.text ]
-        , H.wbr [] []
-        , " " |> H.text
-        , static |> Static.project |> .title |> H.text
-        , H.wbr [] []
-        , " " |> H.text
-        , H.small [] [ H.small [] [ static |> Static.project |> .sub |> H.text ] ]
-        ]
-      ]
+  L.lazy
+    (\project ->
+      Html.mobileHeader
+        { company = project.company
+        , title   = project.title
+        , sub     = project.sub
+        }
+    )
+    (model |> Frame.static |> Static.project)
+
+navHeader : FrameModel a app appMsg -> Html Msg
+navHeader model =
+  L.lazy
+    (\project ->
+      Html.navHeader
+        { company = project.company
+        , title   = project.title
+        , sub     = project.sub
+        }
+    )
+    (model |> Frame.static |> Static.project)
+
+navFooter : FrameModel a app appMsg -> Html Msg
+navFooter model =
+  L.lazy
+    (\version ->
+      Html.navFooter
+        { version = version |> .version
+        }
+    )
+    (model |> Frame.static |> Static.version)
 
 mobileAddress : FrameModel a app appMsg -> Html Msg
 mobileAddress = navAddress
 
 breadcrumb : FrameModel a app appMsg -> Html Msg
 breadcrumb model =
-  H.ul []
-    [ H.li [] [ "MAIN" |> H.text ]
-    , H.li []
-      [ H.a [ A.href Home.index ]
-        [ H.i [ A.class "fas fa-home" ] []
-        , " " |> H.text
-        , "Home" |> H.text
-        ]
-      ]
-    ]
-
-navHeader : FrameModel a app appMsg -> Html Msg
-navHeader model =
-  let
-    static = model |> Frame.static
-  in
-    H.header []
-      [ H.p []
-        [ H.small [] [ static |> Static.project |> .company |> H.text ]
-        , H.br [] []
-        , static |> Static.project |> .title |> H.text
-        , H.br [] []
-        , H.small [] [ H.small [] [ static |> Static.project |> .sub |> H.text ] ]
-        ]
-      ]
+  L.lazy2
+    (\static side ->
+      Html.breadcrumb <| View.breadcrumb
+        { path = static |> Static.page |> .path
+        , menu = side |> .menu
+        , i18n = menuI18n
+        }
+    )
+    (model |> Frame.static)
+    (model |> Frame.layout |> .side)
 
 navAddress : FrameModel a app appMsg -> Html Msg
 navAddress model =
-  H.address []
-    [ H.a [ A.href Home.index ]
-      [ H.ul []
-        [ H.li [ A.class "header" ] [ H.span [] [ "Upload" |> H.text ] ]
-        , H.li []
-          [ H.span [ A.class "success" ]
-            [ H.i [ A.class "fas fa-circle" ] []
-            , " " |> H.text
-            , "mode1" |> H.text
-            ]
-          ]
-        , H.li []
-          [ H.span [ A.class "gray" ]
-            [ H.i [ A.class "fas fa-circle" ] []
-            , " " |> H.text
-            , "mode2" |> H.text
-            ]
-          ]
-        ]
-      ]
-    , H.footer []
-      [ H.a [ A.href Home.index ]
-        [ H.em [ A.class "badge is-small is-danger" ]
-          [ "Error" |> H.text ] -- TODO ここに state の取得ステータスを表示
-        ]
-      , " " |> H.text
-      , H.a [ A.href Home.index ]
-        [ H.i [ A.class "fas fa-user-circle" ] []
-        , " " |> H.text
-        , "manager" |> H.text
-        ]
-      ]
-    ]
+  L.lazy2
+    (\auth side ->
+      Html.navAddress
+        { title = "Upload"
+        , mode1 =
+          { title = "mode1"
+          , state = True
+          }
+        , mode2 =
+          { title = "mode2"
+          , state = False
+          }
+        , badge = View.badgeState
+          { state = side |> .badge |> Http.state
+          , i18n  = HttpI18n.error
+          }
+        , roles = auth |> Auth.credential |> Credential.roles
+        , href =
+          { config = Home.index
+          , profile = Home.index
+          }
+        , i18n =
+          { title = identity
+          , mode  = identity
+          , role  = I18n.role
+          }
+        }
+    )
+    (model |> Frame.auth)
+    (model |> Frame.layout |> .side)
 
 nav : FrameModel a app appMsg -> Html Msg
 nav model =
-  H.section []
-    [ H.ul []
-      [ H.li []
-        [ H.b []
-          [ H.a [ A.href "#", E.onClick (MenuClose "MAIN") ]
-            [ "MAIN" |> H.text
-            , " " |> H.text
-            , H.em [ A.class "badge is-danger is-small" ] [ "4" |> H.text ]
-            , " " |> H.text
-            , H.i [ A.class "fas fa-caret-down" ] []
-            ]
-          ]
-        ]
-      , H.li [ A.class "is-active" ]
-        [ H.a [ A.href Home.index ]
-          [ H.i [ A.class "fas fa-fw fa-home" ] []
-          , " " |> H.text
-          , "Home" |> H.text
-          , " " |> H.text
-          , H.em [ A.class "badge is-danger is-small" ] [ "4" |> H.text ]
-          ]
-        ]
-      ]
-    , H.ul []
-      [ H.li []
-        [ H.b []
-          [ H.a [ A.href "#", E.onClick (MenuClose "DATA") ]
-            [ "DATA" |> H.text
-            , " " |> H.text
-            , H.i [ A.class "fas fa-caret-down" ] []
-            ]
-          ]
-        ]
-      , H.li []
-        [ H.a [ A.href Home.index ]
-          [ H.i [ A.class "fas fa-fw fa-home" ] []
-          , " " |> H.text
-          , "Home" |> H.text
-          ]
-        ]
-      ]
-    ]
+  L.lazy3
+    (\static auth side ->
+      Html.nav
+        { open  = MenuOpen
+        , close = MenuClose
+        , menu  = View.menu
+          { path      = model |> Frame.static |> Static.page |> .path
+          , roles     = model |> Frame.auth |> Auth.credential |> Credential.roles
+          , menu      = side |> .menu
+          , allow     = allow
+          , collapsed = side |> .collapsed |> collapsed
+          , badge =
+            \path ->
+              badgeNames
+              |> Dict.get path
+              |> Maybe.andThen
+                (\name ->
+                  side |> .badge
+                  |> Http.response
+                  |> Maybe.andThen (.counts >> Dict.get name)
+                )
+          , i18n = menuI18n
+          }
+        }
+    )
+    (model |> Frame.static)
+    (model |> Frame.auth)
+    (model |> Frame.layout |> .side)
 
-navFooter : FrameModel a app appMsg -> Html Msg
-navFooter model =
-  let
-    static = model |> Frame.static
-  in
-    H.footer [] [ H.p [] [ "version : " ++ (static |> Static.version |> .version) |> H.text ] ]
+menuI18n : View.MenuI18n
+menuI18n =
+  { title = I18n.title
+  , menu  = I18n.menu
+  }

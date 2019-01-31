@@ -9,11 +9,11 @@ type Icon
   = Fa Fa
 
 type Fa
-  = Solid String
-  | Regular String
+  = FaSolid String
+  | FaRegular String
 
 fas : String -> Icon
-fas = Solid >> Fa
+fas = FaSolid >> Fa
 
 far : String -> Icon
-far = Regular >> Fa
+far = FaRegular >> Fa
