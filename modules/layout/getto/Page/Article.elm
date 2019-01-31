@@ -10,6 +10,7 @@ module GettoUpload.Layout.Page.Article exposing
   , header
   , footer
   )
+import GettoUpload.Layout.Page.Article.Html as Html
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Static as Static
 import GettoUpload.I18n.App as I18n
@@ -57,30 +58,29 @@ title = Static.page >> .path >> I18n.title
 documentTitle : FrameModel a app appMsg -> String
 documentTitle model =
   let
-    static = model |> Frame.static
+    static  = model |> Frame.static
+    project = static |> Static.project
   in
-    (static |> title)
-    ++ " | "
-    ++ (static |> Static.project |> .company)
-    ++ " "
-    ++ (static |> Static.project |> .title)
+    Html.documentTitle
+      { path    = static |> Static.page |> .path
+      , company = project.company
+      , title   = project.title
+      , i18n    = I18n.title
+      }
 
 header : FrameModel a app appMsg -> Html Msg
-header model =
-  let
-    static = model |> Frame.static
-  in
-    H.h1 [] [ static |> title |> H.text ]
+header model = L.lazy
+  (\static -> Html.header
+    { path = static |> Static.page |> .path
+    , i18n = I18n.title
+    }
+  )
+  (model |> Frame.static)
 
 footer : FrameModel a app appMsg -> Html Msg
-footer model =
-  let
-    static = model |> Frame.static
-  in
-    H.footer []
-      [ H.p []
-        [ H.i [ A.class "far fa-copyright" ] []
-        , " " |> H.text
-        , static |> Static.version |> .copyright |> H.text
-        ]
-      ]
+footer model = L.lazy
+  (\static -> Html.footer
+    { copyright = static |> Static.version |> .copyright
+    }
+  )
+  (model |> Frame.static)

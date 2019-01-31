@@ -1,10 +1,5 @@
 module GettoUpload.Layout.Page.Side.View exposing
-  ( MobileHeader
-  , NavHeader
-  , NavFooter
-  , NavAddress
-  , Breadcrumb
-  , Nav
+  ( Breadcrumb
   , Menu
   , BadgeState(..)
   , MenuI18n
@@ -17,42 +12,6 @@ import GettoUpload.Extension.View.Icon as Icon exposing ( Icon )
 import GettoUpload.Extension.View.Http as HttpView
 import GettoUpload.Extension.Href as Href exposing ( Href )
 
-type alias MobileHeader =
-  { company : String
-  , title : String
-  , sub : String
-  }
-
-type alias NavHeader =
-  { company : String
-  , title : String
-  , sub : String
-  }
-
-type alias NavFooter =
-  { version : String
-  }
-
-type alias NavAddress =
-  { title   : String
-  , mode1   : NavAddressMode
-  , mode2   : NavAddressMode
-  , badge   : BadgeState
-  , roles   : List String
-  , href :
-    { config  : Href
-    , profile : Href
-    }
-  , i18n :
-    { title : String -> String
-    , mode  : String -> String
-    , role  : String -> String
-    }
-  }
-type alias NavAddressMode =
-  { title : String
-  , state : Bool
-  }
 
 type alias Breadcrumb = ( String, List BreadcrumbItem )
 
@@ -60,12 +19,6 @@ type alias BreadcrumbItem =
   { title : String
   , icon  : Icon
   , href  : Href
-  }
-
-type alias Nav msg =
-  { open  : String -> msg
-  , close : String -> msg
-  , menu  : List Menu
   }
 
 type alias Menu =
