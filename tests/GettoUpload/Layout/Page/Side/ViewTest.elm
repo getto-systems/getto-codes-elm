@@ -1,5 +1,5 @@
-module GettoUpload.Layout.Frame.Side.ViewTest exposing (..)
-import GettoUpload.Layout.Frame.Side.View as Side
+module GettoUpload.Layout.Page.Side.ViewTest exposing (..)
+import GettoUpload.Layout.Page.Side.View as Side
 import GettoUpload.Layout.Menu as Menu
 import GettoUpload.Layout.Icon as Icon
 
