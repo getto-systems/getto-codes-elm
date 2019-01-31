@@ -11,10 +11,12 @@ module GettoUpload.App.Index.Dashboard exposing
   , contents
   , dialogs
   )
+import GettoUpload.App.Index.Dashboard.Html as Html
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
-import GettoUpload.Extension.Href.Home as HomeHref
-import GettoUpload.Extension.Href as Href
+import GettoUpload.Extension.Href.Home as Home
+import GettoUpload.I18n.App as I18n
+import GettoUpload.I18n.App.Index.Dashboard as DashboardI18n
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
@@ -67,33 +69,25 @@ dashboard model =
   H.section [ A.class "dashboard" ]
     [ H.dl []
       [ H.dd []
-        [ H.section []
-          [ H.h2 [] [ "Subject" |> H.text ]
-          , H.p []
-            [ H.em []
-              [ "3" |> H.text
-              , H.small [] [ H.small [] [ "million" |> H.text ] ]
-              ]
-            , " " |> H.text
-            , H.em [] [ "/" |> H.text ]
-            , " " |> H.text
-            , H.em []
-              [ H.small [] [ "20" |> H.text ]
-              , H.small [] [ H.small [] [ "million" |> H.text ] ]
-              ]
-            ]
-          , H.meter [ A.value "3", A.max "20" ] [ "15%" |> H.text ]
-          , H.footer []
-            [ H.a [ HomeHref.index |> Href.toString |> A.href ]
-              [ H.i [ A.class "fas fa-user" ] []
-              , " " |> H.text
-              , "User" |> H.text
-              ]
-            ]
-          ]
+        [ model |> example
         ]
       ]
     ]
+
+example : FrameModel a msg -> Html Msg
+example model = L.lazy
+  (\static -> Html.example
+    { name = "example"
+    , current = 3
+    , target = 20
+    , page = Home.index
+    , i18n =
+      { title = I18n.title
+      , name  = DashboardI18n.title
+      }
+    }
+  )
+  (model |> Frame.static)
 
 dialogs : FrameModel a msg -> List (Html Msg)
 dialogs model = []

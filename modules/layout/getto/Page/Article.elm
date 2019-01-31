@@ -20,8 +20,6 @@ import Getto.Command.Transition as Transition exposing ( Transition )
 import Json.Encode as Encode
 import Json.Decode as Decode
 import Html as H exposing ( Html )
-import Html.Attributes as A
-import Html.Events as E
 import Html.Lazy as L
 
 type alias FrameModel a app appMsg = Frame.Model { a | article : Model } app appMsg
