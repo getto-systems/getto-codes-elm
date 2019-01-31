@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Menu exposing
+module GettoUpload.Layout.View.Menu exposing
   ( Menu
   , Item
   , item
@@ -6,7 +6,7 @@ module GettoUpload.Layout.Menu exposing
   , href
   , children
   )
-import GettoUpload.Layout.Icon as Icon exposing ( Icon )
+import GettoUpload.Layout.View.Icon as Icon exposing ( Icon )
 
 type alias Menu = List ( String, List Item )
 

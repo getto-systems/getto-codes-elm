@@ -1,7 +1,7 @@
 module GettoUpload.Layout.Page.Side.ViewTest exposing (..)
 import GettoUpload.Layout.Page.Side.View as Side
-import GettoUpload.Layout.Menu as Menu
-import GettoUpload.Layout.Icon as Icon
+import GettoUpload.Layout.View.Menu as Menu
+import GettoUpload.Layout.View.Icon as Icon
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)

@@ -5,8 +5,8 @@ module GettoUpload.Layout.Page.Side.View exposing
   , menu
   , breadcrumb
   )
-import GettoUpload.Layout.Menu as Menu
-import GettoUpload.Layout.Icon as Icon exposing ( Icon )
+import GettoUpload.Layout.View.Menu as Menu
+import GettoUpload.Layout.View.Icon as Icon exposing ( Icon )
 
 import Dict exposing ( Dict )
 
