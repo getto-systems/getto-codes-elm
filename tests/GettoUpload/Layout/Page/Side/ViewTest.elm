@@ -1,8 +1,8 @@
 module GettoUpload.Layout.Page.Side.ViewTest exposing (..)
 import GettoUpload.Layout.Page.Side.View as Side
-import GettoUpload.Layout.View.Menu as Menu
-import GettoUpload.Layout.View.Icon as Icon
-import GettoUpload.Layout.Href as Href exposing ( Href )
+import GettoUpload.Extension.View.Menu as Menu
+import GettoUpload.Extension.View.Icon as Icon
+import GettoUpload.Extension.Href as Href exposing ( Href )
 
 import Getto.Url.Query.Encode as QueryEncode
 
