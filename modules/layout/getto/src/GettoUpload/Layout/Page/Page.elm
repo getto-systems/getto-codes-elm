@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Frame.Page exposing
+module GettoUpload.Layout.Page.Page exposing
   ( Model
   , Msg
   , setup
@@ -16,8 +16,8 @@ module GettoUpload.Layout.Frame.Page exposing
   , navFooter
   )
 import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Frame.Side    as Side
-import GettoUpload.Layout.Frame.Article as Article
+import GettoUpload.Layout.Page.Side    as Side
+import GettoUpload.Layout.Page.Article as Article
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode

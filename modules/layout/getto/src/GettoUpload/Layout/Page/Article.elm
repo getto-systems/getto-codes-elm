@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Frame.Article exposing
+module GettoUpload.Layout.Page.Article exposing
   ( Model
   , Msg
   , init
