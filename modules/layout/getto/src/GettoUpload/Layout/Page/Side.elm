@@ -21,6 +21,7 @@ import GettoUpload.Layout.Frame.Static as Static
 import GettoUpload.Layout.Frame.Credential as Credential
 import GettoUpload.Layout.Command.Auth as Auth
 import GettoUpload.Layout.Command.Http as Http
+import GettoUpload.Layout.Href as Href
 import GettoUpload.Layout.Href.Home as Home
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Layout.View.Http as HttpView
@@ -38,8 +39,6 @@ import Dict exposing ( Dict )
 import Json.Encode as Encode
 import Json.Decode as Decode
 import Html as H exposing ( Html )
-import Html.Attributes as A
-import Html.Events as E
 import Html.Lazy as L
 
 type alias FrameModel a app appMsg = Frame.Model { a | side : Model } app appMsg
@@ -108,7 +107,7 @@ allow roles (group,_) =
 
 badgeNames : Dict String String
 badgeNames = Dict.fromList
-  [ ( Home.index, "home" )
+  [ ( Home.index |> Href.path, "home" )
   ]
 
 collapsed : Set String -> String -> Bool
@@ -235,9 +234,9 @@ nav model =
           , allow     = allow
           , collapsed = side |> .collapsed |> collapsed
           , badge =
-            \path ->
+            \href ->
               badgeNames
-              |> Dict.get path
+              |> Dict.get (href |> Href.path)
               |> Maybe.andThen
                 (\name ->
                   side |> .badge

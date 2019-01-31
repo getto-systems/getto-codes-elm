@@ -9,6 +9,7 @@ module GettoUpload.Layout.Page.Side.Html exposing
 import GettoUpload.Layout.Page.Side.View as View
 import GettoUpload.Layout.View.Icon as Icon
 import GettoUpload.Layout.View.Html as Html
+import GettoUpload.Layout.Href as Href
 
 import Html as H exposing ( Html )
 import Html.Attributes as A
@@ -70,7 +71,7 @@ navAddress model =
           error |> Html.badge ["is-small","is-danger"]
   in
     H.address []
-      [ H.a [ model.href.config |> A.href ]
+      [ H.a [ model.href.config |> Href.toString |> A.href ]
         [ H.ul []
           [ H.li [ "header" |> A.class ] [ H.span [] [ model.title |> model.i18n.title |> H.text ] ]
           , model.mode1 |> mode
@@ -80,7 +81,7 @@ navAddress model =
       , H.footer []
         [ badge
         , " " |> H.text
-        , H.a [ model.href.profile |> A.href ]
+        , H.a [ model.href.profile |> Href.toString |> A.href ]
           [ Icon.fas "user-circle" |> Html.icon []
           , " " |> H.text
           , model.roles |> List.map model.i18n.role |> String.join " " |> H.text
@@ -98,7 +99,7 @@ breadcrumb data =
         ( items |> List.map
           (\item ->
             H.li []
-              [ H.a [ item.href |> A.href ]
+              [ H.a [ item.href |> Href.toString |> A.href ]
                 [ item.icon |> Html.icon []
                 , " " |> H.text
                 , item.title |> H.text
@@ -149,7 +150,7 @@ nav model =
           ( header.items |> List.map
             (\item ->
               H.li [ item |> active |> A.class ]
-                [ H.a [ item.href |> A.href ]
+                [ H.a [ item.href |> Href.toString |> A.href ]
                   [ item.icon |> Html.icon ["fa-fw"]
                   , " " |> H.text
                   , item.title |> H.text
