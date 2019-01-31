@@ -19,10 +19,10 @@ import GettoUpload.Layout.Frame.Static as Static
 import GettoUpload.Layout.Frame.Credential as Credential
 import GettoUpload.Layout.Command.Auth as Auth
 import GettoUpload.Layout.Command.Http as Http
-import GettoUpload.Layout.Menu as Menu exposing ( Menu )
 import GettoUpload.Layout.Href.Home as Home
 import GettoUpload.Layout.Api as Api
-import GettoUpload.Layout.Icon as Icon
+import GettoUpload.Layout.View.Menu as Menu exposing ( Menu )
+import GettoUpload.Layout.View.Icon as Icon
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode

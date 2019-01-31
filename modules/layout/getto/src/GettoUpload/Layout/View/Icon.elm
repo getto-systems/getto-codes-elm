@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Icon exposing
+module GettoUpload.Layout.View.Icon exposing
   ( Icon(..)
   , Fa(..)
   , fas
