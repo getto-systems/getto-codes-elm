@@ -12,7 +12,7 @@ module GettoUpload.App.Index.Dashboard exposing
   , dialogs
   )
 import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Frame.Page as Layout
+import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Href.Home as HomeHref
 
 import Getto.Command.Transition as Transition exposing ( Transition )

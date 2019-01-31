@@ -1,7 +1,7 @@
 module GettoUpload.App.Index.Page exposing ( main )
 import GettoUpload.App.Index.Dashboard as Dashboard
 import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Frame.Page as Layout
+import GettoUpload.Layout.Page.Page as Layout
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode

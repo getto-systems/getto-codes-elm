@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Frame.Side exposing
+module GettoUpload.Layout.Page.Side exposing
   ( Model
   , Msg
   , init
