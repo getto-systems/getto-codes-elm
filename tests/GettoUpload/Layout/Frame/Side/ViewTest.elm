@@ -1,7 +1,7 @@
 module GettoUpload.Layout.Frame.Side.ViewTest exposing (..)
 import GettoUpload.Layout.Frame.Side.View as Side
 import GettoUpload.Layout.Menu as Menu
-import GettoUpload.Layout.Fa as Fa
+import GettoUpload.Layout.Icon as Icon
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
@@ -10,27 +10,27 @@ import Test exposing (..)
 menu : Menu.Menu
 menu =
   [ ( "main"
-    , [ Menu.item (Fa.solid "home") "home.html"
-        [ Menu.item (Fa.solid "file") "home/file.html"
-          [ Menu.item (Fa.solid "pencil") "home/file/edit.html" []
+    , [ Menu.item (Icon.fas "home") "home.html"
+        [ Menu.item (Icon.fas "file") "home/file.html"
+          [ Menu.item (Icon.fas "pencil") "home/file/edit.html" []
           ]
         ]
-      , Menu.item (Fa.solid "data") "data.html"
-        [ Menu.item (Fa.solid "file") "data/file.html"
-          [ Menu.item (Fa.solid "pencil") "data/file/edit.html" []
+      , Menu.item (Icon.fas "data") "data.html"
+        [ Menu.item (Icon.fas "file") "data/file.html"
+          [ Menu.item (Icon.fas "pencil") "data/file/edit.html" []
           ]
         ]
       ]
     )
   , ( "data"
-    , [ Menu.item (Fa.solid "home") "master.html"
-        [ Menu.item (Fa.solid "file") "master/file.html"
-          [ Menu.item (Fa.solid "pencil") "master/file/edit.html" []
+    , [ Menu.item (Icon.fas "home") "master.html"
+        [ Menu.item (Icon.fas "file") "master/file.html"
+          [ Menu.item (Icon.fas "pencil") "master/file/edit.html" []
           ]
         ]
-      , Menu.item (Fa.solid "data") "upload.html"
-        [ Menu.item (Fa.solid "file") "upload/file.html"
-          [ Menu.item (Fa.solid "pencil") "upload/file/edit.html" []
+      , Menu.item (Icon.fas "data") "upload.html"
+        [ Menu.item (Icon.fas "file") "upload/file.html"
+          [ Menu.item (Icon.fas "pencil") "upload/file/edit.html" []
           ]
         ]
       ]
@@ -53,7 +53,7 @@ suite =
           |> Expect.equal
             (Just
               ( "main"
-              , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
+              , [ { title = "home.html", icon = Icon.fas "home", href = "home.html" }
                 ]
               )
             )
@@ -67,7 +67,7 @@ suite =
           |> Expect.equal
             (Just
               ( "main"
-              , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
+              , [ { title = "home.html", icon = Icon.fas "home", href = "home.html" }
                 ]
               )
             )
@@ -78,8 +78,8 @@ suite =
           |> Expect.equal
             (Just
               ( "main"
-              , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
-                , { title = "home/file.html", icon = Fa.solid "file", href = "home/file.html" }
+              , [ { title = "home.html", icon = Icon.fas "home", href = "home.html" }
+                , { title = "home/file.html", icon = Icon.fas "file", href = "home/file.html" }
                 ]
               )
             )
@@ -90,9 +90,9 @@ suite =
           |> Expect.equal
             (Just
               ( "main"
-              , [ { title = "home.html", icon = Fa.solid "home", href = "home.html" }
-                , { title = "home/file.html", icon = Fa.solid "file", href = "home/file.html" }
-                , { title = "home/file/edit.html", icon = Fa.solid "pencil", href = "home/file/edit.html" }
+              , [ { title = "home.html", icon = Icon.fas "home", href = "home.html" }
+                , { title = "home/file.html", icon = Icon.fas "file", href = "home/file.html" }
+                , { title = "home/file/edit.html", icon = Icon.fas "pencil", href = "home/file/edit.html" }
                 ]
               )
             )
@@ -103,9 +103,9 @@ suite =
           |> Expect.equal
             (Just
               ( "data"
-              , [ { title = "master.html", icon = Fa.solid "home", href = "master.html" }
-                , { title = "master/file.html", icon = Fa.solid "file", href = "master/file.html" }
-                , { title = "master/file/edit.html", icon = Fa.solid "pencil", href = "master/file/edit.html" }
+              , [ { title = "master.html", icon = Icon.fas "home", href = "master.html" }
+                , { title = "master/file.html", icon = Icon.fas "file", href = "master/file.html" }
+                , { title = "master/file/edit.html", icon = Icon.fas "pencil", href = "master/file/edit.html" }
                 ]
               )
             )
@@ -116,7 +116,7 @@ suite =
           |> Expect.equal
             (Just
               ( "data"
-              , [ { title = "upload.html", icon = Fa.solid "data", href = "upload.html" }
+              , [ { title = "upload.html", icon = Icon.fas "data", href = "upload.html" }
                 ]
               )
             )

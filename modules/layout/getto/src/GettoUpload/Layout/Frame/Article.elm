@@ -12,8 +12,6 @@ module GettoUpload.Layout.Frame.Article exposing
   )
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Static as Static
-import GettoUpload.Layout.Href.Home as Home
-import GettoUpload.Layout.Fa as Fa -- TODO Icon.Fa -- Icon.Line も追加したいかも
 import GettoUpload.I18n.App as I18n
 
 import Getto.Command.Transition as Transition exposing ( Transition )
@@ -35,14 +33,6 @@ type Msg
 init : Frame.InitModel -> ( Model, FrameTransition a app appMsg )
 init model =
   ( {}
-  {-
-  , { store = False
-    , search = False
-    , request =
-      [ ( badge, BadgeStateChanged )
-      ]
-    }
-  -}
   , Transition.none
   )
 

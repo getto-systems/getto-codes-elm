@@ -22,7 +22,7 @@ import GettoUpload.Layout.Command.Http as Http
 import GettoUpload.Layout.Menu as Menu exposing ( Menu )
 import GettoUpload.Layout.Href.Home as Home
 import GettoUpload.Layout.Api as Api
-import GettoUpload.Layout.Fa as Fa -- TODO Icon.Fa -- Icon.Line も追加したいかも
+import GettoUpload.Layout.Icon as Icon
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
@@ -87,11 +87,11 @@ badge = Http.get
 menu : Menu
 menu =
   [ ( "main"
-    , [ Menu.item (Fa.solid "home") Home.index []
+    , [ Menu.item (Icon.fas "home") Home.index []
       ]
     )
   , ( "data"
-    , [ Menu.item (Fa.solid "home") Home.index []
+    , [ Menu.item (Icon.fas "home") Home.index []
       ]
     )
   ]
