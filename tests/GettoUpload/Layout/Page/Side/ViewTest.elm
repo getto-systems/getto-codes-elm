@@ -45,22 +45,367 @@ i18n =
 suite : Test
 suite =
   describe "Side"
-    {-
-    [ describe "side"
+    [ describe "menu"
       [ test "should return side menu" <|
         \_ ->
-          { path = "home.html" } |> Side.menu i18n menu
-          |> Expect.equal
-            (Just
-              ( "main"
-              , [ { title = "home.html", icon = Icon.fas "home", href = "home.html" }
-                ]
-              )
-            )
-      ]
-    -}
+          let
+            allow roles (group,_) = True
+            collapsed group = False
+            badge path = Nothing
+          in
+            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
+            |> Expect.equal
+              [ { title     = "main"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = True
+                    , title  = "home.html"
+                    , href   = "home.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "data.html"
+                    , href   = "data.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              , { title     = "data"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = False
+                    , title  = "master.html"
+                    , href   = "master.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "upload.html"
+                    , href   = "upload.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              ]
 
-    [ describe "breadcrumb"
+      , test "should return side menu only allowed" <|
+        \_ ->
+          let
+            allow roles (group,items) = group == "main"
+            collapsed group = False
+            badge path = Nothing
+          in
+            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
+            |> Expect.equal
+              [ { title     = "main"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = True
+                    , title  = "home.html"
+                    , href   = "home.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "data.html"
+                    , href   = "data.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              ]
+
+      , test "should return side menu only allowed with roles" <|
+        \_ ->
+          let
+            allow roles (group,_) = roles |> List.member "admin"
+            collapsed group = False
+            badge path = Nothing
+          in
+            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
+            |> Expect.equal
+              [ { title     = "main"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = True
+                    , title  = "home.html"
+                    , href   = "home.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "data.html"
+                    , href   = "data.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              , { title     = "data"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = False
+                    , title  = "master.html"
+                    , href   = "master.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "upload.html"
+                    , href   = "upload.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              ]
+
+      , test "should return side menu with collapsed" <|
+        \_ ->
+          let
+            allow roles (group,_) = True
+            collapsed group = group == "data"
+            badge path = Nothing
+          in
+            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
+            |> Expect.equal
+              [ { title     = "main"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = True
+                    , title  = "home.html"
+                    , href   = "home.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "data.html"
+                    , href   = "data.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              , { title     = "data"
+                , badge     = Nothing
+                , collapsed = True
+                , items = []
+                }
+              ]
+
+      , test "should return side menu with collapsed on active tree" <|
+        \_ ->
+          let
+            allow roles (group,_) = True
+            collapsed group = group == "main"
+            badge path = Nothing
+          in
+            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
+            |> Expect.equal
+              [ { title     = "main"
+                , badge     = Nothing
+                , collapsed = True
+                , items =
+                  [ { active = True
+                    , title  = "home.html"
+                    , href   = "home.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              , { title     = "data"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = False
+                    , title  = "master.html"
+                    , href   = "master.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "upload.html"
+                    , href   = "upload.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              ]
+
+      , test "should return side menu with badge" <|
+        \_ ->
+          let
+            allow roles (group,_) = True
+            collapsed group = False
+            badge path =
+              case path of
+                "home.html" -> Just 4
+                _           -> Nothing
+          in
+            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
+            |> Expect.equal
+              [ { title     = "main"
+                , badge     = Just 4
+                , collapsed = False
+                , items =
+                  [ { active = True
+                    , title  = "home.html"
+                    , href   = "home.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Just 4
+                    }
+                  , { active = False
+                    , title  = "data.html"
+                    , href   = "data.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              , { title     = "data"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = False
+                    , title  = "master.html"
+                    , href   = "master.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "upload.html"
+                    , href   = "upload.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              ]
+
+      , test "should return side menu with several badge" <|
+        \_ ->
+          let
+            allow roles (group,_) = True
+            collapsed group = False
+            badge path =
+              case path of
+                "home.html" -> Just 4
+                "data.html" -> Just 3
+                _           -> Nothing
+          in
+            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
+            |> Expect.equal
+              [ { title     = "main"
+                , badge     = Just 7
+                , collapsed = False
+                , items =
+                  [ { active = True
+                    , title  = "home.html"
+                    , href   = "home.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Just 4
+                    }
+                  , { active = False
+                    , title  = "data.html"
+                    , href   = "data.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Just 3
+                    }
+                  ]
+                }
+              , { title     = "data"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = False
+                    , title  = "master.html"
+                    , href   = "master.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "upload.html"
+                    , href   = "upload.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              ]
+
+      , test "should return side menu with inner badge" <|
+        \_ ->
+          let
+            allow roles (group,_) = True
+            collapsed group = False
+            badge path =
+              case path of
+                "home.html"      -> Just 4
+                "home/file.html" -> Just 3
+                _                -> Nothing
+          in
+            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
+            |> Expect.equal
+              [ { title     = "main"
+                , badge     = Just 7
+                , collapsed = False
+                , items =
+                  [ { active = True
+                    , title  = "home.html"
+                    , href   = "home.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Just 7
+                    }
+                  , { active = False
+                    , title  = "data.html"
+                    , href   = "data.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              , { title     = "data"
+                , badge     = Nothing
+                , collapsed = False
+                , items =
+                  [ { active = False
+                    , title  = "master.html"
+                    , href   = "master.html"
+                    , icon   = Icon.fas "home"
+                    , badge  = Nothing
+                    }
+                  , { active = False
+                    , title  = "upload.html"
+                    , href   = "upload.html"
+                    , icon   = Icon.fas "data"
+                    , badge  = Nothing
+                    }
+                  ]
+                }
+              ]
+      ]
+
+    , describe "breadcrumb"
       [ test "should return breadcrumbs" <|
         \_ ->
           { path = "home.html", menu = menu, i18n = i18n } |> Side.breadcrumb

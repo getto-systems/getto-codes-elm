@@ -1,5 +1,5 @@
 module GettoUpload.Layout.Page.Side.View exposing
-  ( Side
+  ( Menu
   , Breadcrumb
   , MenuI18n
   , menu
@@ -10,14 +10,14 @@ import GettoUpload.Layout.View.Icon as Icon exposing ( Icon )
 
 import Dict exposing ( Dict )
 
-type alias Side =
+type alias Menu =
   { title     : String
   , badge     : Maybe Int
   , collapsed : Bool
-  , items     : List SideEntry
+  , items     : List MenuItem
   }
 
-type alias SideEntry =
+type alias MenuItem =
   { active : Bool
   , title  : String
   , href   : String
@@ -25,9 +25,9 @@ type alias SideEntry =
   , badge  : Maybe Int
   }
 
-type alias Breadcrumb = ( String, List BreadcrumbEntry )
+type alias Breadcrumb = ( String, List BreadcrumbItem )
 
-type alias BreadcrumbEntry =
+type alias BreadcrumbItem =
   { title : String
   , icon  : Icon
   , href  : String
@@ -48,7 +48,7 @@ type alias SideModel =
   , i18n       : MenuI18n
   }
 
-menu : SideModel -> List Side
+menu : SideModel -> List Menu
 menu model =
   let
     badge item =
@@ -69,6 +69,8 @@ menu model =
     |> List.map
       (\(group,items) ->
         let
+          collapsed = group |> model.collapsed
+
           entries =
             items |> List.map
               (\item ->
@@ -79,17 +81,13 @@ menu model =
                 , badge  = item |> badge
                 }
               )
-
-          collapsed =
-            (group |> model.collapsed) &&
-            (entries |> List.any .active |> not)
         in
           { title     = group |> model.i18n.menu
           , badge     = entries |> List.filterMap .badge |> sum
           , collapsed = collapsed
           , items =
             if collapsed
-              then []
+              then entries |> List.filter .active
               else entries
           }
       )
