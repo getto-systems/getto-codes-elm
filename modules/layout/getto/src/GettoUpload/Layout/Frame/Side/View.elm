@@ -6,7 +6,7 @@ module GettoUpload.Layout.Frame.Side.View exposing
   , breadcrumb
   )
 import GettoUpload.Layout.Menu as Menu
-import GettoUpload.Layout.Fa as Fa
+import GettoUpload.Layout.Icon as Icon exposing ( Icon )
 
 import Dict exposing ( Dict )
 
@@ -21,7 +21,7 @@ type alias SideEntry =
   { active : Bool
   , title  : String
   , href   : String
-  , icon   : Fa.Icon
+  , icon   : Icon
   , badge  : Maybe Int
   }
 
@@ -29,7 +29,7 @@ type alias Breadcrumb = ( String, List BreadcrumbEntry )
 
 type alias BreadcrumbEntry =
   { title : String
-  , icon  : Fa.Icon
+  , icon  : Icon
   , href  : String
   }
 
