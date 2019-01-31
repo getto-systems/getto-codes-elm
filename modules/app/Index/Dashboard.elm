@@ -11,6 +11,7 @@ module GettoUpload.App.Index.Dashboard exposing
   , contents
   , dialogs
   )
+import GettoUpload.App.Index.Dashboard.View as View
 import GettoUpload.App.Index.Dashboard.Html as Html
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
@@ -78,8 +79,10 @@ example : FrameModel a msg -> Html Msg
 example model = L.lazy
   (\static -> Html.example
     { name = "example"
-    , current = 3
-    , target = 20
+    , data = View.example
+      { current = 3
+      , target = 20
+      }
     , page = Home.index
     , i18n =
       { title = I18n.title
