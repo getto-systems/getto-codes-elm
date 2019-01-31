@@ -133,8 +133,8 @@ update msg model =
   case msg of
     BadgeStateChanged state -> ( { model | badge = model.badge |> Http.stateTo state }, Transition.none )
 
-    MenuOpen  name -> ( { model | collapsed = model.collapsed |> Set.remove name }, Transition.none )
-    MenuClose name -> ( { model | collapsed = model.collapsed |> Set.insert name }, Transition.none )
+    MenuOpen  name -> ( { model | collapsed = model.collapsed |> Set.remove name }, Frame.storeLayout )
+    MenuClose name -> ( { model | collapsed = model.collapsed |> Set.insert name }, Frame.storeLayout )
 
 
 mobileHeader : FrameModel a app appMsg -> Html Msg

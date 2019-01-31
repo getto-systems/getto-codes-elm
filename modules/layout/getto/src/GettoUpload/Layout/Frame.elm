@@ -208,17 +208,17 @@ app : Model layout app appMsg -> app
 app (Model model) = model.app
 
 
-logout : Model layout app appMsg -> ( Model layout app appMsg, Cmd annonymous )
-logout (Model model) = ( Model model, model.auth |> Auth.logout )
+logout : Transition (Model layout app appMsg) annonymous
+logout (Model model) = model.auth |> Auth.logout
 
-storeLayout : Model layout app appMsg -> ( Model layout app appMsg, Cmd annonymous )
-storeLayout (Model model) = ( Model model, model.layout |> Store.store model.store.layout )
+storeLayout : Transition (Model layout app appMsg) annonymous
+storeLayout (Model model) = model.layout |> Store.store model.store.layout
 
-storeApp : Model layout app appMsg -> ( Model layout app appMsg, Cmd annonymous )
-storeApp (Model model) = ( Model model, model.app |> Store.store model.store.app )
+storeApp : Transition (Model layout app appMsg) annonymous
+storeApp (Model model) = model.app |> Store.store model.store.app
 
-search : Model layout app appMsg -> ( Model layout app appMsg, Cmd annonymous )
-search (Model model) = ( Model model, model.app |> Search.search model.search )
+search : Transition (Model layout app appMsg) annonymous
+search (Model model) = model.app |> Search.search model.search
 
 
 mapLayout : Html layoutMsg -> Html (Msg layoutMsg appMsg)
