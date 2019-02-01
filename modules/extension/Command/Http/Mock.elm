@@ -49,7 +49,17 @@ request data =
 
 mock : Dict ( String, String ) Request
 mock =
-  [ ( ( "GET", "layout/menu/badge" ), Encode.null |> Mock )
+  [ ( ( "GET", "layout/menu/badge" )
+    , Mock
+      ( [ ( "counts"
+          , [ [ ( "name", "home" |> Encode.string )
+              , ( "count", 4 |> Encode.int )
+              ]
+            ] |> Encode.list Encode.object
+          )
+        ] |> Encode.object
+      )
+    )
   ]
   |> List.map (\((method,path),res) -> ( ( method, Env.api.upload ++ path ), res ))
   |> Dict.fromList
