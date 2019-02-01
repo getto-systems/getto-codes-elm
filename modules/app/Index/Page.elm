@@ -42,9 +42,7 @@ setup =
       ]
     , \value model ->
       Transition.compose Model
-        ( model.dashboard |> Dashboard.searchChanged ["dashboard"] value
-          |> Transition.map Dashboard
-        )
+        ( model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transition.map Dashboard )
     )
   , store =
     ( \model -> Encode.object
@@ -52,7 +50,7 @@ setup =
       ]
     , \value model ->
       Model
-        (model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]))
+        ( model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]) )
     )
   , init = init
   }

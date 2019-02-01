@@ -19,11 +19,11 @@ import GettoUpload.Layout.Page.Side.Html as Html
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Static as Static
 import GettoUpload.Layout.Frame.Credential as Credential
+import GettoUpload.Layout.Api as Api
 import GettoUpload.Extension.Command.Auth as Auth
 import GettoUpload.Extension.Command.Http as Http
-import GettoUpload.Extension.Href as Href
+import GettoUpload.Extension.Href as Href exposing ( Href )
 import GettoUpload.Extension.Href.Home as Home
-import GettoUpload.Extension.Api as Api
 import GettoUpload.Extension.View.Http as HttpView
 import GettoUpload.Extension.View.Menu as Menu exposing ( Menu )
 import GettoUpload.Extension.View.Icon as Icon
@@ -68,23 +68,25 @@ init model =
   )
 
 badge : Http.Request (FrameModel a app appMsg) Badge
-badge = Http.get
-  { url     = "layout/menu/badge" |> Api.prependRoot
-  , headers = Frame.auth >> Auth.credential >> Credential.headers
-  , params  = \model -> [] |> QueryEncode.object
-  , decoder = Decode.map Badge
-      ( Decode.at ["counts"]
-        ( Decode.list
-          ( Decode.map2 Tuple.pair
-            ( Decode.at ["name"]  Decode.string )
-            ( Decode.at ["count"] Decode.int )
+badge = "layout/menu/badge" |> Api.upload
+  (\(url,headers) ->
+    Http.get
+      { url     = url
+      , headers = headers
+      , params  = \model -> [] |> QueryEncode.object
+      , decoder = Decode.map Badge
+        ( Decode.at ["counts"]
+          ( Decode.list
+            ( Decode.map2 Tuple.pair
+              ( Decode.at ["name"]  Decode.string )
+              ( Decode.at ["count"] Decode.int )
+            )
+          |> Decode.map Dict.fromList
           )
-        |> Decode.map Dict.fromList
         )
-      )
-  , timeout = 10 * 1000
-  , tracker = Nothing
-  }
+      , timeout = 10 * 1000
+      }
+  )
 
 menu : Menu
 menu =
@@ -107,8 +109,14 @@ allow roles (group,_) =
 
 badgeNames : Dict String String
 badgeNames = Dict.fromList
-  [ ( Home.index |> Href.path, "home" )
+  [ ( Home.index |> toBadgeName, "home" )
   ]
+
+toBadgeName : Href -> String
+toBadgeName href =
+  case href |> Href.path of
+    Href.Internal path -> "INTERNAL:" ++ path
+    Href.Keycloak path -> "KEYCLOAK:" ++ path
 
 collapsed : Set String -> String -> Bool
 collapsed data name = data |> Set.member name
@@ -224,7 +232,7 @@ nav model = L.lazy3
       , badge =
         \href ->
           badgeNames
-          |> Dict.get (href |> Href.path)
+          |> Dict.get (href |> toBadgeName)
           |> Maybe.andThen
             (\name ->
               side |> .badge

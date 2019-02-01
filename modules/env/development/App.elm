@@ -1,7 +1,13 @@
 module GettoUpload.Env.App exposing
-  ( hrefRoot
-  , apiRoot
+  ( href
+  , api
   )
 
-hrefRoot = "/dist/"
-apiRoot  = "http://getto.workstation:30080/"
+href =
+  { internal = "/dist/"
+  , keycloak = "http://getto.workstation:10380/"
+  }
+
+api =
+  { upload = "http://getto.workstation:30080/"
+  }

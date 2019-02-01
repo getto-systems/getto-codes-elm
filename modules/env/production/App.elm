@@ -1,7 +1,14 @@
 module GettoUpload.Env.App exposing
-  ( root
+  ( href
+  , api
   )
-
 import GettoUpload.Version as Version
 
-root = "/" ++ Version.data.version ++ "/"
+href =
+  { internal = "/" ++ Version.data.version ++ "/"
+  , keycloak = "https://keycloak.getto.systems/"
+  }
+
+api =
+  { upload = "https://api.upload.getto.systems/"
+  }

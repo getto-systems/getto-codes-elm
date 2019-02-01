@@ -50,9 +50,6 @@ update msg model =
     Noop -> ( model, Transition.none )
 
 
-title : Static.Model -> String
-title = Static.page >> .path >> I18n.title
-
 documentTitle : FrameModel a app appMsg -> String
 documentTitle model =
   let
@@ -60,7 +57,7 @@ documentTitle model =
     project = static |> Static.project
   in
     Html.documentTitle
-      { path    = static |> Static.page |> .path
+      { href    = static |> Static.page |> .href
       , company = project.company
       , title   = project.title
       , i18n    = I18n.title
@@ -69,7 +66,7 @@ documentTitle model =
 header : FrameModel a app appMsg -> Html Msg
 header model = L.lazy
   (\static -> Html.header
-    { path = static |> Static.page |> .path
+    { href = static |> Static.page |> .href
     , i18n = I18n.title
     }
   )

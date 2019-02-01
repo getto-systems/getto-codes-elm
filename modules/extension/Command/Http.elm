@@ -43,7 +43,6 @@ type alias RequestInner model data params =
   , params  : model -> params
   , decoder : Decode.Decoder data
   , timeout : Float
-  , tracker : Maybe String
   }
 
 type alias Header = ( String, String )
@@ -87,6 +86,8 @@ request req msg model =
     query   data = model |> data.params |> QueryEncode.encode
     json    data = model |> data.params |> Http.jsonBody
     part    data = model |> data.params |> Part.toBody
+
+    marker     = req |> trackMarker |> Just
     requestMsg = toState >> msg
   in
     Mock.request <| -- httpRequest <|
@@ -98,7 +99,7 @@ request req msg model =
           , body    = Http.emptyBody
           , decoder = data.decoder
           , timeout = Just data.timeout
-          , tracker = data.tracker
+          , tracker = marker
           , msg     = requestMsg
           }
         Post data ->
@@ -108,7 +109,7 @@ request req msg model =
           , body    = data |> json
           , decoder = data.decoder
           , timeout = Just data.timeout
-          , tracker = data.tracker
+          , tracker = marker
           , msg     = requestMsg
           }
         Put data ->
@@ -118,7 +119,7 @@ request req msg model =
           , body    = data |> json
           , decoder = data.decoder
           , timeout = Just data.timeout
-          , tracker = data.tracker
+          , tracker = marker
           , msg     = requestMsg
           }
         Delete data ->
@@ -128,7 +129,7 @@ request req msg model =
           , body    = data |> json
           , decoder = data.decoder
           , timeout = Just data.timeout
-          , tracker = data.tracker
+          , tracker = marker
           , msg     = requestMsg
           }
         Upload data ->
@@ -138,9 +139,21 @@ request req msg model =
           , body    = data |> part
           , decoder = data.decoder
           , timeout = Just data.timeout
-          , tracker = data.tracker
+          , tracker = marker
           , msg     = requestMsg
           }
+
+trackMarker : Request model data -> String
+trackMarker req =
+  let
+    appendUrl data marker = marker ++ data.url
+  in
+    case req of
+      Get    data -> "GET:"    |> appendUrl data
+      Post   data -> "POST:"   |> appendUrl data
+      Put    data -> "PUT:"    |> appendUrl data
+      Delete data -> "DELETE:" |> appendUrl data
+      Upload data -> "UPLOAD:" |> appendUrl data
 
 toState : Result Http.Error data -> HttpView.State data
 toState result =
@@ -170,22 +183,14 @@ httpRequest data =
 track : Request model data -> (HttpView.State data -> msg) -> Sub msg
 track req msg =
   let
-    trackerData =
-      case req of
-        Get    data -> data.tracker
-        Post   data -> data.tracker
-        Put    data -> data.tracker
-        Delete data -> data.tracker
-        Upload data -> data.tracker
+    marker = req |> trackMarker
 
     toProgress progress =
       case progress of
         Http.Sending   data -> HttpView.Sending data
         Http.Receiving data -> HttpView.Receiving data
   in
-    case trackerData of
-      Nothing -> Sub.none
-      Just tracker -> (toProgress >> HttpView.Progress >> msg) |> Http.track tracker
+    (toProgress >> HttpView.Progress >> msg) |> Http.track marker
 
 get : RequestInner model data QueryEncode.Value -> Request model data
 get = Get

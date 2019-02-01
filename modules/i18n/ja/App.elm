@@ -3,16 +3,17 @@ module GettoUpload.I18n.App exposing
   , menu
   , role
   )
+import GettoUpload.Extension.Href as Href exposing ( Href )
 
 menu : String -> String
 menu = String.toUpper
 
-title : String -> String
-title path =
-  case path of
-    "index.html" -> "ホーム"
+title : Href -> String
+title href =
+  case href |> Href.path of
+    Href.Internal "index.html" -> "ホーム"
 
-    _ -> path
+    _ -> href |> Href.toString
 
 role : String -> String
 role name =

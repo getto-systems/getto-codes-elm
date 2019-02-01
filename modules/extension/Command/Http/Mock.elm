@@ -1,7 +1,7 @@
 module GettoUpload.Extension.Command.Http.Mock exposing
   ( request
   )
-import GettoUpload.Extension.Api as Api
+import GettoUpload.Env.App as Env
 
 import Dict exposing ( Dict )
 import Json.Encode as Encode
@@ -20,20 +20,36 @@ type alias RequestData data msg =
   , msg     : Result Http.Error data -> msg
   }
 
+type Request
+  = Real
+  | Mock Decode.Value
+
 request : RequestData data msg -> Cmd msg
 request data =
-  case mock |> Dict.get (data.method,data.url) of
+  case mock |> Dict.get ( data.method, data.url ) of
     Nothing  -> Cmd.none
     Just res ->
-      res
-      |> Decode.decodeValue data.decoder
-      |> Result.mapError (Decode.errorToString >> Http.BadBody)
-      |> Task.succeed
-      |> Task.perform data.msg
+      case res of
+        Real ->
+          Http.request
+            { method  = data.method
+            , headers = data.headers
+            , url     = data.url
+            , body    = data.body
+            , expect  = data.decoder |> Http.expectJson data.msg
+            , timeout = data.timeout
+            , tracker = data.tracker
+            }
+        Mock val ->
+          val
+          |> Decode.decodeValue data.decoder
+          |> Result.mapError (Decode.errorToString >> Http.BadBody)
+          |> Task.succeed
+          |> Task.perform data.msg
 
-mock : Dict ( String, String ) Decode.Value
+mock : Dict ( String, String ) Request
 mock =
-  [ ( ( "GET", "layout/menu/badge" ), Encode.null )
+  [ ( ( "GET", "layout/menu/badge" ), Encode.null |> Mock )
   ]
-  |> List.map (\((method,path),res) -> ( ( method, path |> Api.prependRoot ), res ))
+  |> List.map (\((method,path),res) -> ( ( method, Env.api.upload ++ path ), res ))
   |> Dict.fromList

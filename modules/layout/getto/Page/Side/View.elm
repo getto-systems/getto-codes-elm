@@ -44,7 +44,7 @@ type BadgeState
 
 type alias MenuI18n =
   { menu  : String -> String
-  , title : String -> String
+  , title : Href -> String
   }
 
 
@@ -111,7 +111,7 @@ toBreadcrumb i18n group result =
           |> List.reverse
           |> List.map
             (\item ->
-              { title = item |> Menu.href |> Href.path |> i18n.title
+              { title = item |> Menu.href |> i18n.title
               , href  = item |> Menu.href
               , icon  = item |> Menu.icon
               }
@@ -157,7 +157,7 @@ menu model =
             items |> List.map
               (\item ->
                 { active = item |> active
-                , title  = item |> Menu.href |> Href.path |> model.i18n.title
+                , title  = item |> Menu.href |> model.i18n.title
                 , href   = item |> Menu.href
                 , icon   = item |> Menu.icon
                 , badge  = item |> badge
@@ -183,4 +183,4 @@ sum list =
     else list |> List.sum |> Just
 
 match : String -> Menu.Item -> Bool
-match path = Menu.href >> Href.path >> (==) path
+match path = Menu.href >> Href.path >> (==) (Href.Internal path)

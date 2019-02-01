@@ -48,8 +48,8 @@ setup =
       ]
     , \value model ->
       Model
-        (model.article |> Article.storeChanged (value |> SafeDecode.valueAt ["article"]))
-        (model.side    |> Side.storeChanged    (value |> SafeDecode.valueAt ["side"]))
+        ( model.article |> Article.storeChanged (value |> SafeDecode.valueAt ["article"]) )
+        ( model.side    |> Side.storeChanged    (value |> SafeDecode.valueAt ["side"]) )
     )
   , init  = init
   }
