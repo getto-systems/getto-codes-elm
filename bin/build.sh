@@ -10,6 +10,8 @@ getto_elm_build_main(){
   local tmp_target
   local dist_target
   local test_target
+  local module
+  local file
 
   if [ -f tmp/wip ]; then
     return
@@ -37,6 +39,15 @@ getto_elm_build_main(){
     echo "elm build: $target"
     "$elm" make "$src_target" --output="$tmp_target" && getto_elm_build_after
   fi
+
+  module=${target%.elm}
+  module=${module//\//.}
+
+  for file in $(grep "import $module " -R $target_dir | sed 's/:.*//'); do
+    file=${file#$target_dir}
+    file=${file#/}
+    ./bin/build.sh $target_dir $file
+  done
 }
 
 getto_elm_build_after(){
