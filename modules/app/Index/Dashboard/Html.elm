@@ -10,7 +10,7 @@ import Html as H exposing ( Html )
 import Html.Attributes as A
 
 
-example : { name : String, data : View.Example, page : Href, i18n : { title : Href -> String, name : String -> String } } -> Html msg
+example : { name : String, data : View.Example, page : Href, i18n : { title : Href.Path -> String, name : String -> String } } -> Html msg
 example model =
   H.section []
     [ H.h2 [] [ model.name |> model.i18n.name |> H.text ]
@@ -33,7 +33,7 @@ example model =
       [ H.a [ model.page |> Href.toString |> A.href ]
         [ Icon.fas "user" |> Html.icon []
         , " " |> H.text
-        , model.page |> model.i18n.title |> H.text
+        , model.page |> Href.path |> model.i18n.title |> H.text
         ]
       ]
     ]

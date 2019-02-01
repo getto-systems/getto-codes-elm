@@ -8,9 +8,7 @@ module GettoUpload.Layout.Frame.Static exposing
   , page
   , version
   )
-import GettoUpload.Extension.Href as Href exposing ( Href )
-
-import Getto.Url.Query.Encode as QueryEncode
+import GettoUpload.Extension.Href as Href
 
 type alias Flags =
   { project : Project
@@ -40,8 +38,7 @@ type alias Project =
   }
 
 type alias Page =
-  { path : String
-  , href : Href
+  { path : Href.Path
   }
 
 init : Version -> Flags -> Model
@@ -49,8 +46,7 @@ init versionData flags = Model
   { version = versionData
   , project = flags.project
   , page    =
-    { path = flags.page.path
-    , href = flags.page.path |> Href.internal QueryEncode.empty
+    { path = flags.page.path |> Href.Internal
     }
   }
 
