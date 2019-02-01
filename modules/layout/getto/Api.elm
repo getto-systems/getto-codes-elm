@@ -1,5 +1,5 @@
 module GettoUpload.Layout.Api exposing
-  ( upload
+  ( request
   )
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Credential as Credential
@@ -12,11 +12,11 @@ type alias Info layout app appMsg =
   , headers : Frame.Model layout app appMsg -> List Http.Header
   }
 
-upload : (( String, (Frame.Model layout app appMsg -> List Http.Header)) -> Http.Request (Frame.Model layout app appMsg) data) -> String -> Http.Request (Frame.Model layout app appMsg) data
-upload request pathTo =
-  ( Env.api.upload ++ pathTo
+request : (( String, (Frame.Model layout app appMsg -> List Http.Header)) -> Http.Request (Frame.Model layout app appMsg) data) -> Http.Request (Frame.Model layout app appMsg) data
+request req =
+  ( Env.api.host
   , Frame.auth >> Auth.credential >> Credential.token >>
       \token ->
         [ ( "Authorization", token )
         ]
-  ) |> request
+  ) |> req

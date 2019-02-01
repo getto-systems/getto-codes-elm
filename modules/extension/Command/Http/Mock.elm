@@ -58,5 +58,5 @@ mock =
       )
     )
   ]
-  |> List.map (\((method,path),res) -> ( ( method, Env.api.upload ++ path ), res ))
+  |> List.map (\((method,path),res) -> ( ( method, Env.api.host ++ path ), res ))
   |> Dict.fromList

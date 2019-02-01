@@ -9,5 +9,5 @@ href =
   }
 
 api =
-  { upload = "http://getto.workstation:30080/"
+  { host = "http://getto.workstation:30080/"
   }
