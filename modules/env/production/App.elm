@@ -10,5 +10,5 @@ href =
   }
 
 api =
-  { upload = "https://api.upload.getto.systems/"
+  { host = "https://api.upload.getto.systems/"
   }
