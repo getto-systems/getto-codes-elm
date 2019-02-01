@@ -27,25 +27,22 @@ type Request
 request : RequestData data msg -> Cmd msg
 request data =
   case mock |> Dict.get ( data.method, data.url ) of
-    Nothing  -> Cmd.none
-    Just res ->
-      case res of
-        Real _ ->
-          Http.request
-            { method  = data.method
-            , headers = data.headers
-            , url     = data.url
-            , body    = data.body
-            , expect  = data.decoder |> Http.expectJson data.msg
-            , timeout = data.timeout
-            , tracker = data.tracker
-            }
-        Mock val ->
-          val
-          |> Decode.decodeValue data.decoder
-          |> Result.mapError (Decode.errorToString >> Http.BadBody)
-          |> Task.succeed
-          |> Task.perform data.msg
+    Just (Mock res) ->
+      res
+      |> Decode.decodeValue data.decoder
+      |> Result.mapError (Decode.errorToString >> Http.BadBody)
+      |> Task.succeed
+      |> Task.perform data.msg
+    _ ->
+      Http.request
+        { method  = data.method
+        , headers = data.headers
+        , url     = data.url
+        , body    = data.body
+        , expect  = data.decoder |> Http.expectJson data.msg
+        , timeout = data.timeout
+        , tracker = data.tracker
+        }
 
 mock : Dict ( String, String ) Request
 mock =
