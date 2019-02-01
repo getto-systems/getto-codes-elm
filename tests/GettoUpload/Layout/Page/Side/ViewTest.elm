@@ -11,7 +11,7 @@ import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
 
 href : String -> Href
-href = Href.href QueryEncode.empty
+href = Href.internal QueryEncode.empty
 
 menu : Menu.Menu
 menu =
@@ -44,8 +44,12 @@ menu =
   ]
 
 i18n =
-  { menu = identity
-  , title = identity
+  { menu  = identity
+  , title =
+    \value ->
+      case value |> Href.path of
+        Href.Internal path -> path
+        Href.Keycloak path -> path
   }
 
 suite : Test
@@ -271,8 +275,8 @@ suite =
             collapsed group = False
             badge path =
               case path |> Href.path of
-                "home.html" -> Just 4
-                _           -> Nothing
+                Href.Internal "home.html" -> Just 4
+                _ -> Nothing
           in
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
@@ -324,9 +328,9 @@ suite =
             collapsed group = False
             badge path =
               case path |> Href.path of
-                "home.html" -> Just 4
-                "data.html" -> Just 3
-                _           -> Nothing
+                Href.Internal "home.html" -> Just 4
+                Href.Internal "data.html" -> Just 3
+                _ -> Nothing
           in
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
@@ -378,9 +382,9 @@ suite =
             collapsed group = False
             badge path =
               case path |> Href.path of
-                "home.html"      -> Just 4
-                "home/file.html" -> Just 3
-                _                -> Nothing
+                Href.Internal "home.html"      -> Just 4
+                Href.Internal "home/file.html" -> Just 3
+                _ -> Nothing
           in
             { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu

@@ -3,6 +3,7 @@
 getto_elm_build_main(){
   local elm
   local elm_test
+  local elm_cache
   local dist
   local target_dir
   local target
@@ -10,8 +11,6 @@ getto_elm_build_main(){
   local tmp_target
   local dist_target
   local test_target
-  local module
-  local file
 
   if [ -f tmp/wip ]; then
     return
@@ -19,6 +18,7 @@ getto_elm_build_main(){
 
   elm=./node_modules/.bin/elm
   elm_test=./node_modules/.bin/elm-test
+  elm_cache=./elm-stuff/0.19.0
 
   dist=./public/dist/_app
 
@@ -37,17 +37,9 @@ getto_elm_build_main(){
 
   if [ -f "$src_target" ]; then
     echo "elm build: $target"
+    getto_elm_build_remove_relative_module_cache $target
     "$elm" make "$src_target" --output="$tmp_target" && getto_elm_build_after
   fi
-
-  module=${target%.elm}
-  module=${module//\//.}
-
-  for file in $(grep "import $module " -R $target_dir | sed 's/:.*//'); do
-    file=${file#$target_dir}
-    file=${file#/}
-    ./bin/build.sh $target_dir $file
-  done
 }
 
 getto_elm_build_after(){
@@ -82,6 +74,26 @@ getto_elm_build_changed(){
   if [ -n "$changed" ]; then
     echo changed
   fi
+}
+
+getto_elm_build_remove_relative_module_cache(){
+  local current
+  local module
+  local file
+
+  current=$1; shift
+
+  module=${current%.elm}
+  module=${module//\//.}
+
+  rm -f $elm_cache/${module//./-}.*
+
+  for file in $(grep "import $module " -R $target_dir | sed 's/:.*//'); do
+    file=${file#$target_dir}
+    file=${file#/}
+
+    getto_elm_build_remove_relative_module_cache $file
+  done
 }
 
 getto_elm_build_main "$@"

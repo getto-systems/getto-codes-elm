@@ -5,23 +5,24 @@ module GettoUpload.Layout.Page.Article.Html exposing
   )
 import GettoUpload.Extension.View.Icon as Icon
 import GettoUpload.Extension.View.Html as Html
+import GettoUpload.Extension.Href as Href exposing ( Href )
 
 import Html as H exposing ( Html )
 import Html.Attributes as A
 
 
-documentTitle : { path : String, company : String, title : String, i18n : String -> String } -> String
+documentTitle : { href : Href, company : String, title : String, i18n : Href -> String } -> String
 documentTitle model =
-  (model.path |> model.i18n)
+  (model.href |> model.i18n)
   ++ " | "
   ++ model.company
   ++ " "
   ++ model.title
 
 
-header : { path : String, i18n : String -> String } -> Html msg
+header : { href : Href, i18n : Href -> String } -> Html msg
 header model =
-  H.h1 [] [ model.path |> model.i18n |> H.text ]
+  H.h1 [] [ model.href |> model.i18n |> H.text ]
 
 
 footer : { copyright : String } -> Html msg

@@ -5,4 +5,4 @@ import GettoUpload.Extension.Href as Href
 
 import Getto.Url.Query.Encode as QueryEncode
 
-index = "index.html" |> Href.href QueryEncode.empty
+index = "index.html" |> Href.internal QueryEncode.empty
