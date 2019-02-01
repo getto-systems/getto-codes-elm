@@ -44,7 +44,9 @@ getto_elm_build_main(){
   module=${module//\//.}
 
   for file in $(grep "import $module " -R $target_dir | sed 's/:.*//'); do
-    ./bin/build.sh $target_dir ${file#$target_dir/}
+    file=${file#$target_dir}
+    file=${file#/}
+    ./bin/build.sh $target_dir $file
   done
 }
 
