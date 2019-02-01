@@ -57,7 +57,7 @@ documentTitle model =
     project = static |> Static.project
   in
     Html.documentTitle
-      { href    = static |> Static.page |> .href
+      { path    = static |> Static.page |> .path
       , company = project.company
       , title   = project.title
       , i18n    = I18n.title
@@ -66,7 +66,7 @@ documentTitle model =
 header : FrameModel a app appMsg -> Html Msg
 header model = L.lazy
   (\static -> Html.header
-    { href = static |> Static.page |> .href
+    { path = static |> Static.page |> .path
     , i18n = I18n.title
     }
   )

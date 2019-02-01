@@ -47,7 +47,7 @@ i18n =
   { menu  = identity
   , title =
     \value ->
-      case value |> Href.path of
+      case value of
         Href.Internal path -> path
         Href.Keycloak path -> path
   }
@@ -63,7 +63,7 @@ suite =
             collapsed group = False
             badge path = Nothing
           in
-            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            { path = Href.Internal "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
               [ { name      = "main"
@@ -113,7 +113,7 @@ suite =
             collapsed group = False
             badge path = Nothing
           in
-            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            { path = Href.Internal "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
               [ { name      = "main"
@@ -144,7 +144,7 @@ suite =
             collapsed group = False
             badge path = Nothing
           in
-            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            { path = Href.Internal "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
               [ { name      = "main"
@@ -194,7 +194,7 @@ suite =
             collapsed group = group == "data"
             badge path = Nothing
           in
-            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            { path = Href.Internal "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
               [ { name      = "main"
@@ -231,7 +231,7 @@ suite =
             collapsed group = group == "main"
             badge path = Nothing
           in
-            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            { path = Href.Internal "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
               [ { name      = "main"
@@ -278,7 +278,7 @@ suite =
                 Href.Internal "home.html" -> Just 4
                 _ -> Nothing
           in
-            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            { path = Href.Internal "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
               [ { name      = "main"
@@ -332,7 +332,7 @@ suite =
                 Href.Internal "data.html" -> Just 3
                 _ -> Nothing
           in
-            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            { path = Href.Internal "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
               [ { name      = "main"
@@ -386,7 +386,7 @@ suite =
                 Href.Internal "home/file.html" -> Just 3
                 _ -> Nothing
           in
-            { path = "home.html", roles = ["admin"], menu = menu, i18n = i18n
+            { path = Href.Internal "home.html", roles = ["admin"], menu = menu, i18n = i18n
             , allow = allow, collapsed = collapsed, badge = badge } |> Side.menu
             |> Expect.equal
               [ { name      = "main"
@@ -433,7 +433,7 @@ suite =
     , describe "breadcrumb"
       [ test "should return breadcrumbs" <|
         \_ ->
-          { path = "home.html", menu = menu, i18n = i18n } |> Side.breadcrumb
+          { path = Href.Internal "home.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "main"
@@ -444,7 +444,7 @@ suite =
 
       , test "should return breadcrumbs at second level" <|
         \_ ->
-          { path = "home/file.html", menu = menu, i18n = i18n } |> Side.breadcrumb
+          { path = Href.Internal "home/file.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "main"
@@ -456,7 +456,7 @@ suite =
 
       , test "should return breadcrumbs at therd level" <|
         \_ ->
-          { path = "home/file/edit.html", menu = menu, i18n = i18n } |> Side.breadcrumb
+          { path = Href.Internal "home/file/edit.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "main"
@@ -469,7 +469,7 @@ suite =
 
       , test "should return breadcrumbs at therd level of 'data'" <|
         \_ ->
-          { path = "master/file/edit.html", menu = menu, i18n = i18n } |> Side.breadcrumb
+          { path = Href.Internal "master/file/edit.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "data"
@@ -482,7 +482,7 @@ suite =
 
       , test "should return breadcrumbs at top level of another 'data'" <|
         \_ ->
-          { path = "upload.html", menu = menu, i18n = i18n } |> Side.breadcrumb
+          { path = Href.Internal "upload.html", menu = menu, i18n = i18n } |> Side.breadcrumb
           |> Expect.equal
             (Just
               ( "data"
