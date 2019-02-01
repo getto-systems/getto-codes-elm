@@ -21,7 +21,7 @@ type alias RequestData data msg =
   }
 
 type Request
-  = Real
+  = Real Decode.Value
   | Mock Decode.Value
 
 request : RequestData data msg -> Cmd msg
@@ -30,7 +30,7 @@ request data =
     Nothing  -> Cmd.none
     Just res ->
       case res of
-        Real ->
+        Real _ ->
           Http.request
             { method  = data.method
             , headers = data.headers
@@ -50,7 +50,7 @@ request data =
 mock : Dict ( String, String ) Request
 mock =
   [ ( ( "GET", "layout/menu/badge" )
-    , Mock
+    , Mock -- Real
       ( [ ( "counts"
           , [ [ ( "name", "home" |> Encode.string )
               , ( "count", 4 |> Encode.int )
