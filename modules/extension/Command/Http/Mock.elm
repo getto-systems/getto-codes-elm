@@ -1,6 +1,7 @@
 module GettoUpload.Extension.Command.Http.Mock exposing
   ( request
   )
+import GettoUpload.Extension.Command.Http.Real as Real
 import GettoUpload.Env.App as Env
 
 import Dict exposing ( Dict )
@@ -8,6 +9,7 @@ import Json.Encode as Encode
 import Json.Decode as Decode
 import Http
 import Task
+import Process
 
 type alias RequestData data msg =
   { method  : String
@@ -21,33 +23,29 @@ type alias RequestData data msg =
   }
 
 type Request
-  = Real Decode.Value
-  | Mock Decode.Value
+  = Real
+  | Mock Float Decode.Value
 
 request : RequestData data msg -> Cmd msg
 request data =
   case mock |> Dict.get ( data.method, data.url ) of
-    Just (Mock res) ->
-      res
-      |> Decode.decodeValue data.decoder
-      |> Result.mapError (Decode.errorToString >> Http.BadBody)
-      |> Task.succeed
+    Just (Mock delay res) ->
+      Process.sleep delay
+      |> Task.map
+        (\_ ->
+          res
+          |> Decode.decodeValue data.decoder
+          |> Result.mapError (Decode.errorToString >> Http.BadBody)
+        )
       |> Task.perform data.msg
-    _ ->
-      Http.request
-        { method  = data.method
-        , headers = data.headers
-        , url     = data.url
-        , body    = data.body
-        , expect  = data.decoder |> Http.expectJson data.msg
-        , timeout = data.timeout
-        , tracker = data.tracker
-        }
+
+    _ -> data |> Real.request
 
 mock : Dict ( String, String ) Request
 mock =
   [ ( ( "GET", "layout/menu/badge" )
-    , Mock -- Real
+    --, Real
+    {--}, Mock 1000
       ( [ ( "counts"
           , [ [ ( "name", "home" |> Encode.string )
               , ( "count", 4 |> Encode.int )
@@ -56,6 +54,7 @@ mock =
           )
         ] |> Encode.object
       )
+    --}
     )
   ]
   |> List.map (\((method,path),res) -> ( ( method, Env.api.host ++ path ), res ))
