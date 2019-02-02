@@ -1,4 +1,4 @@
-module GettoUpload.Extension.Command.Search exposing
+module GettoUpload.Command.Search exposing
   ( Model
   , Init
   , init

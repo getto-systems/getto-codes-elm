@@ -3,8 +3,8 @@ module GettoUpload.Layout.Api exposing
   )
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Credential as Credential
-import GettoUpload.Extension.Command.Auth as Auth
-import GettoUpload.Extension.Command.Http as Http
+import GettoUpload.Command.Auth as Auth
+import GettoUpload.Command.Http as Http
 import GettoUpload.Env.App as Env
 
 type alias Info layout app appMsg =

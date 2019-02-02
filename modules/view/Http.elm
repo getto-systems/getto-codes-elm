@@ -1,4 +1,4 @@
-module GettoUpload.Extension.View.Http exposing
+module GettoUpload.View.Http exposing
   ( State(..)
   , Progress(..)
   , Error(..)

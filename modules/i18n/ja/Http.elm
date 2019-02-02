@@ -1,7 +1,7 @@
 module GettoUpload.I18n.Http exposing
   ( error
   )
-import GettoUpload.Extension.View.Http as HttpView
+import GettoUpload.View.Http as HttpView
 
 error : HttpView.Error -> String
 error err =

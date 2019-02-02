@@ -1,4 +1,4 @@
-module GettoUpload.Extension.View.Menu exposing
+module GettoUpload.View.Menu exposing
   ( Menu
   , Item
   , item
@@ -6,7 +6,7 @@ module GettoUpload.Extension.View.Menu exposing
   , href
   , children
   )
-import GettoUpload.Extension.View.Icon as Icon exposing ( Icon )
+import GettoUpload.View.Icon as Icon exposing ( Icon )
 import GettoUpload.Extension.Href as Href exposing ( Href )
 
 type alias Menu = List ( String, List Item )

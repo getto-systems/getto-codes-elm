@@ -7,8 +7,8 @@ module GettoUpload.Layout.Page.Side.Html exposing
   , nav
   )
 import GettoUpload.Layout.Page.Side.View as View
-import GettoUpload.Extension.View.Icon as Icon
-import GettoUpload.Extension.View.Html as Html
+import GettoUpload.View.Html as Html
+import GettoUpload.View.Icon as Icon
 import GettoUpload.Extension.Href as Href exposing ( Href )
 
 import Html as H exposing ( Html )

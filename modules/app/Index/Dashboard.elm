@@ -11,13 +11,13 @@ module GettoUpload.App.Index.Dashboard exposing
   , contents
   , dialogs
   )
-import GettoUpload.App.Index.Dashboard.View as View
 import GettoUpload.App.Index.Dashboard.Html as Html
-import GettoUpload.Layout.Frame as Frame
+import GettoUpload.App.Index.Dashboard.View as View
 import GettoUpload.Layout.Page.Page as Layout
-import GettoUpload.Extension.Href.Home as Home
-import GettoUpload.I18n.App as I18n
+import GettoUpload.Layout.Frame as Frame
 import GettoUpload.I18n.App.Index.Dashboard as DashboardI18n
+import GettoUpload.I18n.App as I18n
+import GettoUpload.Extension.Href.Home as Home
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode

@@ -1,8 +1,8 @@
-module GettoUpload.Extension.View.Html exposing
+module GettoUpload.View.Html exposing
   ( icon
   , badge
   )
-import GettoUpload.Extension.View.Icon as Icon exposing ( Icon )
+import GettoUpload.View.Icon as Icon exposing ( Icon )
 
 import Html as H exposing ( Html )
 import Html.Attributes as A

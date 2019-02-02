@@ -1,4 +1,4 @@
-module GettoUpload.Extension.View.Icon exposing
+module GettoUpload.View.Icon exposing
   ( Icon(..)
   , Fa(..)
   , fas
