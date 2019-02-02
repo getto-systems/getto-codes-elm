@@ -15,6 +15,7 @@ module GettoUpload.Extension.Command.Http exposing
   , delete
   , upload
   )
+--import GettoUpload.Extension.Command.Http.Real as Real
 import GettoUpload.Extension.Command.Http.Mock as Mock
 import GettoUpload.Extension.View.Http as HttpView
 
@@ -24,6 +25,7 @@ import Getto.Http.Part as Part
 import Json.Encode as Encode
 import Json.Decode as Decode
 import Http
+import Task
 
 type Entry data = Entry
   { state    : HttpView.State data
@@ -90,7 +92,8 @@ request req msg model =
     marker     = req |> trackMarker |> Just
     requestMsg = toState >> msg
   in
-    Mock.request <| -- httpRequest <|
+    [ HttpView.Loading |> Task.succeed |> Task.perform msg
+    , Mock.request <| -- Real.request <|
       case req of
         Get data ->
           { method  = "GET"
@@ -142,6 +145,7 @@ request req msg model =
           , tracker = marker
           , msg     = requestMsg
           }
+    ] |> Cmd.batch
 
 trackMarker : Request model data -> String
 trackMarker req =
@@ -167,18 +171,6 @@ toState result =
           Http.NetworkError     -> HttpView.NetworkError
           Http.BadStatus status -> HttpView.BadStatus status
           Http.BadBody  message -> HttpView.BadBody message
-
-httpRequest : RequestData data msg -> Cmd msg
-httpRequest data =
-  Http.request
-    { method  = data.method
-    , headers = data.headers
-    , url     = data.url
-    , body    = data.body
-    , expect  = data.decoder |> Http.expectJson data.msg
-    , timeout = data.timeout
-    , tracker = data.tracker
-    }
 
 track : Request model data -> (HttpView.State data -> msg) -> Sub msg
 track req msg =
