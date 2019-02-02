@@ -7,9 +7,9 @@ module GettoUpload.Layout.Page.Side.View exposing
   , menu
   , breadcrumb
   )
-import GettoUpload.Extension.View.Menu as Menu
-import GettoUpload.Extension.View.Icon as Icon exposing ( Icon )
-import GettoUpload.Extension.View.Http as HttpView
+import GettoUpload.View.Menu as Menu
+import GettoUpload.View.Icon as Icon exposing ( Icon )
+import GettoUpload.View.Http as HttpView
 import GettoUpload.Extension.Href as Href exposing ( Href )
 
 

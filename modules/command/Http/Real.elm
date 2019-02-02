@@ -1,7 +1,7 @@
-module GettoUpload.Extension.Command.Http.Real exposing
+module GettoUpload.Command.Http.Real exposing
   ( request
   )
-import GettoUpload.Extension.View.Http as HttpView
+import GettoUpload.View.Http as HttpView
 
 import Json.Decode as Decode
 import Http

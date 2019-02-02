@@ -22,9 +22,9 @@ module GettoUpload.Layout.Frame exposing
   )
 import GettoUpload.Layout.Frame.Static     as Static
 import GettoUpload.Layout.Frame.Credential as Credential
-import GettoUpload.Extension.Command.Auth   as Auth
-import GettoUpload.Extension.Command.Store  as Store
-import GettoUpload.Extension.Command.Search as Search
+import GettoUpload.Command.Auth   as Auth
+import GettoUpload.Command.Store  as Store
+import GettoUpload.Command.Search as Search
 import GettoUpload.Version as Version
 
 import Getto.Command as Command

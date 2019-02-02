@@ -1,4 +1,4 @@
-module GettoUpload.Extension.Command.Http exposing
+module GettoUpload.Command.Http exposing
   ( Entry
   , Request
   , Header
@@ -15,9 +15,9 @@ module GettoUpload.Extension.Command.Http exposing
   , delete
   , upload
   )
---import GettoUpload.Extension.Command.Http.Real as Real
-import GettoUpload.Extension.Command.Http.Mock as Mock
-import GettoUpload.Extension.View.Http as HttpView
+--import GettoUpload.Command.Http.Real as Real
+import GettoUpload.Command.Http.Mock as Mock
+import GettoUpload.View.Http as HttpView
 
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Http.Part as Part

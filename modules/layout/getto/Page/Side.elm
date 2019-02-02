@@ -14,21 +14,21 @@ module GettoUpload.Layout.Page.Side exposing
   , nav
   , navFooter
   )
-import GettoUpload.Layout.Page.Side.View as View
 import GettoUpload.Layout.Page.Side.Html as Html
-import GettoUpload.Layout.Frame as Frame
+import GettoUpload.Layout.Page.Side.View as View
 import GettoUpload.Layout.Frame.Static as Static
 import GettoUpload.Layout.Frame.Credential as Credential
+import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
-import GettoUpload.Extension.Command.Auth as Auth
-import GettoUpload.Extension.Command.Http as Http
-import GettoUpload.Extension.Href as Href exposing ( Href )
-import GettoUpload.Extension.Href.Home as Home
-import GettoUpload.Extension.View.Http as HttpView
-import GettoUpload.Extension.View.Menu as Menu exposing ( Menu )
-import GettoUpload.Extension.View.Icon as Icon
+import GettoUpload.Command.Auth as Auth
+import GettoUpload.Command.Http as Http
+import GettoUpload.View.Http as HttpView
+import GettoUpload.View.Menu as Menu exposing ( Menu )
+import GettoUpload.View.Icon as Icon
 import GettoUpload.I18n.App  as I18n
 import GettoUpload.I18n.Http as HttpI18n
+import GettoUpload.Extension.Href as Href exposing ( Href )
+import GettoUpload.Extension.Href.Home as Home
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode

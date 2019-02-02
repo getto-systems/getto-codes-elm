@@ -1,7 +1,7 @@
-module GettoUpload.Extension.Command.Http.Mock exposing
+module GettoUpload.Command.Http.Mock exposing
   ( request
   )
-import GettoUpload.Extension.Command.Http.Real as Real
+import GettoUpload.Command.Http.Real as Real
 import GettoUpload.Env.App as Env
 
 import Dict exposing ( Dict )

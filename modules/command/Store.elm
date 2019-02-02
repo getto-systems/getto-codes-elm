@@ -1,4 +1,4 @@
-port module GettoUpload.Extension.Command.Store exposing
+port module GettoUpload.Command.Store exposing
   ( Model
   , Init
   , StoreType(..)

@@ -3,8 +3,8 @@ module GettoUpload.Layout.Page.Article.Html exposing
   , header
   , footer
   )
-import GettoUpload.Extension.View.Icon as Icon
-import GettoUpload.Extension.View.Html as Html
+import GettoUpload.View.Html as Html
+import GettoUpload.View.Icon as Icon
 import GettoUpload.Extension.Href as Href
 
 import Html as H exposing ( Html )
