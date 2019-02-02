@@ -69,9 +69,9 @@ init model =
 
 badge : Http.Request (FrameModel a app appMsg) Badge
 badge = Api.request
-  (\(url,headers) ->
+  (\(host,headers) ->
     Http.get
-      { url     = url ++ "layout/menu/badge"
+      { url     = host ++ "layout/menu/badge"
       , headers = headers
       , params  = \model -> [] |> QueryEncode.object
       , decoder = Decode.map Badge
