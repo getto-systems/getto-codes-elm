@@ -22,14 +22,14 @@ import Json.Decode as Decode
 import Html as H exposing ( Html )
 import Html.Lazy as L
 
-type alias FrameModel a app appMsg = Frame.Model { a | article : Model } app appMsg
-type alias FrameTransition a app appMsg = Transition (FrameModel a app appMsg) Msg
+type alias FrameModel a app = Frame.Model { a | article : Model } app
+type alias FrameTransition a app = Transition (FrameModel a app) Msg
 type alias Model = {}
 
 type Msg
   = Noop
 
-init : Frame.InitModel -> ( Model, FrameTransition a app appMsg )
+init : Frame.InitModel -> ( Model, FrameTransition a app )
 init model =
   ( {}
   , Transition.none
@@ -44,13 +44,13 @@ storeChanged value model = model
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none
 
-update : Msg -> Model -> ( Model, FrameTransition a app appMsg )
+update : Msg -> Model -> ( Model, FrameTransition a app )
 update msg model =
   case msg of
     Noop -> ( model, Transition.none )
 
 
-documentTitle : FrameModel a app appMsg -> String
+documentTitle : FrameModel a app -> String
 documentTitle model =
   let
     static  = model |> Frame.static
@@ -63,7 +63,7 @@ documentTitle model =
       , i18n    = I18n.title
       }
 
-header : FrameModel a app appMsg -> Html Msg
+header : FrameModel a app -> Html Msg
 header model = L.lazy
   (\static -> Html.header
     { path = static |> Static.page |> .path
@@ -72,7 +72,7 @@ header model = L.lazy
   )
   (model |> Frame.static)
 
-footer : FrameModel a app appMsg -> Html Msg
+footer : FrameModel a app -> Html Msg
 footer model = L.lazy
   (\static -> Html.footer
     { copyright = static |> Static.version |> .copyright

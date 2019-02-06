@@ -24,7 +24,7 @@ main = Browser.application
   , view          = document
   }
 
-type alias FrameModel = Frame.Model Layout.Model Model Msg
+type alias FrameModel = Frame.Model Layout.Model Model
 type alias FrameTransition = Transition FrameModel Msg
 type alias Model =
   { dashboard : Dashboard.Model
@@ -41,8 +41,8 @@ setup =
       [ ( "dashboard", model.dashboard |> Dashboard.search )
       ]
     , \value model ->
-      Transition.compose Model
-        ( model.dashboard |> Dashboard.searchChanged ["dashboard"] value |> Transition.map Dashboard )
+      Model
+        ( model.dashboard |> Dashboard.searchChanged ["dashboard"] value )
     )
   , store =
     ( \model -> Encode.object

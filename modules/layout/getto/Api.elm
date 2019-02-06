@@ -7,12 +7,12 @@ import GettoUpload.Command.Auth as Auth
 import GettoUpload.Command.Http as Http
 import GettoUpload.Env.App as Env
 
-type alias Info layout app appMsg =
+type alias Info layout app =
   { url : String
-  , headers : Frame.Model layout app appMsg -> List Http.Header
+  , headers : Frame.Model layout app -> List Http.Header
   }
 
-request : (( String, (Frame.Model layout app appMsg -> List Http.Header)) -> Http.Request (Frame.Model layout app appMsg) header body) -> Http.Request (Frame.Model layout app appMsg) header body
+request : (( String, (Frame.Model layout app -> List Http.Header)) -> Http.Request (Frame.Model layout app) header body) -> Http.Request (Frame.Model layout app) header body
 request req =
   ( Env.api.host
   , Frame.auth >> Auth.credential >> Credential.token >>

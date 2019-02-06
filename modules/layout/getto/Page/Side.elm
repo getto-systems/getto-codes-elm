@@ -42,8 +42,8 @@ import Json.Decode as Decode
 import Html as H exposing ( Html )
 import Html.Lazy as L
 
-type alias FrameModel a app appMsg = Frame.Model { a | side : Model } app appMsg
-type alias FrameTransition a app appMsg = Transition (FrameModel a app appMsg) Msg
+type alias FrameModel a app = Frame.Model { a | side : Model } app
+type alias FrameTransition a app = Transition (FrameModel a app) Msg
 type alias Model =
   { menu       : Menu
   , badge      : Http.Entry () Badge
@@ -60,7 +60,7 @@ type Msg
   | MenuOpen  String
   | MenuClose String
 
-init : Frame.InitModel -> ( Model, FrameTransition a app appMsg )
+init : Frame.InitModel -> ( Model, FrameTransition a app )
 init model =
   ( { menu       = menu
     , badgeNames = badgeNames
@@ -70,7 +70,7 @@ init model =
   , Http.request badge BadgeStateChanged
   )
 
-badge : Http.Request (FrameModel a app appMsg) () Badge
+badge : Http.Request (FrameModel a app) () Badge
 badge = Api.request
   (\(host,headers) ->
     Http.get
@@ -142,7 +142,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   Http.track badge BadgeStateChanged
 
-update : Msg -> Model -> ( Model, FrameTransition a app appMsg )
+update : Msg -> Model -> ( Model, FrameTransition a app )
 update msg model =
   case msg of
     BadgeStateChanged state -> ( { model | badge = model.badge |> Http.stateTo state }, Transition.none )
@@ -151,7 +151,7 @@ update msg model =
     MenuClose name -> ( { model | collapsed = model.collapsed |> Set.insert name }, Frame.storeLayout )
 
 
-mobileHeader : FrameModel a app appMsg -> Html Msg
+mobileHeader : FrameModel a app -> Html Msg
 mobileHeader model = L.lazy
   (\project -> Html.mobileHeader
     { company = project.company
@@ -161,7 +161,7 @@ mobileHeader model = L.lazy
   )
   (model |> Frame.static |> Static.project)
 
-navHeader : FrameModel a app appMsg -> Html Msg
+navHeader : FrameModel a app -> Html Msg
 navHeader model = L.lazy
   (\project -> Html.navHeader
     { company = project.company
@@ -171,7 +171,7 @@ navHeader model = L.lazy
   )
   (model |> Frame.static |> Static.project)
 
-navFooter : FrameModel a app appMsg -> Html Msg
+navFooter : FrameModel a app -> Html Msg
 navFooter model = L.lazy
   (\version -> Html.navFooter
     { version = version |> .version
@@ -179,10 +179,10 @@ navFooter model = L.lazy
   )
   (model |> Frame.static |> Static.version)
 
-mobileAddress : FrameModel a app appMsg -> Html Msg
+mobileAddress : FrameModel a app -> Html Msg
 mobileAddress = navAddress
 
-breadcrumb : FrameModel a app appMsg -> Html Msg
+breadcrumb : FrameModel a app -> Html Msg
 breadcrumb model = L.lazy2
   (\static side -> Html.breadcrumb <| View.breadcrumb
     { path = static |> Static.page |> .path
@@ -193,7 +193,7 @@ breadcrumb model = L.lazy2
   (model |> Frame.static)
   (model |> Frame.layout |> .side)
 
-navAddress : FrameModel a app appMsg -> Html Msg
+navAddress : FrameModel a app -> Html Msg
 navAddress model = L.lazy2
   (\auth side -> Html.navAddress
     { title = "Upload"
@@ -224,7 +224,7 @@ navAddress model = L.lazy2
   (model |> Frame.auth)
   (model |> Frame.layout |> .side)
 
-nav : FrameModel a app appMsg -> Html Msg
+nav : FrameModel a app -> Html Msg
 nav model = L.lazy3
   (\static auth side -> Html.nav
     { open  = MenuOpen
