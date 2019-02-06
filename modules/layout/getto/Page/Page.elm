@@ -27,8 +27,8 @@ import Json.Decode as Decode
 import Html as H exposing ( Html )
 import Html.Lazy as L
 
-type alias FrameModel app appMsg = Frame.Model Model app appMsg
-type alias FrameTransition app appMsg = Transition (FrameModel app appMsg) Msg
+type alias FrameModel app = Frame.Model Model app
+type alias FrameTransition app = Transition (FrameModel app) Msg
 type alias Model =
   { article : Article.Model
   , side    : Side.Model
@@ -39,7 +39,7 @@ type Msg
   = Article Article.Msg
   | Side    Side.Msg
 
-setup : Frame.SetupLayout Model app appMsg Msg
+setup : Frame.SetupLayout Model app Msg
 setup =
   { store =
     ( \model -> Encode.object
@@ -54,7 +54,7 @@ setup =
   , init  = init
   }
 
-init : Frame.InitModel -> ( Model, FrameTransition app appMsg )
+init : Frame.InitModel -> ( Model, FrameTransition app )
 init model =
   Transition.compose2 Model
     (model |> Article.init |> Transition.map Article)
@@ -66,7 +66,7 @@ subscriptions model =
   , model.side    |> Side.subscriptions    |> Sub.map Side
   ] |> Sub.batch
 
-update : Msg -> Model -> ( Model, FrameTransition app appMsg )
+update : Msg -> Model -> ( Model, FrameTransition app )
 update message =
   case message of
     Article msg ->
@@ -80,32 +80,32 @@ update message =
         (Side.update msg >> Transition.map Side)
 
 
-documentTitle : FrameModel app appMsg -> String
+documentTitle : FrameModel app -> String
 documentTitle = Article.documentTitle
 
-articleHeader : FrameModel app appMsg -> Html (FrameMsg appMsg)
+articleHeader : FrameModel app -> Html (FrameMsg appMsg)
 articleHeader = Article.header >> H.map Article >> Frame.mapLayout
 
-articleFooter : FrameModel app appMsg -> Html (FrameMsg appMsg)
+articleFooter : FrameModel app -> Html (FrameMsg appMsg)
 articleFooter = Article.footer >> H.map Article >> Frame.mapLayout
 
-mobileHeader : FrameModel app appMsg -> Html (FrameMsg appMsg)
+mobileHeader : FrameModel app -> Html (FrameMsg appMsg)
 mobileHeader = Side.mobileHeader >> H.map Side >> Frame.mapLayout
 
-mobileAddress : FrameModel app appMsg -> Html (FrameMsg appMsg)
+mobileAddress : FrameModel app -> Html (FrameMsg appMsg)
 mobileAddress = Side.navAddress >> H.map Side >> Frame.mapLayout
 
-breadcrumb : FrameModel app appMsg -> Html (FrameMsg appMsg)
+breadcrumb : FrameModel app -> Html (FrameMsg appMsg)
 breadcrumb = Side.breadcrumb >> H.map Side >> Frame.mapLayout
 
-navHeader : FrameModel app appMsg -> Html (FrameMsg appMsg)
+navHeader : FrameModel app -> Html (FrameMsg appMsg)
 navHeader = Side.navHeader >> H.map Side >> Frame.mapLayout
 
-navAddress : FrameModel app appMsg -> Html (FrameMsg appMsg)
+navAddress : FrameModel app -> Html (FrameMsg appMsg)
 navAddress = Side.navAddress >> H.map Side >> Frame.mapLayout
 
-nav : FrameModel app appMsg -> Html (FrameMsg appMsg)
+nav : FrameModel app -> Html (FrameMsg appMsg)
 nav = Side.nav >> H.map Side >> Frame.mapLayout
 
-navFooter : FrameModel app appMsg -> Html (FrameMsg appMsg)
+navFooter : FrameModel app -> Html (FrameMsg appMsg)
 navFooter = Side.navFooter >> H.map Side >> Frame.mapLayout

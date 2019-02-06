@@ -45,11 +45,11 @@ type alias Flags =
     }
   }
 
-type Model layout app appMsg = Model (Inner layout app appMsg)
-type alias Inner layout app appMsg = Base
+type Model layout app = Model (Inner layout app)
+type alias Inner layout app = Base
   { layout : layout
   , app : app
-  , search : Search.Model app (Model layout app appMsg) appMsg
+  , search : Search.Model app
   , store  :
     { layout : Store.Model layout
     , app    : Store.Model app
@@ -77,17 +77,17 @@ onUrlRequest = UrlRequest
 onUrlChange  = UrlChange
 
 
-type alias SetupLayout layout app appMsg layoutMsg =
+type alias SetupLayout layout app layoutMsg =
   { store : Store.Init layout
-  , init  : InitModel -> ( layout, Transition (Model layout app appMsg) layoutMsg )
+  , init  : InitModel -> ( layout, Transition (Model layout app) layoutMsg )
   }
 type alias SetupApp layout app appMsg =
-  { search : Search.Init app (Model layout app appMsg) appMsg
+  { search : Search.Init app
   , store  : Store.Init app
-  , init   : InitModel -> ( app, Transition (Model layout app appMsg) appMsg )
+  , init   : InitModel -> ( app, Transition (Model layout app) appMsg )
   }
 
-init : SetupLayout layout app appMsg layoutMsg -> SetupApp layout app appMsg -> Flags -> Url -> Navigation.Key -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
+init : SetupLayout layout app layoutMsg -> SetupApp layout app appMsg -> Flags -> Url -> Navigation.Key -> ( Model layout app, Cmd (Msg layoutMsg appMsg) )
 init setupLayout setupApp flags url key =
   let
     model =
@@ -112,12 +112,12 @@ init setupLayout setupApp flags url key =
     |> Command.none
     |> Command.andThen (layoutStoreChanged flags.store.layout >> Command.none)
     |> Command.andThen (appStoreChanged    flags.store.app    >> Command.none)
-    |> Command.andThen (searchChanged url)
+    |> Command.andThen (searchChanged      url                >> Command.none)
     |> Command.andThen (Transition.exec layoutCmd >> Command.map Layout)
     |> Command.andThen (Transition.exec appCmd    >> Command.map App)
 
 
-subscriptions : (layout -> Sub layoutMsg) -> (app -> Sub appMsg) -> Model layout app appMsg -> Sub (Msg layoutMsg appMsg)
+subscriptions : (layout -> Sub layoutMsg) -> (app -> Sub appMsg) -> Model layout app -> Sub (Msg layoutMsg appMsg)
 subscriptions layoutSubscriptions appSubscriptions (Model model) = Sub.batch
   [ [ CredentialChanged  |> Auth.subscriptions  model.auth
     , LayoutStoreChanged |> Store.subscriptions model.store.layout
@@ -128,13 +128,13 @@ subscriptions layoutSubscriptions appSubscriptions (Model model) = Sub.batch
   ]
 
 
-type alias LayoutUpdater layout app appMsg layoutMsg = (layoutMsg -> layout -> ( layout, Transition (Model layout app appMsg) layoutMsg ))
-type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition (Model layout app appMsg) appMsg ))
+type alias LayoutUpdater layout app layoutMsg = (layoutMsg -> layout -> ( layout, Transition (Model layout app) layoutMsg ))
+type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition (Model layout app) appMsg ))
 
-update : LayoutUpdater layout app appMsg layoutMsg -> AppUpdater layout app appMsg -> Msg layoutMsg appMsg  -> Model layout app appMsg -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
+update : LayoutUpdater layout app layoutMsg -> AppUpdater layout app appMsg -> Msg layoutMsg appMsg  -> Model layout app -> ( Model layout app, Cmd (Msg layoutMsg appMsg) )
 update layoutUpdater appUpdater message model =
   case message of
-    UrlChange url -> model |> searchChanged url
+    UrlChange url -> model |> searchChanged url |> Command.none
     UrlRequest urlRequest ->
       case urlRequest of
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
@@ -168,49 +168,46 @@ update layoutUpdater appUpdater message model =
             Model { m | layout = newLayout } |> Transition.exec f |> Command.map Layout
 
 
-credentialChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
+credentialChanged : Decode.Value -> Model layout app -> Model layout app
 credentialChanged value (Model model) =
   Model { model | auth = model.auth |> Auth.changed value }
 
-searchChanged : Url -> Model layout app appMsg -> ( Model layout app appMsg, Cmd (Msg layoutMsg appMsg) )
+searchChanged : Url -> Model layout app -> Model layout app
 searchChanged url (Model model) =
-  let
-    (newApp,f) = model.app |> Search.changed model.search url
-  in
-    Model { model | app = newApp } |> Transition.exec f |> Command.map App
+  Model { model | app = model.app |> Search.changed model.search url }
 
-layoutStoreChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
+layoutStoreChanged : Decode.Value -> Model layout app -> Model layout app
 layoutStoreChanged value (Model model) =
   Model { model | layout = model.layout |> Store.changed model.store.layout value }
 
-appStoreChanged : Decode.Value -> Model layout app appMsg -> Model layout app appMsg
+appStoreChanged : Decode.Value -> Model layout app -> Model layout app
 appStoreChanged value (Model model) =
   Model { model | app = model.app |> Store.changed model.store.app value }
 
 
-static : Model layout app appMsg -> Static.Model
+static : Model layout app -> Static.Model
 static (Model model) = model.static
 
-auth : Model layout app appMsg -> Auth.Model Credential.Model
+auth : Model layout app -> Auth.Model Credential.Model
 auth (Model model) = model.auth
 
-layout : Model layout app appMsg -> layout
+layout : Model layout app -> layout
 layout (Model model) = model.layout
 
-app : Model layout app appMsg -> app
+app : Model layout app -> app
 app (Model model) = model.app
 
 
-logout : Transition (Model layout app appMsg) annonymous
+logout : Transition (Model layout app) annonymous
 logout (Model model) = model.auth |> Auth.logout
 
-storeLayout : Transition (Model layout app appMsg) annonymous
+storeLayout : Transition (Model layout app) annonymous
 storeLayout (Model model) = model.layout |> Store.store model.store.layout
 
-storeApp : Transition (Model layout app appMsg) annonymous
+storeApp : Transition (Model layout app) annonymous
 storeApp (Model model) = model.app |> Store.store model.store.app
 
-search : Transition (Model layout app appMsg) annonymous
+search : Transition (Model layout app) annonymous
 search (Model model) = model.app |> Search.search model.search
 
 

@@ -30,21 +30,21 @@ import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-type alias FrameModel a msg = Frame.Model Layout.Model { a | dashboard : Model } msg
-type alias FrameTransition a msg = Transition (FrameModel a msg) Msg
+type alias FrameModel a = Frame.Model Layout.Model { a | dashboard : Model }
+type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model = {}
 
 type Msg
   = HelloWorld
 
-init : Frame.InitModel -> ( Model, FrameTransition a msg )
+init : Frame.InitModel -> ( Model, FrameTransition a )
 init model = ( {}, Transition.none )
 
 search : Model -> QueryEncode.Value
 search model = QueryEncode.empty
 
-searchChanged : List String -> QueryDecode.Value -> Model -> ( Model, FrameTransition a msg )
-searchChanged names value model = ( model, Transition.none )
+searchChanged : List String -> QueryDecode.Value -> Model -> Model
+searchChanged names value model = model
 
 store : Model -> Encode.Value
 store model = Encode.null
@@ -55,17 +55,17 @@ storeChanged value model = model
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none
 
-update : Msg -> Model -> ( Model, FrameTransition a msg )
+update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
     HelloWorld -> ( model, Transition.none )
 
-contents : FrameModel a msg -> List (Html Msg)
+contents : FrameModel a -> List (Html Msg)
 contents model =
   [ model |> dashboard
   ]
 
-dashboard : FrameModel a msg -> Html Msg
+dashboard : FrameModel a -> Html Msg
 dashboard model =
   H.section [ A.class "dashboard" ]
     [ H.dl []
@@ -75,7 +75,7 @@ dashboard model =
       ]
     ]
 
-example : FrameModel a msg -> Html Msg
+example : FrameModel a -> Html Msg
 example model = L.lazy
   (\static -> Html.example
     { name = "example"
@@ -92,5 +92,5 @@ example model = L.lazy
   )
   (model |> Frame.static)
 
-dialogs : FrameModel a msg -> List (Html Msg)
+dialogs : FrameModel a -> List (Html Msg)
 dialogs model = []
