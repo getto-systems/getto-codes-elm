@@ -12,7 +12,7 @@ type alias Info layout app appMsg =
   , headers : Frame.Model layout app appMsg -> List Http.Header
   }
 
-request : (( String, (Frame.Model layout app appMsg -> List Http.Header)) -> Http.Request (Frame.Model layout app appMsg) data) -> Http.Request (Frame.Model layout app appMsg) data
+request : (( String, (Frame.Model layout app appMsg -> List Http.Header)) -> Http.Request (Frame.Model layout app appMsg) header body) -> Http.Request (Frame.Model layout app appMsg) header body
 request req =
   ( Env.api.host
   , Frame.auth >> Auth.credential >> Credential.token >>

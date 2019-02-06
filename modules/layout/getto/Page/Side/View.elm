@@ -48,12 +48,12 @@ type alias MenuI18n =
   }
 
 
-type alias BadgeStateModel data =
-  { state : HttpView.State data
+type alias BadgeStateModel header body =
+  { state : HttpView.State header body
   , i18n  : HttpView.Error -> String
   }
 
-badgeState : BadgeStateModel data -> BadgeState
+badgeState : BadgeStateModel header body -> BadgeState
 badgeState model =
   case model.state of
     HttpView.Empty      -> NoProbrem

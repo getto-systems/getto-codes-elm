@@ -1,15 +1,24 @@
 module GettoUpload.View.Http exposing
   ( State(..)
+  , Response
   , Progress(..)
   , Error(..)
+  , response
+  , header
+  , body
   )
 
-type State data
+type State header body
   = Empty
   | Loading
   | Progress Progress
-  | Success data
+  | Success (Response header body)
   | Failure Error
+
+type Response header body = Response
+  { header : header
+  , body   : body
+  }
 
 type Progress
   = Sending
@@ -25,5 +34,20 @@ type Error
   = BadUrl String
   | Timeout
   | NetworkError
+  | BadRequest
+  | Unauthorized
+  | Forbidden
+  | NotFound
+  | UnprocessableEntity
   | BadStatus Int
+  | BadHeader String
   | BadBody String
+
+response : header -> body -> Response header body
+response headerData bodyData = Response { header = headerData, body = bodyData }
+
+header : Response header body -> header
+header (Response res) = res.header
+
+body : Response header body -> body
+body (Response res) = res.body

@@ -5,6 +5,8 @@ module GettoUpload.Command.Http exposing
   , empty
   , state
   , response
+  , responseHeader
+  , responseBody
   , stateTo
   , clear
   , request
@@ -20,6 +22,7 @@ import GettoUpload.Command.Http.Mock as Mock
 import GettoUpload.View.Http as HttpView
 
 import Getto.Url.Query.Encode as QueryEncode
+import Getto.Http.Header.Decode as HeaderDecode
 import Getto.Http.Part as Part
 
 import Json.Encode as Encode
@@ -27,61 +30,59 @@ import Json.Decode as Decode
 import Http
 import Task
 
-type Entry data = Entry
-  { state    : HttpView.State data
-  , response : Maybe data
+type Entry header body = Entry
+  { state    : HttpView.State header body
+  , response : Maybe (HttpView.Response header body)
   }
 
-type Request model data
-  = Get    (RequestInner model data QueryEncode.Value)
-  | Post   (RequestInner model data Encode.Value)
-  | Put    (RequestInner model data Encode.Value)
-  | Delete (RequestInner model data Encode.Value)
-  | Upload (RequestInner model data Part.Value)
+type Request model header body
+  = Get    (RequestInner model header body QueryEncode.Value)
+  | Post   (RequestInner model header body Encode.Value)
+  | Put    (RequestInner model header body Encode.Value)
+  | Delete (RequestInner model header body Encode.Value)
+  | Upload (RequestInner model header body Part.Value)
 
-type alias RequestInner model data params =
-  { url     : String
-  , headers : model -> List Header
-  , params  : model -> params
-  , decoder : Decode.Decoder data
-  , timeout : Float
+type alias RequestInner model header body params =
+  { url      : String
+  , headers  : model -> List Header
+  , params   : model -> params
+  , response :
+    { header : HeaderDecode.Decoder header
+    , body   : Decode.Decoder body
+    }
+  , timeout  : Float
   }
 
 type alias Header = ( String, String )
 
-type alias RequestData data msg =
-  { method  : String
-  , headers : List Http.Header
-  , url     : String
-  , body    : Http.Body
-  , decoder : Decode.Decoder data
-  , timeout : Maybe Float
-  , tracker : Maybe String
-  , msg     : Result Http.Error data -> msg
-  }
-
-empty : Entry model
+empty : Entry header body
 empty = Entry
   { state    = HttpView.Empty
   , response = Nothing
   }
 
-state : Entry model -> HttpView.State model
+state : Entry header body -> HttpView.State header body
 state (Entry entry) = entry.state
 
-response : Entry model -> Maybe model
+response : Entry header body -> Maybe (HttpView.Response header body)
 response (Entry entry) = entry.response
 
-stateTo : HttpView.State model -> Entry model -> Entry model
+responseHeader : Entry header body -> Maybe header
+responseHeader = response >> Maybe.map HttpView.header
+
+responseBody : Entry header body -> Maybe body
+responseBody = response >> Maybe.map HttpView.body
+
+stateTo : HttpView.State header body -> Entry header body -> Entry header body
 stateTo value (Entry entry) =
   case value of
     HttpView.Success data -> Entry { entry | state = value, response = Just data }
     _                     -> Entry { entry | state = value }
 
-clear : Entry model -> Entry model
-clear (Entry entry) = Entry { entry | response = Nothing }
+clear : Entry header body -> Entry header body
+clear (Entry entry) = Entry { entry | state = HttpView.Empty, response = Nothing }
 
-request : Request model data -> (HttpView.State data -> msg) -> model -> Cmd msg
+request : Request model header body -> (HttpView.State header body -> msg) -> model -> Cmd msg
 request req msg model =
   let
     headers data = model |> data.headers |> List.map (\(key,value) -> Http.header key value)
@@ -89,65 +90,64 @@ request req msg model =
     json    data = model |> data.params |> Http.jsonBody
     part    data = model |> data.params |> Part.toBody
 
-    marker     = req |> trackMarker |> Just
-    requestMsg = toState >> msg
+    marker = req |> trackMarker |> Just
   in
     [ HttpView.Loading |> Task.succeed |> Task.perform msg
     , Mock.request <| -- Real.request <|
       case req of
         Get data ->
-          { method  = "GET"
-          , headers = data |> headers
-          , url     = data.url ++ (data |> query)
-          , body    = Http.emptyBody
-          , decoder = data.decoder
-          , timeout = Just data.timeout
-          , tracker = marker
-          , msg     = requestMsg
+          { method   = "GET"
+          , headers  = data |> headers
+          , url      = data.url ++ (data |> query)
+          , body     = Http.emptyBody
+          , response = data.response
+          , timeout  = Just data.timeout
+          , tracker  = marker
+          , msg      = msg
           }
         Post data ->
-          { method  = "POST"
-          , headers = data |> headers
-          , url     = data.url
-          , body    = data |> json
-          , decoder = data.decoder
-          , timeout = Just data.timeout
-          , tracker = marker
-          , msg     = requestMsg
+          { method   = "POST"
+          , headers  = data |> headers
+          , url      = data.url
+          , body     = data |> json
+          , response = data.response
+          , timeout  = Just data.timeout
+          , tracker  = marker
+          , msg      = msg
           }
         Put data ->
-          { method  = "PUT"
-          , headers = data |> headers
-          , url     = data.url
-          , body    = data |> json
-          , decoder = data.decoder
-          , timeout = Just data.timeout
-          , tracker = marker
-          , msg     = requestMsg
+          { method   = "PUT"
+          , headers  = data |> headers
+          , url      = data.url
+          , body     = data |> json
+          , response = data.response
+          , timeout  = Just data.timeout
+          , tracker  = marker
+          , msg      = msg
           }
         Delete data ->
-          { method  = "DELETE"
-          , headers = data |> headers
-          , url     = data.url
-          , body    = data |> json
-          , decoder = data.decoder
-          , timeout = Just data.timeout
-          , tracker = marker
-          , msg     = requestMsg
+          { method   = "DELETE"
+          , headers  = data |> headers
+          , url      = data.url
+          , body     = data |> json
+          , response = data.response
+          , timeout  = Just data.timeout
+          , tracker  = marker
+          , msg      = msg
           }
         Upload data ->
-          { method  = "POST"
-          , headers = data |> headers
-          , url     = data.url
-          , body    = data |> part
-          , decoder = data.decoder
-          , timeout = Just data.timeout
-          , tracker = marker
-          , msg     = requestMsg
+          { method   = "POST"
+          , headers  = data |> headers
+          , url      = data.url
+          , body     = data |> part
+          , response = data.response
+          , timeout  = Just data.timeout
+          , tracker  = marker
+          , msg      = msg
           }
     ] |> Cmd.batch
 
-trackMarker : Request model data -> String
+trackMarker : Request model header body -> String
 trackMarker req =
   let
     appendUrl data marker = marker ++ data.url
@@ -159,20 +159,7 @@ trackMarker req =
       Delete data -> "DELETE:" |> appendUrl data
       Upload data -> "UPLOAD:" |> appendUrl data
 
-toState : Result Http.Error data -> HttpView.State data
-toState result =
-  case result of
-    Ok  data  -> HttpView.Success data
-    Err error ->
-      HttpView.Failure <|
-        case error of
-          Http.BadUrl   message -> HttpView.BadUrl message
-          Http.Timeout          -> HttpView.Timeout
-          Http.NetworkError     -> HttpView.NetworkError
-          Http.BadStatus status -> HttpView.BadStatus status
-          Http.BadBody  message -> HttpView.BadBody message
-
-track : Request model data -> (HttpView.State data -> msg) -> Sub msg
+track : Request model header body -> (HttpView.State header body -> msg) -> Sub msg
 track req msg =
   let
     marker = req |> trackMarker
@@ -184,17 +171,17 @@ track req msg =
   in
     (toProgress >> HttpView.Progress >> msg) |> Http.track marker
 
-get : RequestInner model data QueryEncode.Value -> Request model data
+get : RequestInner model header body QueryEncode.Value -> Request model header body
 get = Get
 
-post : RequestInner model data Encode.Value -> Request model data
+post : RequestInner model header body Encode.Value -> Request model header body
 post = Post
 
-put : RequestInner model data Encode.Value -> Request model data
+put : RequestInner model header body Encode.Value -> Request model header body
 put = Put
 
-delete : RequestInner model data Encode.Value -> Request model data
+delete : RequestInner model header body Encode.Value -> Request model header body
 delete = Delete
 
-upload : RequestInner model data Part.Value -> Request model data
+upload : RequestInner model header body Part.Value -> Request model header body
 upload = Upload
