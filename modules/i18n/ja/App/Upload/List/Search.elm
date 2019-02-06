@@ -13,6 +13,6 @@ title name =
 entry : String -> String
 entry name =
   case name of
-    "vendor-order" -> "発注書"
+    "order" -> "発注書"
 
     _ -> name

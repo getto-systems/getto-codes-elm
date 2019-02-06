@@ -50,7 +50,7 @@ init : Frame.InitModel -> ( Model, FrameTransition a )
 init model =
   ( { entries =
       { file =
-        { name = "vendor-order"
+        { name = "order"
         , file = Nothing
         }
       }
