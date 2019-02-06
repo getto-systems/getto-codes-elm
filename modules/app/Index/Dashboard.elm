@@ -2,8 +2,8 @@ module GettoUpload.App.Index.Dashboard exposing
   ( Model
   , Msg
   , init
-  , search
-  , searchChanged
+  , query
+  , queryChanged
   , store
   , storeChanged
   , subscriptions
@@ -40,11 +40,11 @@ type Msg
 init : Frame.InitModel -> ( Model, FrameTransition a )
 init model = ( {}, Transition.none )
 
-search : Model -> QueryEncode.Value
-search model = QueryEncode.empty
+query : Model -> QueryEncode.Value
+query model = QueryEncode.empty
 
-searchChanged : List String -> QueryDecode.Value -> Model -> Model
-searchChanged names value model = model
+queryChanged : List String -> QueryDecode.Value -> Model -> Model
+queryChanged names value model = model
 
 store : Model -> Encode.Value
 store model = Encode.null

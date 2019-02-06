@@ -28,7 +28,8 @@ import GettoUpload.View.Icon as Icon
 import GettoUpload.I18n.App  as I18n
 import GettoUpload.I18n.Http as HttpI18n
 import GettoUpload.Extension.Href as Href exposing ( Href )
-import GettoUpload.Extension.Href.Home as Home
+import GettoUpload.Extension.Href.Home   as Home
+import GettoUpload.Extension.Href.Upload as Upload
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
@@ -100,8 +101,8 @@ menu =
     , [ Menu.item (Icon.fas "home") Home.index []
       ]
     )
-  , ( "data"
-    , [ Menu.item (Icon.fas "home") Home.index []
+  , ( "upload"
+    , [ Menu.item (Icon.fas "file") Upload.list []
       ]
     )
   ]

@@ -11,13 +11,18 @@ type alias Example =
   }
 
 
-example : { current : Int, target : Int } -> Example
+type alias ExampleModel =
+  { current : Int
+  , target  : Int
+  }
+
+example : ExampleModel -> Example
 example model =
   let
-    all = (model.target * 3 |> toFloat) / 2
+    target = model.target |> toFloat
   in
-    { current = model.current |> String.fromInt
-    , target  = model.target  |> String.fromInt
-    , max     = all |> String.fromFloat
-    , percent = (model.current * 100 |> toFloat) / all |> floor |> String.fromInt
+    { current = model.current  |> String.fromInt
+    , target  = model.target   |> String.fromInt
+    , max     = target * 3 / 2 |> String.fromFloat
+    , percent = (model.current * 100 |> toFloat) / target |> floor |> String.fromInt
     }

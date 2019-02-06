@@ -1,1 +1,5 @@
 - name: index
+
+- name: upload
+  entries:
+  - name: list

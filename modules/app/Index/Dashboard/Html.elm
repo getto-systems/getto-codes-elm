@@ -10,7 +10,17 @@ import Html as H exposing ( Html )
 import Html.Attributes as A
 
 
-example : { name : String, data : View.Example, page : Href, i18n : { title : Href.Path -> String, name : String -> String } } -> Html msg
+type alias ExampleModel =
+  { name : String
+  , data : View.Example
+  , page : Href
+  , i18n :
+    { title : Href.Path -> String
+    , name  : String -> String
+    }
+  }
+
+example : ExampleModel -> Html msg
 example model =
   H.section []
     [ H.h2 [] [ model.name |> model.i18n.name |> H.text ]

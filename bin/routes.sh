@@ -37,8 +37,10 @@ getto_elm_routes_main(){
 
   rm tmp/wip
 
-  for page in $(find modules/app/src -name Page.elm); do
-    "$build" "./src" "${page#modules/app/src/}"
+  for page in $(find -L src -name Page.elm); do
+    if [ -n "$(echo $page | grep App)" ]; then
+      "$build" "./src" "${page#src/}"
+    fi
   done
 }
 
