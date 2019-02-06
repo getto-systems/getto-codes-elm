@@ -33,6 +33,7 @@ import GettoUpload.Extension.Href.Home as Home
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Url.Query.Encode as QueryEncode
+import Getto.Http.Header.Decode as HeaderDecode
 
 import Set exposing ( Set )
 import Dict exposing ( Dict )
@@ -45,45 +46,50 @@ type alias FrameModel a app appMsg = Frame.Model { a | side : Model } app appMsg
 type alias FrameTransition a app appMsg = Transition (FrameModel a app appMsg) Msg
 type alias Model =
   { menu       : Menu
-  , badge      : Http.Entry Badge
+  , badge      : Http.Entry () Badge
+  , badgeNames : Dict String String
   , collapsed  : Set String
   }
 
 type alias Badge =
-  { counts : Dict String Int
+  { badge : Dict String Int
   }
 
 type Msg
-  = BadgeStateChanged (HttpView.State Badge)
+  = BadgeStateChanged (HttpView.State () Badge)
   | MenuOpen  String
   | MenuClose String
 
 init : Frame.InitModel -> ( Model, FrameTransition a app appMsg )
 init model =
-  ( { menu      = menu
-    , badge     = Http.empty
-    , collapsed = Set.empty
+  ( { menu       = menu
+    , badgeNames = badgeNames
+    , badge      = Http.empty
+    , collapsed  = Set.empty
     }
   , Http.request badge BadgeStateChanged
   )
 
-badge : Http.Request (FrameModel a app appMsg) Badge
+badge : Http.Request (FrameModel a app appMsg) () Badge
 badge = Api.request
   (\(host,headers) ->
     Http.get
       { url     = host ++ "layout/menu/badge"
       , headers = headers
       , params  = \model -> [] |> QueryEncode.object
-      , decoder = Decode.map Badge
-        ( Decode.at ["counts"]
-          ( Decode.list
-            ( Decode.map2 Tuple.pair
-              ( Decode.at ["name"]  Decode.string )
-              ( Decode.at ["count"] Decode.int )
+      , response =
+        { header = HeaderDecode.succeed ()
+        , body = Decode.map Badge
+          ( Decode.at ["badge"]
+            ( Decode.list
+              ( Decode.map2 Tuple.pair
+                ( Decode.at ["name"]  Decode.string )
+                ( Decode.at ["count"] Decode.int )
+              )
+            |> Decode.map Dict.fromList
             )
-          |> Decode.map Dict.fromList
           )
-        )
+        }
       , timeout = 10 * 1000
       }
   )
@@ -107,6 +113,9 @@ allow roles (group,_) =
   (roles |> List.member "admin") ||
   (roles |> List.member group)
 
+collapsed : Set String -> String -> Bool
+collapsed data name = data |> Set.member name
+
 badgeNames : Dict String String
 badgeNames = Dict.fromList
   [ ( Home.index |> toBadgeName, "home" )
@@ -117,9 +126,6 @@ toBadgeName href =
   case href |> Href.path of
     Href.Internal path -> "INTERNAL:" ++ path
     Href.Keycloak path -> "KEYCLOAK:" ++ path
-
-collapsed : Set String -> String -> Bool
-collapsed data name = data |> Set.member name
 
 store : Model -> Encode.Value
 store model =
@@ -226,18 +232,18 @@ nav model = L.lazy3
     , menu  = View.menu
       { path      = model |> Frame.static |> Static.page |> .path
       , roles     = model |> Frame.auth |> Auth.credential |> Credential.roles
-      , menu      = side |> .menu
+      , menu      = side.menu
       , allow     = allow
-      , collapsed = side |> .collapsed |> collapsed
+      , collapsed = side.collapsed |> collapsed
       , badge =
         \href ->
-          badgeNames
+          side.badgeNames
           |> Dict.get (href |> toBadgeName)
           |> Maybe.andThen
             (\name ->
-              side |> .badge
-              |> Http.response
-              |> Maybe.andThen (.counts >> Dict.get name)
+              side.badge
+              |> Http.responseBody
+              |> Maybe.andThen (.badge >> Dict.get name)
             )
       , i18n = menuI18n
       }
