@@ -1,5 +1,5 @@
-module GettoUpload.App.Index.Page exposing ( main )
-import GettoUpload.App.Index.Dashboard as Dashboard
+module GettoUpload.App.Upload.List.Page exposing ( main )
+import GettoUpload.App.Upload.List.Search as Search
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 
@@ -27,30 +27,30 @@ main = Browser.application
 type alias FrameModel = Frame.Model Layout.Model Model
 type alias FrameTransition = Transition FrameModel Msg
 type alias Model =
-  { dashboard : Dashboard.Model
+  { search : Search.Model
   }
 
 type alias FrameMsg = Frame.Msg Layout.Msg Msg
 type Msg
-  = Dashboard Dashboard.Msg
+  = Search Search.Msg
 
 setup : Frame.SetupApp Layout.Model Model Msg
 setup =
   { search =
     ( \model -> QueryEncode.object
-      [ ( "dashboard", model.dashboard |> Dashboard.query )
+      [ ( "search", model.search |> Search.query )
       ]
     , \value model ->
       Model
-        ( model.dashboard |> Dashboard.queryChanged ["dashboard"] value )
+        ( model.search |> Search.queryChanged ["search"] value )
     )
   , store =
     ( \model -> Encode.object
-      [ ( "dashboard", model.dashboard |> Dashboard.store )
+      [ ( "search", model.search |> Search.store )
       ]
     , \value model ->
       Model
-        ( model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]) )
+        ( model.search |> Search.storeChanged (value |> SafeDecode.valueAt ["search"]) )
     )
   , init = init
   }
@@ -58,20 +58,20 @@ setup =
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
   Transition.compose Model
-    (model |> Dashboard.init |> Transition.map Dashboard)
+    (model |> Search.init |> Transition.map Search)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  [ model.dashboard |> Dashboard.subscriptions |> Sub.map Dashboard
+  [ model.search |> Search.subscriptions |> Sub.map Search
   ] |> Sub.batch
 
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
-    Dashboard msg ->
+    Search msg ->
       Transition.update
-        .dashboard (\dashboard m -> { m | dashboard = dashboard })
-        (Dashboard.update msg >> Transition.map Dashboard)
+        .search (\search m -> { m | search = search })
+        (Search.update msg >> Transition.map Search)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =
@@ -90,7 +90,7 @@ content model =
         , model |> Layout.breadcrumb
         ]
       ] ++
-      ( model |> Dashboard.contents |> Frame.mapApp Dashboard ) ++
+      ( model |> Search.contents |> Frame.mapApp Search ) ++
       [ model |> Layout.articleFooter ]
     , H.nav []
       [ model |> Layout.navHeader
@@ -99,4 +99,4 @@ content model =
       , model |> Layout.navFooter
       ]
     ] ++
-    ( model |> Dashboard.dialogs |> Frame.mapApp Dashboard )
+    ( model |> Search.dialogs |> Frame.mapApp Search )
