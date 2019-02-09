@@ -47,7 +47,7 @@ type alias FrameModel a app = Frame.Model { a | side : Model } app
 type alias FrameTransition a app = Transition (FrameModel a app) Msg
 type alias Model =
   { menu       : Menu
-  , badge      : Http.Entry () Badge
+  , badge      : Http.Model () Badge
   , badgeNames : Dict String String
   , collapsed  : Set String
   }
@@ -65,7 +65,7 @@ init : Frame.InitModel -> ( Model, FrameTransition a app )
 init model =
   ( { menu       = menu
     , badgeNames = badgeNames
-    , badge      = Http.empty
+    , badge      = Http.init
     , collapsed  = Set.empty
     }
   , Http.request badge BadgeStateChanged

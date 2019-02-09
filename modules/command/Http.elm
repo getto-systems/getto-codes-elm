@@ -1,8 +1,8 @@
 module GettoUpload.Command.Http exposing
-  ( Entry
+  ( Model
   , Request
   , Header
-  , empty
+  , init
   , state
   , response
   , responseHeader
@@ -30,7 +30,7 @@ import Json.Decode as Decode
 import Http
 import Task
 
-type Entry header body = Entry
+type Model header body = Model
   { state    : HttpView.State header body
   , response : Maybe (HttpView.Response header body)
   }
@@ -55,32 +55,32 @@ type alias RequestInner model header body params =
 
 type alias Header = ( String, String )
 
-empty : Entry header body
-empty = Entry
+init : Model header body
+init = Model
   { state    = HttpView.Empty
   , response = Nothing
   }
 
-state : Entry header body -> HttpView.State header body
-state (Entry entry) = entry.state
+state : Model header body -> HttpView.State header body
+state (Model entry) = entry.state
 
-response : Entry header body -> Maybe (HttpView.Response header body)
-response (Entry entry) = entry.response
+response : Model header body -> Maybe (HttpView.Response header body)
+response (Model entry) = entry.response
 
-responseHeader : Entry header body -> Maybe header
+responseHeader : Model header body -> Maybe header
 responseHeader = response >> Maybe.map HttpView.header
 
-responseBody : Entry header body -> Maybe body
+responseBody : Model header body -> Maybe body
 responseBody = response >> Maybe.map HttpView.body
 
-stateTo : HttpView.State header body -> Entry header body -> Entry header body
-stateTo value (Entry entry) =
+stateTo : HttpView.State header body -> Model header body -> Model header body
+stateTo value (Model entry) =
   case value of
-    HttpView.Success data -> Entry { entry | state = value, response = Just data }
-    _                     -> Entry { entry | state = value }
+    HttpView.Success data -> Model { entry | state = value, response = Just data }
+    _                     -> Model { entry | state = value }
 
-clear : Entry header body -> Entry header body
-clear (Entry entry) = Entry { entry | state = HttpView.Empty, response = Nothing }
+clear : Model header body -> Model header body
+clear (Model entry) = Model { entry | state = HttpView.Empty, response = Nothing }
 
 request : Request model header body -> (HttpView.State header body -> msg) -> model -> Cmd msg
 request req msg model =
