@@ -80,7 +80,7 @@ request data =
 mock : Dict ( String, String ) Request
 mock =
   [ ( ( "GET", "layout/menu/badge" )
-    --, Real
+    {--, Real --}
     {--}, Mock 1000
       ( [
         ] |> Dict.fromList
@@ -92,6 +92,16 @@ mock =
             ] |> Encode.list Encode.object
           )
         ] |> Encode.object
+      )
+    --}
+    )
+  , ( ( "POST", "upload" )
+    {--}, Real --}
+    {--, Mock 10000
+      ( [ ( "X-Upload-Id", "3" )
+        ] |> Dict.fromList
+      )
+      ( Encode.null
       )
     --}
     )

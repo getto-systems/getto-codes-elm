@@ -15,5 +15,5 @@ error err =
     HttpView.NotFound            -> "存在しませんでした"
     HttpView.UnprocessableEntity -> "保存できませんでした"
     HttpView.BadStatus _         -> "サーバーエラー"
-    HttpView.BadHeader e -> e |> Debug.log "bad-header" |> always "アプリケーションエラー"
-    HttpView.BadBody   e -> e |> Debug.log "bad-body"   |> always "アプリケーションエラー"
+    HttpView.BadHeader _         -> "アプリケーションエラー"
+    HttpView.BadBody _           -> "アプリケーションエラー"

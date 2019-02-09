@@ -58,12 +58,23 @@ expectJson msg decoder =
 
         Http.GoodStatus_ metadata res ->
           case metadata.headers |> HeaderDecode.decode decoder.header of
-            Err headerError -> headerError |> HeaderDecode.errorToString |> HttpView.BadHeader |> Err
-            Ok  header ->
-              case res |> Decode.decodeString decoder.body of
-                Err bodyError -> bodyError |> Decode.errorToString |> HttpView.BadBody |> Err
+            Err headerError ->
+              headerError
+              |> HeaderDecode.errorToString
+              |> Debug.log ("bad-header: " ++ (metadata.headers |> Debug.toString))
+              |> HttpView.BadHeader
+              |> Err
 
-                Ok  body -> body |> HttpView.response header |> Ok
+            Ok header ->
+              case res |> Decode.decodeString decoder.body of
+                Err bodyError ->
+                  bodyError
+                  |> Decode.errorToString
+                  |> Debug.log "bad-body"
+                  |> HttpView.BadBody
+                  |> Err
+
+                Ok body -> body |> HttpView.response header |> Ok
 
 toState : Result HttpView.Error (HttpView.Response header body) -> HttpView.State header body
 toState result =

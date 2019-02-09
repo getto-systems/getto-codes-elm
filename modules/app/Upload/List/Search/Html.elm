@@ -3,6 +3,7 @@ module GettoUpload.App.Upload.List.Search.Html exposing
   )
 import GettoUpload.View.Html as Html
 import GettoUpload.View.Icon as Icon
+import GettoUpload.View.Http as HttpView
 
 import File exposing ( File )
 import Html as H exposing ( Html )
@@ -10,7 +11,7 @@ import Html.Attributes as A
 import Html.Events as E
 
 
-type alias SearchModel msg =
+type alias SearchModel header body msg =
   { title : String
   , entries :
     { file :
@@ -18,6 +19,7 @@ type alias SearchModel msg =
       , file : Maybe File
       }
     }
+  , state : HttpView.State header body
   , msg :
     { submit : msg
     , select : msg
@@ -26,10 +28,11 @@ type alias SearchModel msg =
     { title : String -> String
     , entry : String -> String
     , form  : String -> String
+    , http  : HttpView.Error -> String
     }
   }
 
-search : SearchModel msg -> Html msg
+search : SearchModel header body msg -> Html msg
 search model =
   H.section []
     [ H.form [ model.msg.submit |> E.onSubmit ]
@@ -56,6 +59,12 @@ search model =
         ]
       , H.footer []
         [ H.button [ "is-save" |> A.class ] [ "save" |> model.i18n.form |> H.text ]
+        , case model.state of
+          HttpView.Empty      -> "" |> H.text
+          HttpView.Loading    -> Icon.fas "spinner" |> Html.icon ["fa-spin"]
+          HttpView.Progress _ -> Icon.fas "spinner" |> Html.icon ["fa-spin"]
+          HttpView.Success  _ -> H.em [ "badge is-small is-success" |> A.class ] [ "OK" |> H.text ]
+          HttpView.Failure error -> error |> model.i18n.http |> H.text
         ]
       ]
     ]
