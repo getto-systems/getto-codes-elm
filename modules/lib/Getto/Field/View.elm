@@ -1,6 +1,7 @@
 module Getto.Field.View exposing
   ( Model
   , init
+  , id
   , name
   , value
   , errors
@@ -12,6 +13,9 @@ type Model value = Model (List String) (Field.Model value)
 
 init : List String -> Field.Model value -> Model value
 init = Model
+
+id : Model value -> String
+id (Model _ field) = field |> Field.id
 
 name : Model value -> String
 name (Model _ field) = field |> Field.name

@@ -24,7 +24,7 @@ type alias RegisterModel header body msg =
   , state  : HttpView.State header body
   , msg :
     { upload : msg
-    , change : View.Prop String -> String -> msg
+    , change : View.Prop String -> Field.Update String -> String -> msg
     , select : View.Prop (List File) -> msg
     }
   , i18n :

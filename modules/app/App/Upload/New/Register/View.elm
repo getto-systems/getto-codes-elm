@@ -37,9 +37,9 @@ type alias Set a = Field.Model a -> Form -> Form
 type alias Validate a = ( Prop a, List (Maybe String) )
 
 
-update : Prop a -> a -> Form -> Form
-update (Prop get set) value form =
-  form |> set (form |> get |> Field.change value)
+update : Prop a -> Field.Update a -> a -> Form -> Form
+update (Prop get set) f value form =
+  form |> set (form |> get |> f value)
 
 
 prop : Get a -> Set a -> Prop a
@@ -60,9 +60,12 @@ compose name_ text_ form =
 
 entry : Validate a -> Form -> Entry a
 entry ((Prop get set),errors) form =
-  { field = form |> get |> FieldView.init (errors |> List.filterMap identity)
-  , prop  = Prop get set
-  }
+  let
+    field = form |> get
+  in
+    { field = field |> FieldView.init (errors |> List.filterMap identity)
+    , prop  = Prop get set
+    }
 
 
 hasError : View -> Bool

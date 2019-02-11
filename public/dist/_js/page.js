@@ -160,6 +160,20 @@ try {
   var LayoutStore = Store("_layout");
   var AppStore = Store(config.path);
 
+  var Dom = (function(){
+    return {
+      fill: function(values){
+        values.forEach(function(obj){
+          var element = document.getElementById(obj.id);
+          if (element) {
+            // TODO radio, checkbox, select
+            element.value = obj.value;
+          }
+        });
+      },
+    };
+  })();
+
   var App = (function(config){
     var current_page = config.page;
 
@@ -215,6 +229,12 @@ try {
 
       AppStore.addChangedListener(function(value){
         ports.send("onAppStoreChanged",value);
+      });
+
+      /*** Dom ***/
+
+      ports.subscribe("fillFieldValues", function(values) {
+        Dom.fill(values);
       });
 
       /*** FixedMidashi ***/

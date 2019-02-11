@@ -17,6 +17,7 @@ import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
+import GettoUpload.Command.Dom as Dom
 import GettoUpload.View.Http as HttpView
 import GettoUpload.I18n.App as AppI18n
 import GettoUpload.I18n.App.Upload.New.Register as I18n
@@ -50,7 +51,7 @@ type alias Upload =
   }
 
 type Msg
-  = FieldChanged (View.Prop String) String
+  = FieldChanged (View.Prop String) (Field.Update String) String
   | FileRequest (View.Prop (List File))
   | FileSelect (View.Prop (List File)) File
   | UploadRequest
@@ -59,12 +60,17 @@ type Msg
 init : Frame.InitModel -> ( Model, FrameTransition a )
 init model =
   ( { form =
-      { name = Field.init "name" ""
-      , text = Field.init "text" []
+      { name = Field.init "register" "name" ""
+      , text = Field.init "register" "text" []
       }
     , upload = Http.init
     }
-  , Transition.none
+  , Frame.app >> .register >>
+    (\m ->
+      Dom.fill
+        [ m.form.name |> Dom.string
+        ]
+    )
   )
 
 upload : Http.Request (FrameModel a) Upload Decode.Value
@@ -109,14 +115,14 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    FieldChanged prop value ->
-      ( { model | form = model.form |> View.update prop value }
+    FieldChanged prop f value ->
+      ( { model | form = model.form |> View.update prop f value }
       , Transition.none
       )
 
     FileRequest prop -> ( model, \_ -> FileSelect prop |> File.Select.file [] )
     FileSelect prop file ->
-      ( { model | form = model.form |> View.update prop [file] }
+      ( { model | form = model.form |> View.update prop Field.change [file] }
       , Transition.none
       )
 
