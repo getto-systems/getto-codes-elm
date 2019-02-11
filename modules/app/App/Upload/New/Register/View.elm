@@ -3,6 +3,7 @@ module GettoUpload.App.Upload.New.Register.View exposing
   , View
   , Prop
   , update
+  , change
   , prop
   , compose
   , hasError
@@ -37,9 +38,13 @@ type alias Set a = Field.Model a -> Form -> Form
 type alias Validate a = ( Prop a, List (Maybe String) )
 
 
-update : Prop a -> Field.Update a -> a -> Form -> Form
-update (Prop get set) f value form =
-  form |> set (form |> get |> f value)
+update : Prop a -> Field.Update -> a -> Form -> Form
+update (Prop get set) up value form =
+  form |> set (form |> get |> Field.update up value)
+
+change : Prop a -> a -> Form -> Form
+change (Prop get set) value form =
+  form |> set (form |> get |> Field.change value)
 
 
 prop : Get a -> Set a -> Prop a
