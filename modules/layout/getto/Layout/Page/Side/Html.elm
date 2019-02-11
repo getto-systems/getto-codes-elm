@@ -90,10 +90,9 @@ navAddress model =
 
     badge =
       case model.badge of
-        View.NoProbrem -> "" |> H.text
-        View.Loading   -> Icon.fas "spinner" |> Html.icon ["fa-pulse"]
-        View.Failure error ->
-          error |> Html.badge ["is-small","is-danger"]
+        View.NoProbrem  -> "" |> H.text
+        View.Connecting -> Icon.fas "spinner" |> Html.icon ["fa-pulse"]
+        View.Failure error -> error |> Html.badge ["is-small","is-danger"]
   in
     H.address []
       [ H.a [ model.href.config |> Href.toString |> A.href ]

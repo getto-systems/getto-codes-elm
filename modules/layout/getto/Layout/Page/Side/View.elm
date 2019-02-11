@@ -39,7 +39,7 @@ type alias MenuItem =
 
 type BadgeState
   = NoProbrem
-  | Loading
+  | Connecting
   | Failure String
 
 type alias MenuI18n =
@@ -56,11 +56,9 @@ type alias BadgeStateModel header body =
 badgeState : BadgeStateModel header body -> BadgeState
 badgeState model =
   case model.state of
-    HttpView.Empty      -> NoProbrem
-    HttpView.Loading    -> Loading
-    HttpView.Progress _ -> Loading
-    HttpView.Success  _ -> NoProbrem
-    HttpView.Failure error -> error |> model.i18n |> Failure
+    HttpView.Connecting _ -> Connecting
+    HttpView.Ready (Just (Err error)) -> error |> model.i18n |> Failure
+    HttpView.Ready _      -> NoProbrem
 
 
 type alias BreadcrumbModel =

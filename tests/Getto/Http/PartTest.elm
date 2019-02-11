@@ -18,9 +18,9 @@ suite =
               [ ( "q"
                 , [ ( "name", "John" |> Part.string )
                   , ( "roles"
-                    , [ "admin"  |> Part.string
-                      , "system" |> Part.string
-                      ] |> Part.list
+                    , [ "admin"
+                      , "system"
+                      ] |> Part.list Part.string
                     )
                   ] |> Part.object
                 )
