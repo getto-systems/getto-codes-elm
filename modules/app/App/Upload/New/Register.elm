@@ -22,6 +22,8 @@ import GettoUpload.View.Http as HttpView
 import GettoUpload.I18n.App as AppI18n
 import GettoUpload.I18n.App.Upload.New.Register as I18n
 import GettoUpload.I18n.Http as HttpI18n
+import GettoUpload.Extension.Href as Href
+import GettoUpload.Extension.Href.Upload as Upload
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
@@ -31,6 +33,7 @@ import Getto.Http.Part as Part
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
 
+import Browser.Navigation as Navigation
 import File exposing ( File )
 import File.Select
 import Json.Encode as Encode
@@ -141,7 +144,7 @@ update msg model =
       , case state of
         HttpView.Ready (Just (Ok res)) ->
           [ Frame.clearApp
-          --, TODO redirect to edit.html?upload[id]={res |> HttpView.header |> .id}
+          , always ( res |> HttpView.header |> .id |> Upload.edit |> Href.toString |> Navigation.load )
           ]
           |> Transition.batch
         _ -> Transition.none
