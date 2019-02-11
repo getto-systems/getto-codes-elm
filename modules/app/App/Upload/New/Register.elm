@@ -55,7 +55,8 @@ type alias Upload =
   }
 
 type Msg
-  = FieldChanged (View.Prop String) Field.Update String
+  = FieldInput (View.Prop String) String
+  | FieldChange
   | FileRequest (View.Prop (List File))
   | FileSelect (View.Prop (List File)) File
   | UploadRequest
@@ -69,11 +70,14 @@ init model =
       }
     , upload = Http.init
     }
-  , Frame.app >> .register >>
-    (\m -> Dom.fill
-      [ m.form.name |> Dom.string
-      ]
-    )
+  , fill
+  )
+
+fill : FrameModel a -> Cmd msg
+fill = Frame.app >> .register >>
+  (\m -> Dom.fill
+    [ m.form.name |> Dom.string
+    ]
   )
 
 upload : Http.Request (FrameModel a) Upload Decode.Value
@@ -125,14 +129,13 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    FieldChanged prop up value ->
-      ( { model | form = model.form |> View.update prop up value }
-      , case up of
-        Field.Change -> Frame.storeApp
-        _ -> Transition.none
+    FieldInput prop value ->
+      ( { model | form = model.form |> View.change prop value }
+      , Transition.none
       )
+    FieldChange -> ( model, Frame.storeApp )
 
-    FileRequest prop -> ( model, \_ -> FileSelect prop |> File.Select.file [] )
+    FileRequest prop -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
     FileSelect prop file ->
       ( { model | form = model.form |> View.change prop [file] }
       , Transition.none
@@ -174,7 +177,8 @@ register model = L.lazy
     , state = m.upload |> Http.state
     , msg =
       { upload = UploadRequest
-      , change = FieldChanged
+      , input  = FieldInput
+      , change = FieldChange
       , select = FileRequest
       }
     , i18n =

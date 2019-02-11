@@ -2,7 +2,6 @@ module GettoUpload.App.Upload.New.Register.View exposing
   ( Form
   , View
   , Prop
-  , update
   , change
   , prop
   , compose
@@ -19,6 +18,7 @@ import File exposing ( File )
 type alias Form =
   { name : Field.Model String
   , text : Field.Model (List File)
+  --, memo : Field.Model String
   }
 
 type View = View Bool
@@ -37,10 +37,6 @@ type alias Set a = Field.Model a -> Form -> Form
 
 type alias Validate a = ( Prop a, List (Maybe String) )
 
-
-update : Prop a -> Field.Update -> a -> Form -> Form
-update (Prop get set) up value form =
-  form |> set (form |> get |> Field.update up value)
 
 change : Prop a -> a -> Form -> Form
 change (Prop get set) value form =

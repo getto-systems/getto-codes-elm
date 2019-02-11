@@ -24,7 +24,8 @@ type alias RegisterModel header body msg =
   , state  : HttpView.State header body
   , msg :
     { upload : msg
-    , change : View.Prop String -> Field.Update -> String -> msg
+    , input  : View.Prop String -> String -> msg
+    , change : msg
     , select : View.Prop (List File) -> msg
     }
   , i18n :
@@ -48,7 +49,7 @@ register model =
               [ H.tr ( field |> FieldHtml.isError )
                 [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.text [] (model.msg.change prop)
+                  [ [ field |> FieldHtml.text [] (model.msg.input prop) model.msg.change
                     ]
                   , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
                   ]
