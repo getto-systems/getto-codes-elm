@@ -65,12 +65,13 @@ subscriptions model =
   [ model.register |> Register.subscriptions |> Sub.map Register
   ] |> Sub.batch
 
+register_ = Transition.prop .register (\v m -> { m | register = v })
+
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
     Register msg ->
-      Transition.update
-        .register (\register m -> { m | register = register })
+      Transition.update register_
         (Register.update msg >> Transition.map Register)
 
 document : FrameModel -> Browser.Document FrameMsg

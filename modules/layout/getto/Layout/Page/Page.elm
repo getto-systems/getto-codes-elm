@@ -66,17 +66,18 @@ subscriptions model =
   , model.side    |> Side.subscriptions    |> Sub.map Side
   ] |> Sub.batch
 
+article_ = Transition.prop .article (\v m -> { m | article = v })
+side_    = Transition.prop .side    (\v m -> { m | side = v })
+
 update : Msg -> Model -> ( Model, FrameTransition app )
 update message =
   case message of
     Article msg ->
-      Transition.update
-        .article (\article m -> { m | article = article })
+      Transition.update article_
         (Article.update msg >> Transition.map Article)
 
     Side msg ->
-      Transition.update
-        .side (\side m -> { m | side = side })
+      Transition.update side_
         (Side.update msg >> Transition.map Side)
 
 

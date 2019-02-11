@@ -1,8 +1,10 @@
 module Getto.Command.Transition exposing
   ( Transition
+  , Prop
   , none
   , exec
   , batch
+  , prop
   , update
   , map
   , compose
@@ -17,6 +19,10 @@ module Getto.Command.Transition exposing
 
 type alias Transition model msg = model -> Cmd msg
 
+type Prop big small = Prop (Get big small) (Set big small)
+type alias Get big small = big -> small
+type alias Set big small = small -> big -> big
+
 none : Transition model msg
 none = always Cmd.none
 
@@ -29,8 +35,11 @@ batch list model =
   |> List.map (\f -> model |> f)
   |> Cmd.batch
 
-update : (big -> small) -> (small -> big -> big) -> (small -> ( small, msg )) -> big -> ( big, msg )
-update get set updateSmall model =
+prop : Get big small -> Set big small -> Prop big small
+prop = Prop
+
+update : Prop big small -> (small -> ( small, msg )) -> big -> ( big, msg )
+update (Prop get set) updateSmall model =
   model |> get |> updateSmall
   |> Tuple.mapFirst (\small -> model |> set small)
 
