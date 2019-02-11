@@ -65,12 +65,9 @@ compose name_ text_ form =
 
 entry : Validate a -> Form -> Entry a
 entry ((Prop get set),errors) form =
-  let
-    field = form |> get
-  in
-    { field = field |> FieldView.init (errors |> List.filterMap identity)
-    , prop  = Prop get set
-    }
+  { field = form |> get |> FieldView.init (errors |> List.filterMap identity)
+  , prop  = Prop get set
+  }
 
 
 hasError : View -> Bool

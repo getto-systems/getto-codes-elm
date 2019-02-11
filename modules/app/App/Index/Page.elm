@@ -65,12 +65,13 @@ subscriptions model =
   [ model.dashboard |> Dashboard.subscriptions |> Sub.map Dashboard
   ] |> Sub.batch
 
+dashboard_ = Transition.prop .dashboard (\v m -> { m | dashboard = v })
+
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
     Dashboard msg ->
-      Transition.update
-        .dashboard (\dashboard m -> { m | dashboard = dashboard })
+      Transition.update dashboard_
         (Dashboard.update msg >> Transition.map Dashboard)
 
 document : FrameModel -> Browser.Document FrameMsg
