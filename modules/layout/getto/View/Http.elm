@@ -6,14 +6,13 @@ module GettoUpload.View.Http exposing
   , response
   , header
   , body
+  , progress
   )
+import GettoUpload.View.Http.Progress as Progress
 
 type State header body
-  = Empty
-  | Loading
-  | Progress Progress
-  | Success (Response header body)
-  | Failure Error
+  = Ready (Maybe (Result Error (Response header body)))
+  | Connecting (Maybe Progress)
 
 type Response header body = Response
   { header : header
@@ -21,14 +20,8 @@ type Response header body = Response
   }
 
 type Progress
-  = Sending
-    { sent : Int
-    , size : Int
-    }
-  | Receiving
-    { received : Int
-    , size : Maybe Int
-    }
+  = Sending Progress.Model
+  | Receiving (Maybe Progress.Model)
 
 type Error
   = BadUrl String
@@ -51,3 +44,10 @@ header (Response res) = res.header
 
 body : Response header body -> body
 body (Response res) = res.body
+
+progress : Maybe Progress -> Maybe ( Bool, Int )
+progress data =
+  case data of
+    Just (Sending value)          -> Just ( True,  value |> Progress.percentage )
+    Just (Receiving (Just value)) -> Just ( False, value |> Progress.percentage |> (-) 100 )
+    _ -> Nothing

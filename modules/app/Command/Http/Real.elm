@@ -77,7 +77,4 @@ expectJson msg decoder =
                 Ok body -> body |> HttpView.response header |> Ok
 
 toState : Result HttpView.Error (HttpView.Response header body) -> HttpView.State header body
-toState result =
-  case result of
-    Ok response -> response |> HttpView.Success
-    Err error   -> error    |> HttpView.Failure
+toState = Just >> HttpView.Ready

@@ -57,15 +57,15 @@ type alias Header = ( String, String )
 
 init : Model header body
 init = Model
-  { state    = HttpView.Empty
+  { state    = HttpView.Ready Nothing
   , response = Nothing
   }
 
 state : Model header body -> HttpView.State header body
-state (Model entry) = entry.state
+state (Model model) = model.state
 
 response : Model header body -> Maybe (HttpView.Response header body)
-response (Model entry) = entry.response
+response (Model model) = model.response
 
 responseHeader : Model header body -> Maybe header
 responseHeader = response >> Maybe.map HttpView.header
@@ -74,13 +74,13 @@ responseBody : Model header body -> Maybe body
 responseBody = response >> Maybe.map HttpView.body
 
 stateTo : HttpView.State header body -> Model header body -> Model header body
-stateTo value (Model entry) =
+stateTo value (Model model) =
   case value of
-    HttpView.Success data -> Model { entry | state = value, response = Just data }
-    _                     -> Model { entry | state = value }
+    HttpView.Ready (Just (Ok data)) -> Model { model | state = value, response = Just data }
+    _ -> Model { model | state = value }
 
 clear : Model header body -> Model header body
-clear (Model entry) = Model { entry | state = HttpView.Empty, response = Nothing }
+clear (Model model) = Model { model | state = HttpView.Ready Nothing, response = Nothing }
 
 request : Request model header body -> (HttpView.State header body -> msg) -> model -> Cmd msg
 request req msg model =
@@ -92,7 +92,7 @@ request req msg model =
 
     marker = req |> trackMarker |> Just
   in
-    [ HttpView.Loading |> Task.succeed |> Task.perform msg
+    [ HttpView.Connecting Nothing |> Task.succeed |> Task.perform msg
     , Mock.request <| -- Real.request <|
       case req of
         Get data ->
@@ -166,10 +166,13 @@ track req msg =
 
     toProgress progress =
       case progress of
-        Http.Sending   data -> HttpView.Sending data
-        Http.Receiving data -> HttpView.Receiving data
+        Http.Sending   data -> { current = data.sent, size = data.size } |> HttpView.Sending
+        Http.Receiving data ->
+          data.size
+          |> Maybe.map (\size -> { current = data.received, size = size })
+          |> HttpView.Receiving
   in
-    (toProgress >> HttpView.Progress >> msg) |> Http.track marker
+    (toProgress >> Just >> HttpView.Connecting >> msg) |> Http.track marker
 
 get : RequestInner model header body QueryEncode.Value -> Request model header body
 get = Get

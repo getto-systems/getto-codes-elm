@@ -3,3 +3,4 @@
 - name: upload
   entries:
   - name: list
+  - name: new

@@ -35,8 +35,8 @@ file = FilePart
 bytes : String -> Bytes -> Value
 bytes = BytesPart
 
-list : List Value -> Value
-list = ListPart
+list : (a -> Value) -> List a -> Value
+list f = List.map f >> ListPart
 
 object : List ( String, Value ) -> Value
 object = ObjectPart
