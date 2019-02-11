@@ -5,6 +5,7 @@ port module GettoUpload.Command.Store exposing
   , init
   , subscriptions
   , store
+  , clear
   , changed
   )
 
@@ -48,8 +49,14 @@ subscriptions (Model model) =
 
 store : Model model -> model -> Cmd msg
 store (Model model) =
-  model.encode
-  >>
+  model.encode >>
+    case model.store of
+      Layout -> storeLayout
+      App    -> storeApp
+
+clear : Model model -> Cmd msg
+clear (Model model) =
+  Encode.null |>
     case model.store of
       Layout -> storeLayout
       App    -> storeApp

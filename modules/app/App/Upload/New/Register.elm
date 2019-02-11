@@ -28,6 +28,7 @@ import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Http.Header.Decode as HeaderDecode
 import Getto.Http.Part as Part
+import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
 
 import File exposing ( File )
@@ -51,7 +52,7 @@ type alias Upload =
   }
 
 type Msg
-  = FieldChanged (View.Prop String) (Field.Update String) String
+  = FieldChanged (View.Prop String) Field.Update String
   | FileRequest (View.Prop (List File))
   | FileSelect (View.Prop (List File)) File
   | UploadRequest
@@ -66,10 +67,9 @@ init model =
     , upload = Http.init
     }
   , Frame.app >> .register >>
-    (\m ->
-      Dom.fill
-        [ m.form.name |> Dom.string
-        ]
+    (\m -> Dom.fill
+      [ m.form.name |> Dom.string
+      ]
     )
   )
 
@@ -103,10 +103,17 @@ queryChanged : List String -> QueryDecode.Value -> Model -> Model
 queryChanged names value model = model
 
 store : Model -> Encode.Value
-store model = Encode.null
+store model = Encode.object
+  [ ( "name", model.form.name |> Field.value |> Encode.string )
+  ]
 
 storeChanged : Decode.Value -> Model -> Model
-storeChanged value model = model
+storeChanged value model =
+  { model
+  | form =
+    model.form
+    |> View.change name_ ( value |> SafeDecode.at ["name"] (SafeDecode.string "") )
+  }
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -115,19 +122,30 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    FieldChanged prop f value ->
-      ( { model | form = model.form |> View.update prop f value }
-      , Transition.none
+    FieldChanged prop up value ->
+      ( { model | form = model.form |> View.update prop up value }
+      , case up of
+        Field.Change -> Frame.storeApp
+        _ -> Transition.none
       )
 
     FileRequest prop -> ( model, \_ -> FileSelect prop |> File.Select.file [] )
     FileSelect prop file ->
-      ( { model | form = model.form |> View.update prop Field.change [file] }
+      ( { model | form = model.form |> View.change prop [file] }
       , Transition.none
       )
 
     UploadRequest -> ( model, Http.request upload UploadStateChanged )
-    UploadStateChanged state -> ( { model | upload = model.upload |> Http.stateTo state }, Transition.none )
+    UploadStateChanged state ->
+      ( { model | upload = model.upload |> Http.stateTo state }
+      , case state of
+        HttpView.Ready (Just (Ok res)) ->
+          [ Frame.clearApp
+          --, TODO redirect to edit.html?upload[id]={res |> HttpView.header |> .id}
+          ]
+          |> Transition.batch
+        _ -> Transition.none
+      )
 
 contents : FrameModel a -> List (Html Msg)
 contents model =

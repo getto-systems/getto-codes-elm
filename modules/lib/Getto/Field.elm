@@ -1,11 +1,11 @@
 module Getto.Field exposing
   ( Model
-  , Update
+  , Update(..)
   , init
   , id
   , name
   , value
-  , input
+  , update
   , change
   , nothing
   , blank
@@ -20,7 +20,9 @@ type Model value = Model
   , value : value
   }
 
-type alias Update value = value -> Model value -> Model value
+type Update
+  = Input
+  | Change
 
 init : String -> String -> value -> Model value
 init parentId fieldName defaultValue = Model
@@ -41,10 +43,16 @@ value : Model value -> value
 value (Model model) = model.value
 
 
-input : Update value
+update : Update -> value -> Model value -> Model value
+update method =
+  case method of
+    Input  -> input
+    Change -> change
+
+input : value -> Model value -> Model value
 input val (Model model) = Model { model | input = val }
 
-change : Update value
+change : value -> Model value -> Model value
 change val (Model model) = Model { model | input = val, value = val }
 
 

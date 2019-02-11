@@ -16,6 +16,8 @@ module GettoUpload.Layout.Frame exposing
   , logout
   , storeLayout
   , storeApp
+  , clearLayout
+  , clearApp
   , search
   , mapLayout
   , mapApp
@@ -206,6 +208,12 @@ storeLayout (Model model) = model.layout |> Store.store model.store.layout
 
 storeApp : Transition (Model layout app) annonymous
 storeApp (Model model) = model.app |> Store.store model.store.app
+
+clearLayout : Transition (Model layout app) annonymous
+clearLayout (Model model) = Store.clear model.store.layout
+
+clearApp : Transition (Model layout app) annonymous
+clearApp (Model model) = Store.clear model.store.app
 
 search : Transition (Model layout app) annonymous
 search (Model model) = model.app |> Search.search model.search

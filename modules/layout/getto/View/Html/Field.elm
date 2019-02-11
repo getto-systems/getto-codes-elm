@@ -50,7 +50,7 @@ tel   = "tel"   |> input ""
 date  = "date"  |> input ""
 time  = "time"  |> input ""
 
-input : String -> String -> List (H.Attribute msg) -> (Field.Update String -> String -> msg) -> FieldView.Model String -> Html msg
+input : String -> String -> List (H.Attribute msg) -> (Field.Update -> String -> msg) -> FieldView.Model String -> Html msg
 input class type_ attr msg field =
   L.lazy
     (\value ->
@@ -58,8 +58,8 @@ input class type_ attr msg field =
         ( [ type_ |> A.type_
           , field |> FieldView.id |> A.id
           , class |> A.class
-          , msg Field.input  |> E.onInput
-          , msg Field.change |> onChange
+          , msg Field.Input  |> E.onInput
+          , msg Field.Change |> onChange
           ]
           ++ attr
         )
@@ -71,13 +71,13 @@ textarea       = textareaInput 8  ""
 textareaLarge  = textareaInput 12 "is-large"
 textareaXLarge = textareaInput 16 "is-xlarge"
 
-textareaInput : Int -> String -> List (H.Attribute msg) -> (Field.Update String -> String -> msg) -> FieldView.Model String -> Html msg
+textareaInput : Int -> String -> List (H.Attribute msg) -> (Field.Update -> String -> msg) -> FieldView.Model String -> Html msg
 textareaInput rows class attr msg field =
   H.textarea
     ( [ class |> A.class
       , rows  |> A.rows
-      , msg Field.input  |> E.onInput
-      , msg Field.change |> onChange
+      , msg Field.Input  |> E.onInput
+      , msg Field.Change |> onChange
       ]
       ++ attr
     )
