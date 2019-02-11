@@ -1,4 +1,4 @@
-image: node:11.6.0-stretch
+image: node:11.9.0-stretch
 
 test:
   script:
