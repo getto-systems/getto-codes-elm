@@ -1,5 +1,7 @@
 module GettoUpload.Layout.Page.Side.View exposing
-  ( Breadcrumb
+  ( ResponseHeader
+  , ResponseBody
+  , Breadcrumb
   , Menu
   , BadgeState(..)
   , MenuI18n
@@ -12,6 +14,13 @@ import GettoUpload.View.Icon as Icon exposing ( Icon )
 import GettoUpload.View.Http as HttpView
 import GettoUpload.Extension.Href as Href exposing ( Href )
 
+import Dict exposing ( Dict )
+
+type alias ResponseHeader = ()
+
+type alias ResponseBody =
+  { badge : Dict String Int
+  }
 
 type alias Breadcrumb = ( String, List BreadcrumbItem )
 

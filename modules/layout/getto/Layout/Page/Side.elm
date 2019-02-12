@@ -48,17 +48,13 @@ type alias FrameTransition a app = Transition (FrameModel a app) Msg
 type alias Model =
   { signature  : String
   , menu       : Menu
-  , badge      : Http.Model () Badge
+  , badge      : Http.Model View.ResponseHeader View.ResponseBody
   , badgeNames : Dict String String
   , collapsed  : Set String
   }
 
-type alias Badge =
-  { badge : Dict String Int
-  }
-
 type Msg
-  = BadgeStateChanged (HttpView.State () Badge)
+  = BadgeStateChanged (HttpView.State View.ResponseHeader View.ResponseBody)
   | MenuOpen  String
   | MenuClose String
 
@@ -73,7 +69,7 @@ init signature model =
   , Http.request signature badge BadgeStateChanged
   )
 
-badge : Http.Payload (FrameModel a app) () Badge
+badge : Http.Payload (FrameModel a app) View.ResponseHeader View.ResponseBody
 badge = Http.payload "badge" <|
   \model ->
     Http.get
@@ -82,7 +78,7 @@ badge = Http.payload "badge" <|
       , params  = QueryEncode.empty
       , response =
         { header = HeaderDecode.succeed ()
-        , body = Decode.map Badge
+        , body = Decode.map View.ResponseBody
           ( Decode.at ["badge"]
             ( Decode.list
               ( Decode.map2 Tuple.pair
