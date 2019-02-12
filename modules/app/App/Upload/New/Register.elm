@@ -65,8 +65,14 @@ type Msg
 init : Frame.InitModel -> ( Model, FrameTransition a )
 init model =
   ( { form =
-      { name = Field.init "register" "name" ""
-      , text = Field.init "register" "text" []
+      { name     = Field.init "register" "name"     ""
+      , text     = Field.init "register" "text"     []
+      , memo     = Field.init "register" "memo"     ""
+      , age      = Field.init "register" "age"      ""
+      , email    = Field.init "register" "email"    ""
+      , tel      = Field.init "register" "tel"      ""
+      , birthday = Field.init "register" "birthday" ""
+      , start_at = Field.init "register" "start_at" ""
       }
     , upload = Http.init
     }
@@ -76,7 +82,13 @@ init model =
 fill : FrameModel a -> Cmd msg
 fill = Frame.app >> .register >>
   (\m -> Dom.fill
-    [ m.form.name |> Dom.string
+    [ m.form.name     |> Dom.string
+    , m.form.memo     |> Dom.string
+    , m.form.age      |> Dom.string
+    , m.form.email    |> Dom.string
+    , m.form.tel      |> Dom.string
+    , m.form.birthday |> Dom.string
+    , m.form.start_at |> Dom.string
     ]
   )
 
@@ -91,8 +103,14 @@ upload = Api.request
           m = model |> Frame.app |> .register
         in
           Part.object
-            [ ( "name",  m.form.name |> Field.value |> Part.string )
-            , ( "text" , m.form.text |> Field.value |> Part.list Part.file )
+            [ ( "name",      m.form.name     |> Field.value |> Part.string )
+            , ( "text" ,     m.form.text     |> Field.value |> Part.list Part.file )
+            , ( "memo",      m.form.memo     |> Field.value |> Part.string )
+            , ( "age",       m.form.age      |> Field.value |> Part.string )
+            , ( "email",     m.form.email    |> Field.value |> Part.string )
+            , ( "tel",       m.form.tel      |> Field.value |> Part.string )
+            , ( "birthday",  m.form.birthday |> Field.value |> Part.string )
+            , ( "start_at",  m.form.start_at |> Field.value |> Part.string )
             ]
       , response =
         { header = HeaderDecode.map Upload
@@ -111,7 +129,13 @@ queryChanged names value model = model
 
 store : Model -> Encode.Value
 store model = Encode.object
-  [ ( "name", model.form.name |> Field.value |> Encode.string )
+  [ ( "name",     model.form.name     |> Field.value |> Encode.string )
+  , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
+  , ( "age",      model.form.age      |> Field.value |> Encode.string )
+  , ( "email",    model.form.email    |> Field.value |> Encode.string )
+  , ( "tel",      model.form.tel      |> Field.value |> Encode.string )
+  , ( "birthday", model.form.birthday |> Field.value |> Encode.string )
+  , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
   ]
 
 storeChanged : Decode.Value -> Model -> Model
@@ -119,7 +143,13 @@ storeChanged value model =
   { model
   | form =
     model.form
-    |> View.change name_ ( value |> SafeDecode.at ["name"] (SafeDecode.string "") )
+    |> View.change name_     ( value |> SafeDecode.at ["name"]     (SafeDecode.string "") )
+    |> View.change memo_     ( value |> SafeDecode.at ["memo"]     (SafeDecode.string "") )
+    |> View.change age_      ( value |> SafeDecode.at ["age"]      (SafeDecode.string "") )
+    |> View.change email_    ( value |> SafeDecode.at ["email"]    (SafeDecode.string "") )
+    |> View.change tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
+    |> View.change birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
+    |> View.change start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
   }
 
 subscriptions : Model -> Sub Msg
@@ -164,16 +194,28 @@ list model =
     [ model |> register
     ]
 
-name_ = View.prop .name (\v m -> { m | name = v })
-text_ = View.prop .text (\v m -> { m | text = v })
+name_     = View.prop .name     (\v m -> { m | name     = v })
+text_     = View.prop .text     (\v m -> { m | text     = v })
+memo_     = View.prop .memo     (\v m -> { m | memo     = v })
+age_      = View.prop .age      (\v m -> { m | age      = v })
+email_    = View.prop .email    (\v m -> { m | email    = v })
+tel_      = View.prop .tel      (\v m -> { m | tel      = v })
+birthday_ = View.prop .birthday (\v m -> { m | birthday = v })
+start_at_ = View.prop .start_at (\v m -> { m | start_at = v })
 
 register : FrameModel a -> Html Msg
 register model = L.lazy
   (\m -> Html.register
     { title = "register"
     , form = m.form |> View.compose
-      ( name_, [ m.form.name |> Field.blank "blank" ] )
-      ( text_, [ m.form.text |> Field.empty "no-file" ] )
+      ( name_,     [ m.form.name |> Field.blank "blank" ] )
+      ( text_,     [ m.form.text |> Field.empty "no-file" ] )
+      ( memo_,     [] )
+      ( age_,      [] )
+      ( email_,    [] )
+      ( tel_,      [] )
+      ( birthday_, [] )
+      ( start_at_, [] )
     , state = m.upload |> Http.state
     , msg =
       { upload = UploadRequest

@@ -14,8 +14,14 @@ title name =
 field : String -> String
 field name =
   case name of
-    "name" -> "名前"
-    "text" -> "テキスト"
+    "name"     -> "名前"
+    "text"     -> "テキスト"
+    "memo"     -> "備考"
+    "age"      -> "年齢"
+    "email"    -> "メール"
+    "tel"      -> "電話番号"
+    "birthday" -> "誕生日"
+    "start_at" -> "開始時間"
 
     _ -> name
 

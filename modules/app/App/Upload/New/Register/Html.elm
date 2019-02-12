@@ -67,10 +67,76 @@ register model =
                   ]
                 ]
               ]
+          , case model.form |> View.memo of
+            (field,prop) ->
+              [ H.tr ( field |> FieldHtml.isError )
+                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+                , H.td [] <| List.concat
+                  [ [ field |> FieldHtml.textarea [] (model.msg.input prop) model.msg.change
+                    ]
+                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  ]
+                ]
+              ]
+          , case model.form |> View.age of
+            (field,prop) ->
+              [ H.tr ( field |> FieldHtml.isError )
+                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+                , H.td [] <| List.concat
+                  [ [ field |> FieldHtml.number [] (model.msg.input prop) model.msg.change
+                    ]
+                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  ]
+                ]
+              ]
+          , case model.form |> View.email of
+            (field,prop) ->
+              [ H.tr ( field |> FieldHtml.isError )
+                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+                , H.td [] <| List.concat
+                  [ [ field |> FieldHtml.email [] (model.msg.input prop) model.msg.change
+                    ]
+                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  ]
+                ]
+              ]
+          , case model.form |> View.tel of
+            (field,prop) ->
+              [ H.tr ( field |> FieldHtml.isError )
+                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+                , H.td [] <| List.concat
+                  [ [ field |> FieldHtml.tel [] (model.msg.input prop) model.msg.change
+                    ]
+                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  ]
+                ]
+              ]
+          , case model.form |> View.birthday of
+            (field,prop) ->
+              [ H.tr ( field |> FieldHtml.isError )
+                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+                , H.td [] <| List.concat
+                  [ [ field |> FieldHtml.date [] (model.msg.input prop) model.msg.change
+                    ]
+                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  ]
+                ]
+              ]
+          , case model.form |> View.start_at of
+            (field,prop) ->
+              [ H.tr ( field |> FieldHtml.isError )
+                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+                , H.td [] <| List.concat
+                  [ [ field |> FieldHtml.time [] (model.msg.input prop) model.msg.change
+                    ]
+                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  ]
+                ]
+              ]
           ]
         ]
       , H.footer [] <|
-        ( case model.state of
+        case model.state of
           HttpView.Connecting progress ->
             [ "uploading" |> model.i18n.form |> ButtonHtml.connecting
             , progress |> HttpHtml.progress
@@ -84,6 +150,5 @@ register model =
                 [ "upload" |> model.i18n.form |> ButtonHtml.save model.msg.upload
                 , response |> HttpHtml.error model.i18n.http
                 ]
-        )
       ]
     ]
