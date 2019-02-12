@@ -4,12 +4,15 @@ module Getto.Field exposing
   , id
   , name
   , value
-  , change
+  , update
+  , check
   , nothing
   , blank
   , empty
   , validate
   )
+
+import Set exposing ( Set )
 
 type Model value = Model
   { id    : String
@@ -35,8 +38,18 @@ value : Model value -> value
 value (Model model) = model.value
 
 
-change : value -> Model value -> Model value
-change val (Model model) = Model { model | value = val }
+update : value -> Model value -> Model value
+update val (Model model) = Model { model | value = val }
+
+check : comparable -> Bool -> Model (Set comparable) -> Model (Set comparable)
+check val checked (Model model) =
+  Model
+    { model
+    | value =
+      if checked
+        then model.value |> Set.insert val
+        else model.value |> Set.remove val
+    }
 
 
 nothing : String -> Model (Maybe value) -> Maybe String

@@ -3,6 +3,7 @@ module GettoUpload.I18n.App.Upload.New.Register exposing
   , field
   , error
   , gender
+  , quality
   )
 
 title : String -> String
@@ -24,6 +25,7 @@ field name =
     "birthday" -> "誕生日"
     "start_at" -> "開始時間"
     "gender"   -> "性別"
+    "quality"  -> "品質"
 
     _ -> name
 
@@ -41,5 +43,13 @@ gender name =
     "male"   -> "男性"
     "female" -> "女性"
     "other"  -> "その他"
+
+    _ -> name
+
+quality : String -> String
+quality name =
+  case name of
+    "high" -> "高品質"
+    "low"  -> "低品質"
 
     _ -> name

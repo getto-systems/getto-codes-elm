@@ -36,6 +36,7 @@ import Getto.Field as Field
 import Browser.Navigation as Navigation
 import File exposing ( File )
 import File.Select
+import Set exposing ( Set )
 import Json.Encode as Encode
 import Json.Decode as Decode
 import Html as H exposing ( Html )
@@ -56,6 +57,7 @@ type alias Upload =
 
 type Msg
   = FieldInput (View.Prop String) String
+  | FieldCheck (View.Prop (Set String)) String Bool
   | FieldChange
   | FileRequest (View.Prop (List File))
   | FileSelect (View.Prop (List File)) File
@@ -74,6 +76,7 @@ init model =
       , birthday = Field.init "register" "birthday" ""
       , start_at = Field.init "register" "start_at" ""
       , gender   = Field.init "register" "gender"   ""
+      , quality  = Field.init "register" "quality"  ""
       }
     , upload = Http.init
     }
@@ -114,6 +117,7 @@ upload = Api.request
             , ( "birthday",  m.form.birthday |> Field.value |> Part.string )
             , ( "start_at",  m.form.start_at |> Field.value |> Part.string )
             , ( "gender",    m.form.gender   |> Field.value |> Part.string )
+            , ( "quality",   m.form.quality  |> Field.value |> Part.string )
             ]
       , response =
         { header = HeaderDecode.map Upload
@@ -140,6 +144,7 @@ store model = Encode.object
   , ( "birthday", model.form.birthday |> Field.value |> Encode.string )
   , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
   , ( "gender",   model.form.gender   |> Field.value |> Encode.string )
+  , ( "quality",  model.form.quality  |> Field.value |> Encode.string )
   ]
 
 storeChanged : Decode.Value -> Model -> Model
@@ -147,14 +152,15 @@ storeChanged value model =
   { model
   | form =
     model.form
-    |> View.change name_     ( value |> SafeDecode.at ["name"]     (SafeDecode.string "") )
-    |> View.change memo_     ( value |> SafeDecode.at ["memo"]     (SafeDecode.string "") )
-    |> View.change age_      ( value |> SafeDecode.at ["age"]      (SafeDecode.string "") )
-    |> View.change email_    ( value |> SafeDecode.at ["email"]    (SafeDecode.string "") )
-    |> View.change tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
-    |> View.change birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
-    |> View.change start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
-    |> View.change gender_   ( value |> SafeDecode.at ["gender"]   (SafeDecode.string "") )
+    |> View.input name_     ( value |> SafeDecode.at ["name"]     (SafeDecode.string "") )
+    |> View.input memo_     ( value |> SafeDecode.at ["memo"]     (SafeDecode.string "") )
+    |> View.input age_      ( value |> SafeDecode.at ["age"]      (SafeDecode.string "") )
+    |> View.input email_    ( value |> SafeDecode.at ["email"]    (SafeDecode.string "") )
+    |> View.input tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
+    |> View.input birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
+    |> View.input start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
+    |> View.input gender_   ( value |> SafeDecode.at ["gender"]   (SafeDecode.string "") )
+    |> View.input quality_  ( value |> SafeDecode.at ["quality"]  (SafeDecode.string "") )
   }
 
 subscriptions : Model -> Sub Msg
@@ -165,14 +171,18 @@ update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
     FieldInput prop value ->
-      ( { model | form = model.form |> View.change prop value }
+      ( { model | form = model.form |> View.input prop value }
+      , Transition.none
+      )
+    FieldCheck prop value checked ->
+      ( { model | form = model.form |> View.check prop value checked }
       , Transition.none
       )
     FieldChange -> ( model, Frame.storeApp )
 
     FileRequest prop -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
     FileSelect prop file ->
-      ( { model | form = model.form |> View.change prop [file] }
+      ( { model | form = model.form |> View.input prop [file] }
       , Transition.none
       )
 
@@ -208,6 +218,7 @@ tel_      = View.prop .tel      (\v m -> { m | tel      = v })
 birthday_ = View.prop .birthday (\v m -> { m | birthday = v })
 start_at_ = View.prop .start_at (\v m -> { m | start_at = v })
 gender_   = View.prop .gender   (\v m -> { m | gender   = v })
+quality_  = View.prop .quality  (\v m -> { m | quality  = v })
 
 register : FrameModel a -> Html Msg
 register model = L.lazy
@@ -223,6 +234,7 @@ register model = L.lazy
       ( birthday_, [] )
       ( start_at_, [] )
       ( gender_,   [] )
+      ( quality_,  [] )
     , state = m.upload |> Http.state
     , options =
       { gender =
@@ -231,10 +243,15 @@ register model = L.lazy
         , ( "female", "female" |> I18n.gender )
         , ( "other",  "other"  |> I18n.gender )
         ]
+      , quality =
+        [ ( "high", "high" |> I18n.quality )
+        , ( "low",  "low"  |> I18n.quality )
+        ]
       }
     , msg =
       { upload = UploadRequest
       , input  = FieldInput
+      , check  = FieldCheck
       , change = FieldChange
       , select = FileRequest
       }
