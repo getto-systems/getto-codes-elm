@@ -13,8 +13,7 @@ module GettoUpload.App.Upload.Edit.Info.View exposing
   , toggle
   , prop
   , compose
-  , isStatic
-  , hasError
+  , state
   , name
   , memo
   , age
@@ -150,26 +149,20 @@ entry ((Prop get set),errors) form =
   }
 
 
-isStatic : View -> Bool
-isStatic (View state _ _) =
-  case state of
-    Static -> True
-    Edit   -> False
-
-hasError : View -> Bool
-hasError (View _ error _) = error
+state : View -> (State,Bool)
+state (View st error _) = ( st, error )
 
 
-name     (View state _ form) = form.name     |> view state
-memo     (View state _ form) = form.memo     |> view state
-age      (View state _ form) = form.age      |> view state
-email    (View state _ form) = form.email    |> view state
-tel      (View state _ form) = form.tel      |> view state
-birthday (View state _ form) = form.birthday |> view state
-start_at (View state _ form) = form.start_at |> view state
-gender   (View state _ form) = form.gender   |> view state
-quality  (View state _ form) = form.quality  |> view state
-roles    (View state _ form) = form.roles    |> view state
+name     (View st _ form) = form.name     |> view st
+memo     (View st _ form) = form.memo     |> view st
+age      (View st _ form) = form.age      |> view st
+email    (View st _ form) = form.email    |> view st
+tel      (View st _ form) = form.tel      |> view st
+birthday (View st _ form) = form.birthday |> view st
+start_at (View st _ form) = form.start_at |> view st
+gender   (View st _ form) = form.gender   |> view st
+quality  (View st _ form) = form.quality  |> view st
+roles    (View st _ form) = form.roles    |> view st
 
 view : State -> Entry a -> ( State, FieldView.Model a, Prop a )
-view state m = ( state, m.field, m.prop )
+view st m = ( st, m.field, m.prop )

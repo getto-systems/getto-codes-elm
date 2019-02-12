@@ -259,30 +259,23 @@ info model =
                 ]
               ]
             , H.footer [] <|
-              if model.form |> View.isStatic
-                then
+              case model.form |> View.state of
+                (View.Static,_) ->
                   [ "edit" |> model.i18n.form |> ButtonHtml.edit model.msg.edit
                   ]
-                else
+                (View.Edit,hasError) ->
                   case model.put of
                     HttpView.Connecting progress ->
                       [ "saving" |> model.i18n.form |> ButtonHtml.connecting
                       , progress |> HttpHtml.progress
                       ]
                     HttpView.Ready response ->
-                      let
-                        cancel = "cancel" |> model.i18n.form |> ButtonHtml.cancel model.msg.static
-                      in
-                        if model.form |> View.hasError
-                          then
-                            [ "has-error" |> model.i18n.form |> ButtonHtml.error
-                            , cancel
-                            ]
-                          else
-                            [ "save" |> model.i18n.form |> ButtonHtml.save model.msg.put
-                            , cancel
-                            , response |> HttpHtml.error model.i18n.http
-                            ]
+                      [ if hasError
+                        then "has-error" |> model.i18n.form |> ButtonHtml.error
+                        else "save"      |> model.i18n.form |> ButtonHtml.save model.msg.put
+                      , "cancel" |> model.i18n.form |> ButtonHtml.cancel model.msg.static
+                      , response |> HttpHtml.error model.i18n.http
+                      ]
             ]
           ]
     HttpView.Ready (Just (Err error)) ->
