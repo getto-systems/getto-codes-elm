@@ -15,6 +15,9 @@ module GettoUpload.View.Html.Field exposing
   , select
   , radio
   , radioInline
+  , checkbox
+  , checkboxInline
+  , checkboxBlock
   , files
   , errors
   , onChange
@@ -26,6 +29,7 @@ import Getto.Field as Field
 import Getto.Field.View as FieldView
 
 import File exposing ( File )
+import Set exposing ( Set )
 import Json.Decode as Decode
 import Html as H exposing ( Html )
 import Html.Attributes as A
@@ -102,11 +106,9 @@ radio       = radioList []
 radioInline = radioList ["is-inline"]
 
 radioList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model String -> Html msg
-radioList class options attr checkMsg changeMsg field =
+radioList class options attr inputMsg changeMsg field =
   H.ul
-    ( [ field |> FieldView.id |> A.id
-      ]
-      ++ (class |> classAttr)
+    ( (class |> classAttr)
       ++ attr
     )
     ( options |> List.map
@@ -115,10 +117,38 @@ radioList class options attr checkMsg changeMsg field =
           [ H.label []
             [ H.input
               [ "radio" |> A.type_
-              , checkMsg  |> E.onInput
+              , inputMsg  |> E.onInput
               , changeMsg |> onChange
               , value     |> A.value
-              , value == (field |> FieldView.value) |> A.checked
+              , field |> FieldView.value |> (==) value |> A.checked
+              ] []
+            , " " |> H.text
+            , label |> H.text
+            ]
+          ]
+      )
+    )
+
+checkbox       = checkList []
+checkboxInline = checkList ["is-inline"]
+checkboxBlock  = checkList ["is-block"]
+
+checkList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model (Set String) -> Html msg
+checkList class options attr inputMsg changeMsg field =
+  H.ul
+    ( (class |> classAttr)
+      ++ attr
+    )
+    ( options |> List.map
+      (\(value,label) ->
+        H.li []
+          [ H.label []
+            [ H.input
+              [ "checkbox" |> A.type_
+              , inputMsg  |> E.onInput
+              , changeMsg |> onChange
+              , value     |> A.value
+              , field |> FieldView.value |> Set.member value |> A.checked
               ] []
             , " " |> H.text
             , label |> H.text

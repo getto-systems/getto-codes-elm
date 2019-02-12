@@ -5,7 +5,7 @@ module Getto.Field exposing
   , name
   , value
   , update
-  , check
+  , toggle
   , nothing
   , blank
   , empty
@@ -41,14 +41,14 @@ value (Model model) = model.value
 update : value -> Model value -> Model value
 update val (Model model) = Model { model | value = val }
 
-check : comparable -> Bool -> Model (Set comparable) -> Model (Set comparable)
-check val checked (Model model) =
+toggle : comparable -> Model (Set comparable) -> Model (Set comparable)
+toggle val (Model model) =
   Model
     { model
     | value =
-      if checked
-        then model.value |> Set.insert val
-        else model.value |> Set.remove val
+      if model.value |> Set.member val
+        then model.value |> Set.remove val
+        else model.value |> Set.insert val
     }
 
 
