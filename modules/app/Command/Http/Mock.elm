@@ -96,8 +96,8 @@ mock =
     --}
     )
   , ( ( "POST", "upload" )
-    {--, Real --}
-    {--}, Mock 3000
+    {--}, Real --}
+    {--, Mock 3000
       ( [ ( "x-upload-id", "3" )
         ] |> Dict.fromList
       )
