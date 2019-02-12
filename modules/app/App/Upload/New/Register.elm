@@ -49,11 +49,7 @@ type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
   { signature : String
   , form : View.Form
-  , upload : Http.Model Upload Decode.Value
-  }
-
-type alias Upload =
-  { id : Int
+  , upload : Http.Model View.ResponseHeader View.ResponseBody
   }
 
 type Msg
@@ -63,7 +59,7 @@ type Msg
   | FileRequest (View.Prop (List File))
   | FileSelect (View.Prop (List File)) File
   | UploadRequest
-  | UploadStateChanged (HttpView.State Upload Decode.Value)
+  | UploadStateChanged (HttpView.State View.ResponseHeader View.ResponseBody)
 
 init : String -> Frame.InitModel -> ( Model, FrameTransition a )
 init signature model =
@@ -100,7 +96,7 @@ fill = Frame.app >> .register >>
     ]
   )
 
-upload : Http.Payload (FrameModel a) Upload Decode.Value
+upload : Http.Payload (FrameModel a) View.ResponseHeader View.ResponseBody
 upload = Http.payload "upload" <|
   \model ->
     let
@@ -123,9 +119,9 @@ upload = Http.payload "upload" <|
         , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Part.list Part.string )
         ]
       , response =
-        { header = HeaderDecode.map Upload
+        { header = HeaderDecode.map View.ResponseHeader
           ( HeaderDecode.at "x-upload-id" HeaderDecode.int )
-        , body = Decode.value
+        , body = Decode.succeed ()
         }
       , timeout = 30 * 1000
       }
