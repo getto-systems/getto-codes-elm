@@ -170,7 +170,7 @@ text_ = View.prop .text (\v m -> { m | text = v })
 register : FrameModel a -> Html Msg
 register model = L.lazy
   (\m -> Html.register
-    { title = "select-file"
+    { title = "register"
     , form = m.form |> View.compose
       ( name_, [ m.form.name |> Field.blank "blank" ] )
       ( text_, [ m.form.text |> Field.empty "no-file" ] )

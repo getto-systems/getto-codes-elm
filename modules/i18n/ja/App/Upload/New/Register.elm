@@ -7,7 +7,7 @@ module GettoUpload.I18n.App.Upload.New.Register exposing
 title : String -> String
 title name =
   case name of
-    "select-file" -> "ファイル選択"
+    "register" -> "登録"
 
     _ -> name
 
