@@ -1,6 +1,8 @@
 module GettoUpload.App.Upload.New.Register.View exposing
   ( Form
   , View
+  , ResponseHeader
+  , ResponseBody
   , Prop
   , update
   , toggle
@@ -58,6 +60,12 @@ type alias Entry a =
   { field : FieldView.Model a
   , prop  : Prop a
   }
+
+type alias ResponseHeader =
+  { id : Int
+  }
+
+type alias ResponseBody = ()
 
 type Prop a = Prop (Getter a) (Setter a)
 type alias Getter a = Form -> Field.Model a
