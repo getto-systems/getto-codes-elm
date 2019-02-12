@@ -1,4 +1,4 @@
-module GettoUpload.App.Upload.New.Register exposing
+module GettoUpload.App.Upload.Edit.Info exposing
   ( Model
   , Msg
   , init
@@ -11,8 +11,8 @@ module GettoUpload.App.Upload.New.Register exposing
   , contents
   , dialogs
   )
-import GettoUpload.App.Upload.New.Register.View as View
-import GettoUpload.App.Upload.New.Register.Html as Html
+import GettoUpload.App.Upload.Edit.Info.View as View
+import GettoUpload.App.Upload.Edit.Info.Html as Html
 import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
@@ -20,7 +20,7 @@ import GettoUpload.Command.Http as Http
 import GettoUpload.Command.Dom as Dom
 import GettoUpload.View.Http as HttpView
 import GettoUpload.I18n.App as AppI18n
-import GettoUpload.I18n.App.Upload.New.Register as I18n
+import GettoUpload.I18n.App.Upload.Edit.Info as I18n
 import GettoUpload.I18n.Http as HttpI18n
 import GettoUpload.Extension.Href as Href
 import GettoUpload.Extension.Href.Upload as Upload
@@ -44,33 +44,35 @@ import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | register : Model }
+type alias FrameModel a = Frame.Model Layout.Model { a | info : Model }
 type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
   { signature : String
+  , id   : Int
   , form : View.Form
-  , upload : Http.Model Upload Decode.Value
-  }
-
-type alias Upload =
-  { id : Int
+  , get : Http.Model View.ResponseHeader View.ResponseBody
+  , put : Http.Model View.ResponseHeader View.ResponseBody
   }
 
 type Msg
-  = FieldInput (View.Prop String) String
+  = Edit
+  | Static
+  | FieldInput (View.Prop String) String
   | FieldCheck (View.Prop (Set String)) String
   | FieldChange
   | FileRequest (View.Prop (List File))
   | FileSelect (View.Prop (List File)) File
-  | UploadRequest
-  | UploadStateChanged (HttpView.State Upload Decode.Value)
+  | GetStateChanged (HttpView.State View.ResponseHeader View.ResponseBody)
+  | PutRequest
+  | PutStateChanged (HttpView.State View.ResponseHeader View.ResponseBody)
 
 init : String -> Frame.InitModel -> ( Model, FrameTransition a )
 init signature model =
   ( { signature = signature
+    , id = 0
     , form =
-      { name     = Field.init signature "name"     ""
-      , text     = Field.init signature "text"     []
+      { state    = View.Static
+      , name     = Field.init signature "name"     ""
       , memo     = Field.init signature "memo"     ""
       , age      = Field.init signature "age"      ""
       , email    = Field.init signature "email"    ""
@@ -81,13 +83,15 @@ init signature model =
       , quality  = Field.init signature "quality"  ""
       , roles    = Field.init signature "roles"    Set.empty
       }
-    , upload = Http.init
+    , get = Http.init
+    , put = Http.init
     }
-  , fill
+  , [ Http.request signature get GetStateChanged
+    ] |> Transition.batch
   )
 
 fill : FrameModel a -> Cmd msg
-fill = Frame.app >> .register >>
+fill = Frame.app >> .info >>
   (\m -> Dom.fill
     [ m.form.name     |> Dom.string
     , m.form.memo     |> Dom.string
@@ -100,41 +104,86 @@ fill = Frame.app >> .register >>
     ]
   )
 
-upload : Http.Payload (FrameModel a) Upload Decode.Value
-upload = Http.payload "upload" <|
+get : Http.Payload (FrameModel a) View.ResponseHeader View.ResponseBody
+get = Http.payload "get" <|
   \model ->
     let
-      m = model |> Frame.app |> .register
+      m = model |> Frame.app |> .info
     in
-    Http.upload
-      { url     = "upload" |> Api.url []
-      , headers = model |> Api.headers
-      , params  = Part.object
-        [ ( "name",      m.form.name     |> Field.value |> Part.string )
-        , ( "text" ,     m.form.text     |> Field.value |> Part.list Part.file )
-        , ( "memo",      m.form.memo     |> Field.value |> Part.string )
-        , ( "age",       m.form.age      |> Field.value |> Part.string )
-        , ( "email",     m.form.email    |> Field.value |> Part.string )
-        , ( "tel",       m.form.tel      |> Field.value |> Part.string )
-        , ( "birthday",  m.form.birthday |> Field.value |> Part.string )
-        , ( "start_at",  m.form.start_at |> Field.value |> Part.string )
-        , ( "gender",    m.form.gender   |> Field.value |> Part.string )
-        , ( "quality",   m.form.quality  |> Field.value |> Part.string )
-        , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Part.list Part.string )
-        ]
-      , response =
-        { header = HeaderDecode.map Upload
-          ( HeaderDecode.at "x-upload-id" HeaderDecode.int )
-        , body = Decode.value
+      Http.get
+        { url     = "upload/:id" |> Api.url ( m |> pathInfo )
+        , headers = model |> Api.headers
+        , params  = QueryEncode.empty
+        , response =
+          { header = HeaderDecode.succeed ()
+          , body = decoder
+          }
+        , timeout = 10 * 1000
         }
-      , timeout = 30 * 1000
-      }
+
+put : Http.Payload (FrameModel a) View.ResponseHeader View.ResponseBody
+put = Http.payload "put" <|
+  \model ->
+    let
+      m = model |> Frame.app |> .info
+    in
+      Http.put
+        { url     = "upload/:id/info" |> Api.url ( m |> pathInfo )
+        , headers = model |> Api.headers
+        , params  =
+          Encode.object
+            [ ( "name",      m.form.name     |> Field.value |> Encode.string )
+            , ( "memo",      m.form.memo     |> Field.value |> Encode.string )
+            , ( "age",       m.form.age      |> Field.value |> Encode.string )
+            , ( "email",     m.form.email    |> Field.value |> Encode.string )
+            , ( "tel",       m.form.tel      |> Field.value |> Encode.string )
+            , ( "birthday",  m.form.birthday |> Field.value |> Encode.string )
+            , ( "start_at",  m.form.start_at |> Field.value |> Encode.string )
+            , ( "gender",    m.form.gender   |> Field.value |> Encode.string )
+            , ( "quality",   m.form.quality  |> Field.value |> Encode.string )
+            , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+            ]
+        , response =
+          { header = HeaderDecode.succeed ()
+          , body = decoder
+          }
+        , timeout = 10 * 1000
+        }
+
+pathInfo : Model -> List ( String, String )
+pathInfo model =
+  [ ( "id", model.id |> String.fromInt )
+  ]
+
+decoder : Decode.Decoder View.ResponseBody
+decoder = Decode.map2 View.ResponseBody
+  ( Decode.at ["info"]
+    ( Decode.map5 View.ResponseInfo
+      (Decode.at ["name"]  Decode.string)
+      (Decode.at ["memo"]  Decode.string)
+      (Decode.at ["age"]   Decode.int)
+      (Decode.at ["email"] Decode.string)
+      (Decode.at ["tel"]   Decode.string)
+    )
+  )
+  ( Decode.at ["detail"]
+    ( Decode.map5 View.ResponseDetail
+      (Decode.at ["birthday"] Decode.string)
+      (Decode.at ["start_at"] Decode.string)
+      (Decode.at ["gender"]   Decode.string)
+      (Decode.at ["quality"]  Decode.string)
+      (Decode.at ["roles"]   (Decode.string |> Decode.list |> Decode.map Set.fromList))
+    )
+  )
 
 query : Model -> QueryEncode.Value
-query model = QueryEncode.empty
+query model = QueryEncode.object
+  [ ( "id", model.id |> QueryEncode.int )
+  ]
 
 queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model = model
+queryChanged names value model =
+  { model | id = value |> QueryDecode.entryAt (names ++ ["id"]) (QueryDecode.int 0) }
 
 store : Model -> Encode.Value
 store model = Encode.object
@@ -169,11 +218,22 @@ storeChanged value model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Http.track model.signature upload UploadStateChanged
+  [ Http.track model.signature get GetStateChanged
+  , Http.track model.signature put PutStateChanged
+  ] |> Sub.batch
 
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
+    Edit ->
+      ( { model | form = model.form |> edit model |> View.edit }
+      , fill
+      )
+    Static ->
+      ( { model | form = model.form |> View.static }
+      , Transition.none
+      )
+
     FieldInput prop value ->
       ( { model | form = model.form |> View.update prop value }
       , Transition.none
@@ -190,27 +250,57 @@ update msg model =
       , Transition.none
       )
 
-    UploadRequest -> ( model, Http.request model.signature upload UploadStateChanged )
-    UploadStateChanged state ->
-      ( { model | upload = model.upload |> Http.stateTo state }
-      , case state of
-        HttpView.Ready (Just (Ok res)) ->
-          [ Frame.clearApp
-          , always ( res |> HttpView.header |> .id |> Upload.edit |> Href.toString |> Navigation.load )
-          ]
-          |> Transition.batch
-        _ -> Transition.none
+    GetStateChanged state ->
+      ( { model | get = model.get |> Http.stateTo state }
+      , Transition.none
       )
+
+    PutRequest -> ( model, Http.request model.signature put PutStateChanged )
+    PutStateChanged state ->
+      ( { model
+        | put = model.put |> Http.stateTo state
+        , form = model.form |>
+          case state of
+            HttpView.Ready (Just (Ok _)) -> View.static
+            _ -> identity
+        }
+      , Transition.none
+      )
+
+edit : Model -> View.Form -> View.Form
+edit model form =
+  let
+    response =
+      case model.put |> Http.state of
+        HttpView.Ready (Just (Ok res)) -> Just res
+        _ ->
+          case model.get |> Http.state of
+            HttpView.Ready (Just (Ok res)) -> Just res
+            _ -> Nothing
+  in
+    case response |> Maybe.map HttpView.body of
+      Nothing -> form
+      Just body ->
+        form
+        |> View.update name_     body.info.name
+        |> View.update memo_     body.info.memo
+        |> View.update age_     (body.info.age |> String.fromInt)
+        |> View.update email_    body.info.email
+        |> View.update tel_      body.info.tel
+        |> View.update birthday_ body.detail.birthday
+        |> View.update start_at_ body.detail.start_at
+        |> View.update gender_   body.detail.gender
+        |> View.update quality_  body.detail.quality
+        |> View.update roles_    body.detail.roles
 
 contents : FrameModel a -> List (Html Msg)
 contents model =
   [ H.section [ A.class "edit" ]
-    [ model |> register
+    [ model |> info
     ]
   ]
 
 name_     = View.prop .name     (\v m -> { m | name     = v })
-text_     = View.prop .text     (\v m -> { m | text     = v })
 memo_     = View.prop .memo     (\v m -> { m | memo     = v })
 age_      = View.prop .age      (\v m -> { m | age      = v })
 email_    = View.prop .email    (\v m -> { m | email    = v })
@@ -221,13 +311,12 @@ gender_   = View.prop .gender   (\v m -> { m | gender   = v })
 quality_  = View.prop .quality  (\v m -> { m | quality  = v })
 roles_    = View.prop .roles    (\v m -> { m | roles    = v })
 
-register : FrameModel a -> Html Msg
-register model = L.lazy
-  (\m -> Html.register
-    { title = "register"
+info : FrameModel a -> Html Msg
+info model = L.lazy
+  (\m -> Html.info
+    { title = "info"
     , form = m.form |> View.compose
       ( name_,     [ m.form.name |> Field.blank "blank" ] )
-      ( text_,     [ m.form.text |> Field.empty "no-file" ] )
       ( memo_,     [] )
       ( age_,      [] )
       ( email_,    [] )
@@ -237,7 +326,8 @@ register model = L.lazy
       ( gender_,   [] )
       ( quality_,  [] )
       ( roles_,    [] )
-    , state = m.upload |> Http.state
+    , get = m.get |> Http.state
+    , put = m.put |> Http.state
     , options =
       { gender =
         [ ( "", "please-select" |> AppI18n.form )
@@ -255,11 +345,12 @@ register model = L.lazy
         ]
       }
     , msg =
-      { upload = UploadRequest
+      { put    = PutRequest
       , input  = FieldInput
       , check  = FieldCheck
       , change = FieldChange
-      , select = FileRequest
+      , edit   = Edit
+      , static = Static
       }
     , i18n =
       { title = I18n.title
@@ -270,7 +361,7 @@ register model = L.lazy
       }
     }
   )
-  (model |> Frame.app |> .register)
+  (model |> Frame.app |> .info)
 
 dialogs : FrameModel a -> List (Html Msg)
 dialogs model = []

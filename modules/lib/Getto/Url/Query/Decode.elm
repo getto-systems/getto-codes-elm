@@ -25,22 +25,22 @@ int default = Maybe.andThen String.toInt >> Maybe.withDefault default
 
 entryAt : List String -> ValueDecoder a -> Decoder a
 entryAt names decoder =
-  filter names "="
+  filter names ""
   >> List.head
   >> decoder
 
 listAt : List String -> ValueDecoder a -> Decoder (List a)
 listAt names decoder =
-  filter names "[]="
+  filter names "[]"
   >> List.map (Just >> decoder)
 
 boolAt : List String -> Decoder Bool
-boolAt names = List.any ((==) (names |> Encode.toName))
+boolAt names = List.any ((==) (names |> Encode.toName |> Url.percentEncode))
 
 filter : List String -> String -> List String -> List String
 filter names suffix =
   let
-    name = (names |> List.map Url.percentEncode |> Encode.toName) ++ suffix
+    name = ((names |> Encode.toName) ++ suffix |> Url.percentEncode) ++ "="
     length = name |> String.length
   in
     List.filterMap

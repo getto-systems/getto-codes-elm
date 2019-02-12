@@ -16,6 +16,7 @@ title path =
 
     Href.Internal "upload/list.html" -> "アップロード"
     Href.Internal "upload/new.html"  -> "アップロード登録"
+    Href.Internal "upload/edit.html" -> "アップロード情報"
 
     Href.Internal p -> p
     Href.Keycloak p -> "keycloak:" ++ p
@@ -36,7 +37,11 @@ form name =
 
     "select-file" -> "ファイルを選択"
 
-    "save" -> "保存"
+    "edit"   -> "編集"
+    "cancel" -> "閉じる"
+
+    "save"   -> "保存"
+    "saving" -> "保存中"
 
     "upload"    -> "アップロード"
     "uploading" -> "アップロード中"

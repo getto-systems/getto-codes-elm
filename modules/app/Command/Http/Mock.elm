@@ -105,6 +105,60 @@ mock =
       )
     --}
     )
+  , ( ( "GET", "upload/4" )
+    {--, Real --}
+    {--}, Mock 1000
+      ( [
+        ] |> Dict.fromList
+      )
+      ( Encode.object
+        [ ( "info"
+          , [ ( "name",  "John Doe" |> Encode.string )
+            , ( "memo",  "hello, world\nmulti line memo" |> Encode.string )
+            , ( "age",   40 |> Encode.int )
+            , ( "email", "john@example.com" |> Encode.string )
+            , ( "tel",   "090-xxxx-1234" |> Encode.string )
+            ] |> Encode.object
+          )
+        , ( "detail"
+          , [ ( "birthday", "1980-10-10" |> Encode.string )
+            , ( "start_at", "10:10" |> Encode.string )
+            , ( "gender",   "male" |> Encode.string )
+            , ( "quality",  "high" |> Encode.string )
+            , ( "roles",    ["upload"] |> Encode.list Encode.string )
+            ] |> Encode.object
+          )
+        ]
+      )
+    --}
+    )
+  , ( ( "PUT", "upload/4/info" )
+    {--, Real --}
+    {--}, Mock 1000
+      ( [
+        ] |> Dict.fromList
+      )
+      ( Encode.object
+        [ ( "info"
+          , [ ( "name",  "John Doe - UPDATED!!" |> Encode.string )
+            , ( "memo",  "hello, world\nmulti line memo" |> Encode.string )
+            , ( "age",   40 |> Encode.int )
+            , ( "email", "john@example.com" |> Encode.string )
+            , ( "tel",   "090-xxxx-1234" |> Encode.string )
+            ] |> Encode.object
+          )
+        , ( "detail"
+          , [ ( "birthday", "1980-10-10" |> Encode.string )
+            , ( "start_at", "10:10" |> Encode.string )
+            , ( "gender",   "male" |> Encode.string )
+            , ( "quality",  "high" |> Encode.string )
+            , ( "roles",    ["upload"] |> Encode.list Encode.string )
+            ] |> Encode.object
+          )
+        ]
+      )
+    --}
+    )
   ]
   |> List.map (\((method,path),res) -> ( ( method, Env.api.host ++ path ), res ))
   |> Dict.fromList

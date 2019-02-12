@@ -3,6 +3,8 @@ module GettoUpload.View.Html.Button exposing
   , connecting
   , select
   , save
+  , edit
+  , cancel
   )
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Html as Html
@@ -39,6 +41,22 @@ save : msg -> String -> Html msg
 save msg text =
   button
     [ "is-save" |> A.class
+    , msg |> E.onClick
+    ]
+    [ text |> H.text ]
+
+edit : msg -> String -> Html msg
+edit msg text =
+  button
+    [ "is-edit" |> A.class
+    , msg |> E.onClick
+    ]
+    [ text |> H.text ]
+
+cancel : msg -> String -> Html msg
+cancel msg text =
+  button
+    [ "is-cancel" |> A.class
     , msg |> E.onClick
     ]
     [ text |> H.text ]

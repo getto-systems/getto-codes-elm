@@ -32,13 +32,19 @@ import Html.Lazy as L
 
 type alias FrameModel a = Frame.Model Layout.Model { a | dashboard : Model }
 type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model = {}
+type alias Model =
+  { signature : String
+  }
 
 type Msg
   = HelloWorld
 
-init : Frame.InitModel -> ( Model, FrameTransition a )
-init model = ( {}, Transition.none )
+init : String -> Frame.InitModel -> ( Model, FrameTransition a )
+init signature model =
+  ( { signature = signature
+    }
+  , Transition.none
+  )
 
 query : Model -> QueryEncode.Value
 query model = QueryEncode.empty

@@ -46,7 +46,8 @@ import Html.Lazy as L
 type alias FrameModel a app = Frame.Model { a | side : Model } app
 type alias FrameTransition a app = Transition (FrameModel a app) Msg
 type alias Model =
-  { menu       : Menu
+  { signature  : String
+  , menu       : Menu
   , badge      : Http.Model () Badge
   , badgeNames : Dict String String
   , collapsed  : Set String
@@ -61,23 +62,24 @@ type Msg
   | MenuOpen  String
   | MenuClose String
 
-init : Frame.InitModel -> ( Model, FrameTransition a app )
-init model =
-  ( { menu       = menu
+init : String -> Frame.InitModel -> ( Model, FrameTransition a app )
+init signature model =
+  ( { signature  = signature
+    , menu       = menu
     , badgeNames = badgeNames
     , badge      = Http.init
     , collapsed  = Set.empty
     }
-  , Http.request badge BadgeStateChanged
+  , Http.request signature badge BadgeStateChanged
   )
 
-badge : Http.Request (FrameModel a app) () Badge
-badge = Api.request
-  (\(host,headers) ->
+badge : Http.Payload (FrameModel a app) () Badge
+badge = Http.payload "badge" <|
+  \model ->
     Http.get
-      { url     = host ++ "layout/menu/badge"
-      , headers = headers
-      , params  = \model -> [] |> QueryEncode.object
+      { url     = "layout/menu/badge" |> Api.url []
+      , headers = model |> Api.headers
+      , params  = QueryEncode.empty
       , response =
         { header = HeaderDecode.succeed ()
         , body = Decode.map Badge
@@ -93,7 +95,6 @@ badge = Api.request
         }
       , timeout = 10 * 1000
       }
-  )
 
 menu : Menu
 menu =
@@ -141,7 +142,7 @@ storeChanged value model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Http.track badge BadgeStateChanged
+  Http.track model.signature badge BadgeStateChanged
 
 update : Msg -> Model -> ( Model, FrameTransition a app )
 update msg model =
