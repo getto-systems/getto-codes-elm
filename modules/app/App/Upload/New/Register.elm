@@ -57,7 +57,7 @@ type alias Upload =
 
 type Msg
   = FieldInput (View.Prop String) String
-  | FieldCheck (View.Prop (Set String)) String Bool
+  | FieldCheck (View.Prop (Set String)) String
   | FieldChange
   | FileRequest (View.Prop (List File))
   | FileSelect (View.Prop (List File)) File
@@ -77,6 +77,7 @@ init model =
       , start_at = Field.init "register" "start_at" ""
       , gender   = Field.init "register" "gender"   ""
       , quality  = Field.init "register" "quality"  ""
+      , roles    = Field.init "register" "roles"    Set.empty
       }
     , upload = Http.init
     }
@@ -118,6 +119,7 @@ upload = Api.request
             , ( "start_at",  m.form.start_at |> Field.value |> Part.string )
             , ( "gender",    m.form.gender   |> Field.value |> Part.string )
             , ( "quality",   m.form.quality  |> Field.value |> Part.string )
+            , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Part.list Part.string )
             ]
       , response =
         { header = HeaderDecode.map Upload
@@ -145,6 +147,7 @@ store model = Encode.object
   , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
   , ( "gender",   model.form.gender   |> Field.value |> Encode.string )
   , ( "quality",  model.form.quality  |> Field.value |> Encode.string )
+  , ( "roles",    model.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
   ]
 
 storeChanged : Decode.Value -> Model -> Model
@@ -152,15 +155,16 @@ storeChanged value model =
   { model
   | form =
     model.form
-    |> View.input name_     ( value |> SafeDecode.at ["name"]     (SafeDecode.string "") )
-    |> View.input memo_     ( value |> SafeDecode.at ["memo"]     (SafeDecode.string "") )
-    |> View.input age_      ( value |> SafeDecode.at ["age"]      (SafeDecode.string "") )
-    |> View.input email_    ( value |> SafeDecode.at ["email"]    (SafeDecode.string "") )
-    |> View.input tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
-    |> View.input birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
-    |> View.input start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
-    |> View.input gender_   ( value |> SafeDecode.at ["gender"]   (SafeDecode.string "") )
-    |> View.input quality_  ( value |> SafeDecode.at ["quality"]  (SafeDecode.string "") )
+    |> View.update name_     ( value |> SafeDecode.at ["name"]     (SafeDecode.string "") )
+    |> View.update memo_     ( value |> SafeDecode.at ["memo"]     (SafeDecode.string "") )
+    |> View.update age_      ( value |> SafeDecode.at ["age"]      (SafeDecode.string "") )
+    |> View.update email_    ( value |> SafeDecode.at ["email"]    (SafeDecode.string "") )
+    |> View.update tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
+    |> View.update birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
+    |> View.update start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
+    |> View.update gender_   ( value |> SafeDecode.at ["gender"]   (SafeDecode.string "") )
+    |> View.update quality_  ( value |> SafeDecode.at ["quality"]  (SafeDecode.string "") )
+    |> View.update roles_    ( value |> SafeDecode.at ["roles"]    (SafeDecode.list (SafeDecode.string "")) |> Set.fromList )
   }
 
 subscriptions : Model -> Sub Msg
@@ -171,18 +175,18 @@ update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
     FieldInput prop value ->
-      ( { model | form = model.form |> View.input prop value }
+      ( { model | form = model.form |> View.update prop value }
       , Transition.none
       )
-    FieldCheck prop value checked ->
-      ( { model | form = model.form |> View.check prop value checked }
+    FieldCheck prop value ->
+      ( { model | form = model.form |> View.toggle prop value }
       , Transition.none
       )
     FieldChange -> ( model, Frame.storeApp )
 
     FileRequest prop -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
     FileSelect prop file ->
-      ( { model | form = model.form |> View.input prop [file] }
+      ( { model | form = model.form |> View.update prop [file] }
       , Transition.none
       )
 
@@ -200,14 +204,10 @@ update msg model =
 
 contents : FrameModel a -> List (Html Msg)
 contents model =
-  [ model |> list
-  ]
-
-list : FrameModel a -> Html Msg
-list model =
-  H.section [ A.class "edit" ]
+  [ H.section [ A.class "edit" ]
     [ model |> register
     ]
+  ]
 
 name_     = View.prop .name     (\v m -> { m | name     = v })
 text_     = View.prop .text     (\v m -> { m | text     = v })
@@ -219,6 +219,7 @@ birthday_ = View.prop .birthday (\v m -> { m | birthday = v })
 start_at_ = View.prop .start_at (\v m -> { m | start_at = v })
 gender_   = View.prop .gender   (\v m -> { m | gender   = v })
 quality_  = View.prop .quality  (\v m -> { m | quality  = v })
+roles_    = View.prop .roles    (\v m -> { m | roles    = v })
 
 register : FrameModel a -> Html Msg
 register model = L.lazy
@@ -235,6 +236,7 @@ register model = L.lazy
       ( start_at_, [] )
       ( gender_,   [] )
       ( quality_,  [] )
+      ( roles_,    [] )
     , state = m.upload |> Http.state
     , options =
       { gender =
@@ -246,6 +248,10 @@ register model = L.lazy
       , quality =
         [ ( "high", "high" |> I18n.quality )
         , ( "low",  "low"  |> I18n.quality )
+        ]
+      , roles =
+        [ ( "admin",  "admin"  |> AppI18n.role )
+        , ( "upload", "upload" |> AppI18n.role )
         ]
       }
     , msg =

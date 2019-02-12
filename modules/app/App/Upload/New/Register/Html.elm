@@ -26,11 +26,12 @@ type alias RegisterModel header body msg =
   , options :
     { gender  : List ( String, String )
     , quality : List ( String, String )
+    , roles   : List ( String, String )
     }
   , msg :
     { upload : msg
     , input  : View.Prop String -> String -> msg
-    , check  : View.Prop (Set String) -> String -> Bool -> msg
+    , check  : View.Prop (Set String) -> String -> msg
     , change : msg
     , select : View.Prop (List File) -> msg
     }
@@ -156,6 +157,17 @@ register model =
                 [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
                   [ [ field |> FieldHtml.radio model.options.quality [] (model.msg.input prop) model.msg.change
+                    ]
+                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  ]
+                ]
+              ]
+          , case model.form |> View.roles of
+            (field,prop) ->
+              [ H.tr ( field |> FieldHtml.isError )
+                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+                , H.td [] <| List.concat
+                  [ [ field |> FieldHtml.checkbox model.options.roles [] (model.msg.check prop) model.msg.change
                     ]
                   , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
                   ]

@@ -2,8 +2,8 @@ module GettoUpload.App.Upload.New.Register.View exposing
   ( Form
   , View
   , Prop
-  , input
-  , check
+  , update
+  , toggle
   , prop
   , compose
   , hasError
@@ -17,6 +17,7 @@ module GettoUpload.App.Upload.New.Register.View exposing
   , start_at
   , gender
   , quality
+  , roles
   )
 
 import Getto.Field as Field
@@ -36,7 +37,7 @@ type alias Form =
   , start_at : Field.Model String
   , gender   : Field.Model String
   , quality  : Field.Model String
-  --, roles    : Field.Model (Set String) -- checkbox
+  , roles    : Field.Model (Set String)
   }
 
 type View = View Bool
@@ -50,6 +51,7 @@ type View = View Bool
   , start_at : Entry String
   , gender   : Entry String
   , quality  : Entry String
+  , roles    : Entry (Set String)
   }
 
 type alias Entry a =
@@ -64,20 +66,20 @@ type alias Setter a = Field.Model a -> Form -> Form
 type alias Validate a = ( Prop a, List (Maybe String) )
 
 
-input : Prop a -> a -> Form -> Form
-input (Prop get set) value form =
+update : Prop a -> a -> Form -> Form
+update (Prop get set) value form =
   form |> set (form |> get |> Field.update value)
 
-check : Prop (Set comparable) -> comparable -> Bool -> Form -> Form
-check (Prop get set) value checked form =
-  form |> set (form |> get |> Field.check value checked)
+toggle : Prop (Set comparable) -> comparable -> Form -> Form
+toggle (Prop get set) value form =
+  form |> set (form |> get |> Field.toggle value)
 
 
 prop : Getter a -> Setter a -> Prop a
 prop = Prop
 
-compose : Validate String -> Validate (List File) -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Form -> View
-compose name_ text_ memo_ age_ email_ tel_ birthday_ start_at_ gender_ quality_ form =
+compose : Validate String -> Validate (List File) -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate (Set String) -> Form -> View
+compose name_ text_ memo_ age_ email_ tel_ birthday_ start_at_ gender_ quality_ roles_ form =
   View
     ( List.concat
       [ name_     |> Tuple.second
@@ -90,6 +92,7 @@ compose name_ text_ memo_ age_ email_ tel_ birthday_ start_at_ gender_ quality_ 
       , start_at_ |> Tuple.second
       , gender_   |> Tuple.second
       , quality_  |> Tuple.second
+      , roles_    |> Tuple.second
       ]
       |> List.any ((/=) Nothing)
     )
@@ -103,6 +106,7 @@ compose name_ text_ memo_ age_ email_ tel_ birthday_ start_at_ gender_ quality_ 
     , start_at = form |> entry start_at_
     , gender   = form |> entry gender_
     , quality  = form |> entry quality_
+    , roles    = form |> entry roles_
     }
 
 entry : Validate a -> Form -> Entry a
@@ -126,6 +130,7 @@ birthday (View _ form) = form.birthday |> view
 start_at (View _ form) = form.start_at |> view
 gender   (View _ form) = form.gender   |> view
 quality  (View _ form) = form.quality  |> view
+roles    (View _ form) = form.roles    |> view
 
 view : Entry a -> ( FieldView.Model a, Prop a )
 view m = ( m.field, m.prop )

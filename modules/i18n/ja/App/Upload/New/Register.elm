@@ -26,6 +26,7 @@ field name =
     "start_at" -> "開始時間"
     "gender"   -> "性別"
     "quality"  -> "品質"
+    "roles"    -> "権限"
 
     _ -> name
 
