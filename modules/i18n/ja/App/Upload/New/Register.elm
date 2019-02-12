@@ -2,6 +2,7 @@ module GettoUpload.I18n.App.Upload.New.Register exposing
   ( title
   , field
   , error
+  , gender
   )
 
 title : String -> String
@@ -22,6 +23,7 @@ field name =
     "tel"      -> "電話番号"
     "birthday" -> "誕生日"
     "start_at" -> "開始時間"
+    "gender"   -> "性別"
 
     _ -> name
 
@@ -30,5 +32,14 @@ error name =
   case name of
     "blank"   -> "入力してください"
     "no-file" -> "ファイルを選択してください"
+
+    _ -> name
+
+gender : String -> String
+gender name =
+  case name of
+    "male"   -> "男性"
+    "female" -> "女性"
+    "other"  -> "その他"
 
     _ -> name
