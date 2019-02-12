@@ -1,5 +1,6 @@
 module GettoUpload.Layout.Api exposing
-  ( request
+  ( headers
+  , url
   )
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Credential as Credential
@@ -7,16 +8,20 @@ import GettoUpload.Command.Auth as Auth
 import GettoUpload.Command.Http as Http
 import GettoUpload.Env.App as Env
 
-type alias Info layout app =
-  { url : String
-  , headers : Frame.Model layout app -> List Http.Header
-  }
+headers : Frame.Model layout app -> List Http.Header
+headers =
+  Frame.auth >> Auth.credential >> Credential.token >>
+    \token ->
+      [ ( "Authorization", token )
+      ]
 
-request : (( String, (Frame.Model layout app -> List Http.Header)) -> Http.Request (Frame.Model layout app) header body) -> Http.Request (Frame.Model layout app) header body
-request req =
-  ( Env.api.host
-  , Frame.auth >> Auth.credential >> Credential.token >>
-      \token ->
-        [ ( "Authorization", token )
-        ]
-  ) |> req
+url : List ( String, String ) -> String -> String
+url pathInfo path =
+  Env.api.host ++
+    ( pathInfo
+    |> List.foldl
+      (\(target,replace) ->
+        String.replace (":" ++ target) replace
+      )
+      path
+    )

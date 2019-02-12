@@ -11,8 +11,15 @@ suite =
     [ describe "decode"
       [ test "should decode query" <|
         \_ ->
-          "q[name]=John&q[age]=30&q[en]&q[roles][]=admin&q[roles][]=system&q[nums][]=1&q[nums][]=value&s=name.desc"
-          |> Decode.split
+          [ "q%5Bname%5D=John"
+          , "q%5Bage%5D=30"
+          , "q%5Ben%5D"
+          , "q%5Broles%5D%5B%5D=admin"
+          , "q%5Broles%5D%5B%5D=system"
+          , "q%5Bnums%5D%5B%5D=1"
+          , "q%5Bnums%5D%5B%5D=value"
+          , "s=name.desc"
+          ]
           |>
             (\query ->
               { query =
@@ -76,32 +83,38 @@ suite =
 
       , test "should decode boolean true" <|
         \_ ->
-          "value"
-          |> Decode.split |> (Decode.boolAt ["value"])
+          ["value"]
+          |> (Decode.boolAt ["value"])
           |> Expect.equal True
 
       , test "should decode boolean false" <|
         \_ ->
-          ""
-          |> Decode.split |> (Decode.boolAt ["value"])
+          [""]
+          |> (Decode.boolAt ["value"])
           |> Expect.equal False
 
       , test "should decode special chars" <|
         \_ ->
-          "%3F%5B%20%5D%3D%26=%5B%20%5D%3D%26%3F"
-          |> Decode.split |> (Decode.entryAt ["?[ ]=&"] (Decode.string ""))
+          ["%3F%5B%20%5D%3D%26=%5B%20%5D%3D%26%3F"]
+          |> (Decode.entryAt ["?[ ]=&"] (Decode.string ""))
           |> Expect.equal "[ ]=&?"
 
       , test "should decode first entry with several entries" <|
         \_ ->
-          "entry=value&entry=value2&entry=value3"
-          |> Decode.split |> (Decode.entryAt ["entry"] (Decode.string ""))
+          [ "entry=value"
+          , "entry=value2"
+          , "entry=value3"
+          ]
+          |> (Decode.entryAt ["entry"] (Decode.string ""))
           |> Expect.equal "value"
 
       , test "should decode first entry with several entries that decode successful or failed" <|
         \_ ->
-          "number=value&number=2&number=3"
-          |> Decode.split |> (Decode.entryAt ["number"] (Decode.int 0))
+          [ "number=value"
+          , "number=2"
+          , "number=3"
+          ]
+          |> (Decode.entryAt ["number"] (Decode.int 0))
           |> Expect.equal 0
       ]
     ]

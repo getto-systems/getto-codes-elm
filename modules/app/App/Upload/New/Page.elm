@@ -58,7 +58,7 @@ setup =
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
   Transition.compose Model
-    (model |> Register.init |> Transition.map Register)
+    (model |> Register.init "register" |> Transition.map Register)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

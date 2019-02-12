@@ -1,5 +1,5 @@
-module GettoUpload.App.Index.Page exposing ( main )
-import GettoUpload.App.Index.Dashboard as Dashboard
+module GettoUpload.App.Upload.Edit.Page exposing ( main )
+import GettoUpload.App.Upload.Edit.Info as Info
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 
@@ -27,30 +27,30 @@ main = Browser.application
 type alias FrameModel = Frame.Model Layout.Model Model
 type alias FrameTransition = Transition FrameModel Msg
 type alias Model =
-  { dashboard : Dashboard.Model
+  { info : Info.Model
   }
 
 type alias FrameMsg = Frame.Msg Layout.Msg Msg
 type Msg
-  = Dashboard Dashboard.Msg
+  = Info Info.Msg
 
 setup : Frame.SetupApp Layout.Model Model Msg
 setup =
   { search =
     ( \model -> QueryEncode.object
-      [ ( "dashboard", model.dashboard |> Dashboard.query )
+      [ ( "info", model.info |> Info.query )
       ]
     , \value model ->
       Model
-        ( model.dashboard |> Dashboard.queryChanged ["dashboard"] value )
+        ( model.info |> Info.queryChanged ["info"] value )
     )
   , store =
     ( \model -> Encode.object
-      [ ( "dashboard", model.dashboard |> Dashboard.store )
+      [ ( "info", model.info |> Info.store )
       ]
     , \value model ->
       Model
-        ( model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]) )
+        ( model.info |> Info.storeChanged (value |> SafeDecode.valueAt ["info"]) )
     )
   , init = init
   }
@@ -58,21 +58,21 @@ setup =
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
   Transition.compose Model
-    (model |> Dashboard.init "dashboard" |> Transition.map Dashboard)
+    (model |> Info.init "info" |> Transition.map Info)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  [ model.dashboard |> Dashboard.subscriptions |> Sub.map Dashboard
+  [ model.info |> Info.subscriptions |> Sub.map Info
   ] |> Sub.batch
 
-dashboard_ = Transition.prop .dashboard (\v m -> { m | dashboard = v })
+info_ = Transition.prop .info (\v m -> { m | info = v })
 
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
-    Dashboard msg ->
-      Transition.update dashboard_
-        (Dashboard.update msg >> Transition.map Dashboard)
+    Info msg ->
+      Transition.update info_
+        (Info.update msg >> Transition.map Info)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =
@@ -91,7 +91,7 @@ content model =
         , model |> Layout.breadcrumb
         ]
       ] ++
-      ( model |> Dashboard.contents |> Frame.mapApp Dashboard ) ++
+      ( model |> Info.contents |> Frame.mapApp Info ) ++
       [ model |> Layout.articleFooter ]
     , H.nav []
       [ model |> Layout.navHeader
@@ -100,4 +100,4 @@ content model =
       , model |> Layout.navFooter
       ]
     ] ++
-    ( model |> Dashboard.dialogs |> Frame.mapApp Dashboard )
+    ( model |> Info.dialogs |> Frame.mapApp Info )

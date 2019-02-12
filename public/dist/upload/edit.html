@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+
+<title>GETTO Upload</title>
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+<link rel="stylesheet" href="https://css.getto.systems/0.10.0/getto.css">
+
+</head>
+<body>
+
+<div id="error" class="display-none">
+  <div class="LoginLayout">
+    <article>
+      <header>
+        <p>
+        <small id="company">GETTO</small><br>
+        <span id="title">Upload</span><br>
+        <small id="sub-title">upload files</small>
+        </p>
+      </header>
+      <section>
+        <form method="get" action="/">
+          <footer>
+            <p><em class="badge is-danger"><i class="fa fa-exclamation-triangle"></i> システムエラーが発生しました</em></p>
+          </footer>
+        </form>
+      </section>
+    </article>
+    <footer>
+      <span><i class="far fa-copyright"></i>GETTO systems</span>
+      <span id="project">getto/upload</span>
+      <span id="version">version : DEV</span>
+    </footer>
+  </div>
+</div>
+
+<script defer src="http://getto.workstation:10380/auth/js/keycloak.js" id="keycloak"></script>
+<script defer src="/dist/_config/upload/edit.js"></script>
+<script defer src="/dist/_app/getto_upload/app/upload/edit/page.elm.js"></script>
+<script defer src="/dist/_vendor/getto-detect.js"></script>
+<script defer src="/dist/_vendor/fixed_midashi.js"></script>
+<script defer src="/dist/_js/page.js"></script>
+<script defer src="/dist/_js/development.js"></script>
+
+</body>
+</html>

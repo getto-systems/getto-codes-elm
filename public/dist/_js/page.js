@@ -163,13 +163,14 @@ try {
   var Dom = (function(){
     return {
       fill: function(values){
-        values.forEach(function(obj){
-          var element = document.getElementById(obj.id);
-          if (element) {
-            // TODO radio, checkbox, select
-            element.value = obj.value;
-          }
-        });
+        setTimeout(function(){
+          values.forEach(function(obj){
+            var element = document.getElementById(obj.id);
+            if (element) {
+              element.value = obj.value;
+            }
+          });
+        },100);
       },
     };
   })();
