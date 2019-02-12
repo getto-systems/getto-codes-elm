@@ -13,6 +13,7 @@ import Getto.Field as Field
 import Getto.Field.View as FieldView
 
 import File exposing ( File )
+import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
@@ -23,11 +24,13 @@ type alias RegisterModel header body msg =
   , form : View.View
   , state  : HttpView.State header body
   , options :
-    { gender : List ( String, String )
+    { gender  : List ( String, String )
+    , quality : List ( String, String )
     }
   , msg :
     { upload : msg
     , input  : View.Prop String -> String -> msg
+    , check  : View.Prop (Set String) -> String -> Bool -> msg
     , change : msg
     , select : View.Prop (List File) -> msg
     }
@@ -142,6 +145,17 @@ register model =
                 [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
                   [ [ field |> FieldHtml.select model.options.gender [] (model.msg.input prop) model.msg.change
+                    ]
+                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  ]
+                ]
+              ]
+          , case model.form |> View.quality of
+            (field,prop) ->
+              [ H.tr ( field |> FieldHtml.isError )
+                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+                , H.td [] <| List.concat
+                  [ [ field |> FieldHtml.radio model.options.quality [] (model.msg.input prop) model.msg.change
                     ]
                   , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
                   ]

@@ -13,6 +13,8 @@ module GettoUpload.View.Html.Field exposing
   , time
   , textarea
   , select
+  , radio
+  , radioInline
   , files
   , errors
   , onChange
@@ -81,14 +83,7 @@ textareaInput rows class attr inputMsg changeMsg field =
     )
     []
 
-classAttr : List String -> List (H.Attribute msg)
-classAttr class =
-  if class |> List.isEmpty
-    then []
-    else [ class |> String.join " " |> A.class ]
-
-
-select : List ( String, String ) -> List ( H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model String -> Html msg
+select : List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model String -> Html msg
 select options attr inputMsg changeMsg field =
   H.select
     ( [ field |> FieldView.id |> A.id
@@ -102,6 +97,41 @@ select options attr inputMsg changeMsg field =
         H.option [ value |> A.value ] [ label |> H.text ]
       )
     )
+
+radio       = radioList []
+radioInline = radioList ["is-inline"]
+
+radioList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model String -> Html msg
+radioList class options attr checkMsg changeMsg field =
+  H.ul
+    ( [ field |> FieldView.id |> A.id
+      ]
+      ++ (class |> classAttr)
+      ++ attr
+    )
+    ( options |> List.map
+      (\(value,label) ->
+        H.li []
+          [ H.label []
+            [ H.input
+              [ "radio" |> A.type_
+              , checkMsg  |> E.onInput
+              , changeMsg |> onChange
+              , value     |> A.value
+              , value == (field |> FieldView.value) |> A.checked
+              ] []
+            , " " |> H.text
+            , label |> H.text
+            ]
+          ]
+      )
+    )
+
+classAttr : List String -> List (H.Attribute msg)
+classAttr class =
+  if class |> List.isEmpty
+    then []
+    else [ class |> String.join " " |> A.class ]
 
 
 files : List File -> Html msg
