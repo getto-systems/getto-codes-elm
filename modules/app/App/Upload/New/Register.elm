@@ -73,6 +73,7 @@ init model =
       , tel      = Field.init "register" "tel"      ""
       , birthday = Field.init "register" "birthday" ""
       , start_at = Field.init "register" "start_at" ""
+      , gender   = Field.init "register" "gender"   ""
       }
     , upload = Http.init
     }
@@ -89,6 +90,7 @@ fill = Frame.app >> .register >>
     , m.form.tel      |> Dom.string
     , m.form.birthday |> Dom.string
     , m.form.start_at |> Dom.string
+    , m.form.gender   |> Dom.string
     ]
   )
 
@@ -111,6 +113,7 @@ upload = Api.request
             , ( "tel",       m.form.tel      |> Field.value |> Part.string )
             , ( "birthday",  m.form.birthday |> Field.value |> Part.string )
             , ( "start_at",  m.form.start_at |> Field.value |> Part.string )
+            , ( "gender",    m.form.gender   |> Field.value |> Part.string )
             ]
       , response =
         { header = HeaderDecode.map Upload
@@ -136,6 +139,7 @@ store model = Encode.object
   , ( "tel",      model.form.tel      |> Field.value |> Encode.string )
   , ( "birthday", model.form.birthday |> Field.value |> Encode.string )
   , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
+  , ( "gender",   model.form.gender   |> Field.value |> Encode.string )
   ]
 
 storeChanged : Decode.Value -> Model -> Model
@@ -150,6 +154,7 @@ storeChanged value model =
     |> View.change tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
     |> View.change birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
     |> View.change start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
+    |> View.change gender_   ( value |> SafeDecode.at ["gender"]   (SafeDecode.string "") )
   }
 
 subscriptions : Model -> Sub Msg
@@ -202,6 +207,7 @@ email_    = View.prop .email    (\v m -> { m | email    = v })
 tel_      = View.prop .tel      (\v m -> { m | tel      = v })
 birthday_ = View.prop .birthday (\v m -> { m | birthday = v })
 start_at_ = View.prop .start_at (\v m -> { m | start_at = v })
+gender_   = View.prop .gender   (\v m -> { m | gender   = v })
 
 register : FrameModel a -> Html Msg
 register model = L.lazy
@@ -216,7 +222,16 @@ register model = L.lazy
       ( tel_,      [] )
       ( birthday_, [] )
       ( start_at_, [] )
+      ( gender_,   [] )
     , state = m.upload |> Http.state
+    , options =
+      { gender =
+        [ ( "", "please-select" |> AppI18n.form )
+        , ( "male",   "male"   |> I18n.gender )
+        , ( "female", "female" |> I18n.gender )
+        , ( "other",  "other"  |> I18n.gender )
+        ]
+      }
     , msg =
       { upload = UploadRequest
       , input  = FieldInput

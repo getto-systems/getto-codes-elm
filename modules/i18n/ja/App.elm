@@ -30,10 +30,11 @@ role name =
 form : String -> String
 form name =
   case name of
+    "please-select" -> "選択してください"
+
     "has-error" -> "保存できない項目があります"
 
-    "select-file"    -> "ファイルを選択して下さい"
-    "re-select-file" -> "別なファイルを選択"
+    "select-file" -> "ファイルを選択"
 
     "save" -> "保存"
 

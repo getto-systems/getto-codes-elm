@@ -12,6 +12,7 @@ module GettoUpload.View.Html.Field exposing
   , date
   , time
   , textarea
+  , select
   , files
   , errors
   , onChange
@@ -85,6 +86,22 @@ classAttr class =
   if class |> List.isEmpty
     then []
     else [ class |> String.join " " |> A.class ]
+
+
+select : List ( String, String ) -> List ( H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model String -> Html msg
+select options attr inputMsg changeMsg field =
+  H.select
+    ( [ field |> FieldView.id |> A.id
+      , inputMsg  |> E.onInput
+      , changeMsg |> onChange
+      ]
+      ++ attr
+    )
+    ( options |> List.map
+      (\(value,label) ->
+        H.option [ value |> A.value ] [ label |> H.text ]
+      )
+    )
 
 
 files : List File -> Html msg

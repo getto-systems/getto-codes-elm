@@ -22,6 +22,9 @@ type alias RegisterModel header body msg =
   { title  : String
   , form : View.View
   , state  : HttpView.State header body
+  , options :
+    { gender : List ( String, String )
+    }
   , msg :
     { upload : msg
     , input  : View.Prop String -> String -> msg
@@ -128,6 +131,17 @@ register model =
                 [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
                   [ [ field |> FieldHtml.time [] (model.msg.input prop) model.msg.change
+                    ]
+                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  ]
+                ]
+              ]
+          , case model.form |> View.gender of
+            (field,prop) ->
+              [ H.tr ( field |> FieldHtml.isError )
+                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+                , H.td [] <| List.concat
+                  [ [ field |> FieldHtml.select model.options.gender [] (model.msg.input prop) model.msg.change
                     ]
                   , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
                   ]

@@ -14,6 +14,7 @@ module GettoUpload.App.Upload.New.Register.View exposing
   , tel
   , birthday
   , start_at
+  , gender
   )
 
 import Getto.Field as Field
@@ -30,7 +31,7 @@ type alias Form =
   , tel      : Field.Model String
   , birthday : Field.Model String
   , start_at : Field.Model String
-  --, state    : Field.Model String -- select
+  , gender   : Field.Model String
   --, quality  : Field.Model String -- radio
   --, roles    : Field.Model (List String) -- checkbox
   }
@@ -44,6 +45,7 @@ type View = View Bool
   , tel      : Entry String
   , birthday : Entry String
   , start_at : Entry String
+  , gender   : Entry String
   }
 
 type alias Entry a =
@@ -66,8 +68,8 @@ change (Prop get set) value form =
 prop : Get a -> Set a -> Prop a
 prop = Prop
 
-compose : Validate String -> Validate (List File) -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Form -> View
-compose name_ text_ memo_ age_ email_ tel_ birthday_ start_at_ form =
+compose : Validate String -> Validate (List File) -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Form -> View
+compose name_ text_ memo_ age_ email_ tel_ birthday_ start_at_ gender_ form =
   View
     ( List.concat
       [ name_     |> Tuple.second
@@ -78,6 +80,7 @@ compose name_ text_ memo_ age_ email_ tel_ birthday_ start_at_ form =
       , tel_      |> Tuple.second
       , birthday_ |> Tuple.second
       , start_at_ |> Tuple.second
+      , gender_   |> Tuple.second
       ]
       |> List.any ((/=) Nothing)
     )
@@ -89,6 +92,7 @@ compose name_ text_ memo_ age_ email_ tel_ birthday_ start_at_ form =
     , tel      = form |> entry tel_
     , birthday = form |> entry birthday_
     , start_at = form |> entry start_at_
+    , gender   = form |> entry gender_
     }
 
 entry : Validate a -> Form -> Entry a
@@ -110,6 +114,7 @@ email    (View _ form) = form.email    |> view
 tel      (View _ form) = form.tel      |> view
 birthday (View _ form) = form.birthday |> view
 start_at (View _ form) = form.start_at |> view
+gender   (View _ form) = form.gender   |> view
 
 view : Entry a -> ( FieldView.Model a, Prop a )
 view m = ( m.field, m.prop )
