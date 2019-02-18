@@ -22,8 +22,8 @@ import Html.Events as E
 type alias InfoModel msg =
   { title  : String
   , form : View.View
-  , get  : HttpView.State View.ResponseHeader View.ResponseBody
-  , put  : HttpView.State View.ResponseHeader View.ResponseBody
+  , get  : Http
+  , put  : Http
   , options :
     { gender  : List ( String, String )
     , quality : List ( String, String )
@@ -46,14 +46,16 @@ type alias InfoModel msg =
     }
   }
 
+type alias Http = HttpView.Model View.ResponseHeader View.ResponseBody
+
 info : InfoModel msg -> Html msg
 info model =
-  case model.get of
-    HttpView.Ready (Just (Ok get)) ->
+  case model.get |> HttpView.body of
+    Just get ->
       let
-        res = HttpView.body <|
-          case model.put of
-            HttpView.Ready (Just (Ok put)) -> put
+        res =
+          case model.put |> HttpView.body of
+            Just put -> put
             _ -> get
       in
         H.section []
@@ -264,7 +266,7 @@ info model =
                   [ "edit" |> model.i18n.form |> ButtonHtml.edit model.msg.edit
                   ]
                 (View.Edit,hasError) ->
-                  case model.put of
+                  case model.put |> HttpView.state of
                     HttpView.Connecting progress ->
                       [ "saving" |> model.i18n.form |> ButtonHtml.connecting
                       , progress |> HttpHtml.progress
@@ -278,15 +280,17 @@ info model =
                       ]
             ]
           ]
-    HttpView.Ready (Just (Err error)) ->
-      H.section [ "loading" |> A.class ]
-        [ H.section []
-          [ error |> model.i18n.http |> Html.badge ["is-danger"]
-          ]
-        ]
-    _ ->
-      H.section [ "loading" |> A.class ]
-        [ H.section []
-          [ Icon.fas "spinner" |> Html.icon ["fa-pulse"]
-          ]
-        ]
+    Nothing ->
+      case model.get |> HttpView.state of
+        HttpView.Ready (Just error) ->
+          H.section [ "loading" |> A.class ]
+            [ H.section []
+              [ error |> model.i18n.http |> Html.badge ["is-danger"]
+              ]
+            ]
+        _ ->
+          H.section [ "loading" |> A.class ]
+            [ H.section []
+              [ Icon.fas "spinner" |> Html.icon ["fa-pulse"]
+              ]
+            ]

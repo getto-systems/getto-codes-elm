@@ -58,16 +58,16 @@ type alias MenuI18n =
 
 
 type alias BadgeStateModel header body =
-  { state : HttpView.State header body
-  , i18n  : HttpView.Error -> String
+  { http : HttpView.Model header body
+  , i18n : HttpView.Error -> String
   }
 
 badgeState : BadgeStateModel header body -> BadgeState
 badgeState model =
-  case model.state of
-    HttpView.Connecting _ -> Connecting
-    HttpView.Ready (Just (Err error)) -> error |> model.i18n |> Failure
-    HttpView.Ready _      -> NoProbrem
+  case model.http |> HttpView.state of
+    HttpView.Connecting _  -> Connecting
+    HttpView.Ready Nothing -> NoProbrem
+    HttpView.Ready (Just error) -> error |> model.i18n |> Failure
 
 
 type alias BreadcrumbModel =

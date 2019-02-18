@@ -49,7 +49,7 @@ type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
   { signature : String
   , form : View.Form
-  , upload : Http.Model View.ResponseHeader View.ResponseBody
+  , upload : HttpView.Model View.ResponseHeader View.ResponseBody
   }
 
 type Msg
@@ -59,7 +59,7 @@ type Msg
   | FileRequest (View.Prop (List File))
   | FileSelect (View.Prop (List File)) File
   | UploadRequest
-  | UploadStateChanged (HttpView.State View.ResponseHeader View.ResponseBody)
+  | UploadStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
 
 init : String -> Frame.InitModel -> ( Model, FrameTransition a )
 init signature model =
@@ -77,7 +77,7 @@ init signature model =
       , quality  = Field.init signature "quality"  ""
       , roles    = Field.init signature "roles"    Set.empty
       }
-    , upload = Http.init
+    , upload = HttpView.empty
     }
   , fill
   )
@@ -187,10 +187,10 @@ update msg model =
       )
 
     UploadRequest -> ( model, Http.request model.signature upload UploadStateChanged )
-    UploadStateChanged state ->
-      ( { model | upload = model.upload |> Http.stateTo state }
-      , case state of
-        HttpView.Ready (Just (Ok res)) ->
+    UploadStateChanged mig ->
+      ( { model | upload = model.upload |> HttpView.update mig }
+      , case mig of
+        HttpView.Success res ->
           [ Frame.clearApp
           , always ( res |> HttpView.header |> .id |> Upload.edit |> Href.toString |> Navigation.load )
           ]
@@ -233,7 +233,7 @@ register model = L.lazy
       ( gender_,   [] )
       ( quality_,  [] )
       ( roles_,    [] )
-    , state = m.upload |> Http.state
+    , http = m.upload
     , options =
       { gender =
         [ ( "", "please-select" |> AppI18n.form )

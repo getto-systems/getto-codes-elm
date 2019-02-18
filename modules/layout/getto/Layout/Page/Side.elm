@@ -48,13 +48,13 @@ type alias FrameTransition a app = Transition (FrameModel a app) Msg
 type alias Model =
   { signature  : String
   , menu       : Menu
-  , badge      : Http.Model View.ResponseHeader View.ResponseBody
+  , badge      : HttpView.Model View.ResponseHeader View.ResponseBody
   , badgeNames : Dict String String
   , collapsed  : Set String
   }
 
 type Msg
-  = BadgeStateChanged (HttpView.State View.ResponseHeader View.ResponseBody)
+  = BadgeStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
   | MenuOpen  String
   | MenuClose String
 
@@ -63,7 +63,7 @@ init signature model =
   ( { signature  = signature
     , menu       = menu
     , badgeNames = badgeNames
-    , badge      = Http.init
+    , badge      = HttpView.empty
     , collapsed  = Set.empty
     }
   , Http.request signature badge BadgeStateChanged
@@ -143,7 +143,7 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a app )
 update msg model =
   case msg of
-    BadgeStateChanged state -> ( { model | badge = model.badge |> Http.stateTo state }, Transition.none )
+    BadgeStateChanged mig -> ( { model | badge = model.badge |> HttpView.update mig }, Transition.none )
 
     MenuOpen  name -> ( { model | collapsed = model.collapsed |> Set.remove name }, Frame.storeLayout )
     MenuClose name -> ( { model | collapsed = model.collapsed |> Set.insert name }, Frame.storeLayout )
@@ -204,8 +204,8 @@ navAddress model = L.lazy2
       , state = False
       }
     , badge = View.badgeState
-      { state = side |> .badge |> Http.state
-      , i18n  = HttpI18n.error
+      { http = side |> .badge
+      , i18n = HttpI18n.error
       }
     , roles = auth |> Auth.credential |> Credential.roles
     , href =
@@ -240,7 +240,7 @@ nav model = L.lazy3
           |> Maybe.andThen
             (\name ->
               side.badge
-              |> Http.responseBody
+              |> HttpView.body
               |> Maybe.andThen (.badge >> Dict.get name)
             )
       , i18n = menuI18n
