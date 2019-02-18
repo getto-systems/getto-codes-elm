@@ -137,6 +137,11 @@ breadcrumb data =
 nav : { open : String -> msg, close : String -> msg, menu : List View.Menu } -> Html msg
 nav model =
   let
+    class item =
+      if item.collapsed
+        then [ "is-collapsed" |> A.class ]
+        else []
+
     onClick item =
       if item.collapsed
         then item.name |> model.open  |> E.onClick
@@ -160,7 +165,7 @@ nav model =
     model.menu
     |> List.map
       (\header ->
-        H.ul [] <|
+        H.ul ( header |> class ) <|
           [ H.li []
             [ H.b []
               [ H.a [ "#" |> A.href, header |> onClick ]
