@@ -57,8 +57,8 @@ setup =
 init : Frame.InitModel -> ( Model, FrameTransition app )
 init model =
   Transition.compose2 Model
-    (model |> Article.init "article" |> Transition.map Article)
-    (model |> Side.init    "side"    |> Transition.map Side)
+    (model |> Article.init "layout-article" |> Transition.map Article)
+    (model |> Side.init    "layout-side"    |> Transition.map Side)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
