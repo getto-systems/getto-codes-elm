@@ -22,7 +22,7 @@ type alias RequestData header body msg =
   , response : Response header body
   , timeout  : Maybe Float
   , tracker  : Maybe String
-  , msg      : HttpView.State header body -> msg
+  , msg      : HttpView.Migration header body -> msg
   }
 
 type alias Response header body =
@@ -40,37 +40,41 @@ request data =
     Just (Mock delay rawHeader rawBody) ->
       [ delay * 1 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 1, size = 4 } |> Just |> HttpView.Connecting)
+        |> Task.map (\_ -> HttpView.Sending { current = 1, size = 4 } |> HttpView.Transfer)
       , delay * 2 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 2, size = 4 } |> Just |> HttpView.Connecting)
+        |> Task.map (\_ -> HttpView.Sending { current = 2, size = 4 } |> HttpView.Transfer)
       , delay * 3 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 3, size = 4 } |> Just |> HttpView.Connecting)
+        |> Task.map (\_ -> HttpView.Sending { current = 3, size = 4 } |> HttpView.Transfer)
       , delay * 4 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 4, size = 4 } |> Just |> HttpView.Connecting)
+        |> Task.map (\_ -> HttpView.Proccessing |> HttpView.Transfer)
       , delay * 5 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Receiving (Just { current = 1, size = 4 }) |> Just |> HttpView.Connecting)
+        |> Task.map (\_ -> HttpView.Receiving (Just { current = 1, size = 4 }) |> HttpView.Transfer)
       , delay * 6 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Receiving (Just { current = 2, size = 4 }) |> Just |> HttpView.Connecting)
+        |> Task.map (\_ -> HttpView.Receiving (Just { current = 2, size = 4 }) |> HttpView.Transfer)
       , delay * 7 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Receiving (Just { current = 3, size = 4 }) |> Just |> HttpView.Connecting)
+        |> Task.map (\_ -> HttpView.Receiving (Just { current = 3, size = 4 }) |> HttpView.Transfer)
 
       , delay
         |> Process.sleep
         |> Task.map
           (\_ ->
             case rawHeader |> HeaderDecode.decode data.response.header of
-              Err headerError -> headerError |> HeaderDecode.errorToString |> HttpView.BadHeader |> Err |> Just |> HttpView.Ready
+              Err headerError ->
+                headerError |> HeaderDecode.errorToString |> HttpView.BadHeader |> HttpView.Failure
+
               Ok header ->
                 case rawBody |> Decode.decodeValue data.response.body of
-                  Err bodyError -> bodyError |> Decode.errorToString >> HttpView.BadBody |> Err |> Just |> HttpView.Ready
+                  Err bodyError ->
+                    bodyError |> Decode.errorToString >> HttpView.BadBody |> HttpView.Failure
 
-                  Ok body -> body |> HttpView.response header |> Ok |> Just |> HttpView.Ready
+                  Ok body ->
+                    body |> HttpView.response header |> HttpView.Success
           )
 
       ] |> List.map (Task.perform data.msg) |> Cmd.batch

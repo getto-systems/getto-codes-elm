@@ -17,8 +17,8 @@ progress data =
       H.mark [ "progress is-" ++ (percentage |> String.fromInt) |> A.class ]
         [ Icon.fas ("arrow-circle-" ++ (if direction then "right" else "left")) |> Html.icon [] ]
 
-error : (HttpView.Error -> String) -> Maybe (Result HttpView.Error response) -> Html msg
+error : (HttpView.Error -> String) -> Maybe HttpView.Error -> Html msg
 error i18n res =
   case res of
-    Just (Err err) -> err |> i18n |> Html.badge [ "is-small", "is-danger" ]
-    _ -> "" |> H.text
+    Nothing  -> ""  |> H.text
+    Just err -> err |> i18n |> Html.badge [ "is-small", "is-danger" ]

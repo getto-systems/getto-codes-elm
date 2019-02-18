@@ -50,8 +50,8 @@ type alias Model =
   { signature : String
   , id   : Int
   , form : View.Form
-  , get : Http.Model View.ResponseHeader View.ResponseBody
-  , put : Http.Model View.ResponseHeader View.ResponseBody
+  , get : HttpView.Model View.ResponseHeader View.ResponseBody
+  , put : HttpView.Model View.ResponseHeader View.ResponseBody
   }
 
 type Msg
@@ -62,9 +62,9 @@ type Msg
   | FieldChange
   | FileRequest (View.Prop (List File))
   | FileSelect (View.Prop (List File)) File
-  | GetStateChanged (HttpView.State View.ResponseHeader View.ResponseBody)
+  | GetStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
   | PutRequest
-  | PutStateChanged (HttpView.State View.ResponseHeader View.ResponseBody)
+  | PutStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
 
 init : String -> Frame.InitModel -> ( Model, FrameTransition a )
 init signature model =
@@ -83,8 +83,8 @@ init signature model =
       , quality  = Field.init signature "quality"  ""
       , roles    = Field.init signature "roles"    Set.empty
       }
-    , get = Http.init
-    , put = Http.init
+    , get = HttpView.empty
+    , put = HttpView.empty
     }
   , [ Http.request signature get GetStateChanged
     ] |> Transition.batch
@@ -116,7 +116,7 @@ get = Http.payload "get" <|
         , params  = QueryEncode.empty
         , response =
           { header = HeaderDecode.succeed ()
-          , body = decoder
+          , body   = decoder
           }
         , timeout = 10 * 1000
         }
@@ -250,18 +250,18 @@ update msg model =
       , Transition.none
       )
 
-    GetStateChanged state ->
-      ( { model | get = model.get |> Http.stateTo state }
+    GetStateChanged mig ->
+      ( { model | get = model.get |> HttpView.update mig }
       , Transition.none
       )
 
     PutRequest -> ( model, Http.request model.signature put PutStateChanged )
-    PutStateChanged state ->
+    PutStateChanged mig ->
       ( { model
-        | put = model.put |> Http.stateTo state
+        | put = model.put |> HttpView.update mig
         , form = model.form |>
-          case state of
-            HttpView.Ready (Just (Ok _)) -> View.static
+          case mig of
+            HttpView.Success _ -> View.static
             _ -> identity
         }
       , Transition.none
@@ -271,14 +271,11 @@ edit : Model -> View.Form -> View.Form
 edit model form =
   let
     response =
-      case model.put |> Http.state of
-        HttpView.Ready (Just (Ok res)) -> Just res
-        _ ->
-          case model.get |> Http.state of
-            HttpView.Ready (Just (Ok res)) -> Just res
-            _ -> Nothing
+      case model.put |> HttpView.body of
+        Just res -> Just res
+        Nothing  -> model.get |> HttpView.body
   in
-    case response |> Maybe.map HttpView.body of
+    case response of
       Nothing -> form
       Just body ->
         form
@@ -326,8 +323,8 @@ info model = L.lazy
       ( gender_,   [] )
       ( quality_,  [] )
       ( roles_,    [] )
-    , get = m.get |> Http.state
-    , put = m.put |> Http.state
+    , get = m.get
+    , put = m.put
     , options =
       { gender =
         [ ( "", "please-select" |> AppI18n.form )

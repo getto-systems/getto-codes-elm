@@ -1,14 +1,6 @@
 module GettoUpload.Command.Http exposing
-  ( Model
-  , Payload
+  ( Payload
   , Header
-  , init
-  , state
-  , response
-  , responseHeader
-  , responseBody
-  , stateTo
-  , clear
   , request
   , track
   , payload
@@ -31,11 +23,6 @@ import Json.Decode as Decode
 import Http
 import Task
 
-type Model header body = Model
-  { state    : HttpView.State header body
-  , response : Maybe (HttpView.Response header body)
-  }
-
 type Payload model header body = Payload String (model -> Request header body)
 type Request header body
   = Get    (RequestInner header body QueryEncode.Value)
@@ -57,34 +44,7 @@ type alias RequestInner header body params =
 
 type alias Header = ( String, String )
 
-init : Model header body
-init = Model
-  { state    = HttpView.Ready Nothing
-  , response = Nothing
-  }
-
-state : Model header body -> HttpView.State header body
-state (Model model) = model.state
-
-response : Model header body -> Maybe (HttpView.Response header body)
-response (Model model) = model.response
-
-responseHeader : Model header body -> Maybe header
-responseHeader = response >> Maybe.map HttpView.header
-
-responseBody : Model header body -> Maybe body
-responseBody = response >> Maybe.map HttpView.body
-
-stateTo : HttpView.State header body -> Model header body -> Model header body
-stateTo value (Model model) =
-  case value of
-    HttpView.Ready (Just (Ok data)) -> Model { model | state = value, response = Just data }
-    _ -> Model { model | state = value }
-
-clear : Model header body -> Model header body
-clear (Model model) = Model { model | state = HttpView.Ready Nothing, response = Nothing }
-
-request : String -> Payload model header body -> (HttpView.State header body -> msg) -> model -> Cmd msg
+request : String -> Payload model header body -> (HttpView.Migration header body -> msg) -> model -> Cmd msg
 request signature (Payload marker req) msg model =
   let
     headers = .headers >> List.map (\(key,value) -> Http.header key value)
@@ -95,7 +55,7 @@ request signature (Payload marker req) msg model =
 
     trackMarker = Just ( marker |> tracker signature )
   in
-    [ HttpView.Connecting Nothing |> Task.succeed |> Task.perform msg
+    [ HttpView.Load |> Task.succeed |> Task.perform msg
     , Mock.request <| -- Real.request <|
       case model |> req of
         Get data ->
@@ -150,18 +110,21 @@ request signature (Payload marker req) msg model =
           }
     ] |> Cmd.batch
 
-track : String -> Payload model header body -> (HttpView.State header body -> msg) -> Sub msg
+track : String -> Payload model header body -> (HttpView.Migration header body -> msg) -> Sub msg
 track signature (Payload marker _) msg =
   let
     toProgress progress =
       case progress of
-        Http.Sending   data -> { current = data.sent, size = data.size } |> HttpView.Sending
+        Http.Sending   data ->
+          if data.sent == data.size
+            then HttpView.Proccessing
+            else { current = data.sent, size = data.size } |> HttpView.Sending
         Http.Receiving data ->
           data.size
           |> Maybe.map (\size -> { current = data.received, size = size })
           |> HttpView.Receiving
   in
-    (toProgress >> Just >> HttpView.Connecting >> msg) |> Http.track (marker |> tracker signature)
+    (toProgress >> HttpView.Transfer >> msg) |> Http.track (marker |> tracker signature)
 
 tracker : String -> String -> String
 tracker signature marker = signature ++ ":" ++ marker

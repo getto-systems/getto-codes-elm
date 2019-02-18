@@ -22,7 +22,7 @@ import Html.Events as E
 type alias RegisterModel header body msg =
   { title  : String
   , form : View.View
-  , state  : HttpView.State header body
+  , http : HttpView.Model header body
   , options :
     { gender  : List ( String, String )
     , quality : List ( String, String )
@@ -176,19 +176,19 @@ register model =
           ]
         ]
       , H.footer [] <|
-        case model.state of
+        case model.http |> HttpView.state of
           HttpView.Connecting progress ->
             [ "uploading" |> model.i18n.form |> ButtonHtml.connecting
             , progress |> HttpHtml.progress
             ]
-          HttpView.Ready response ->
+          HttpView.Ready error ->
             if model.form |> View.hasError
               then
                 [ "has-error" |> model.i18n.form |> ButtonHtml.error
                 ]
               else
                 [ "upload" |> model.i18n.form |> ButtonHtml.save model.msg.upload
-                , response |> HttpHtml.error model.i18n.http
+                , error |> HttpHtml.error model.i18n.http
                 ]
       ]
     ]
