@@ -18,9 +18,9 @@ suite =
                   , ( "age",     30     |> Encode.int )
                   , ( "enabled", True   |> Encode.bool )
                   , ( "roles"
-                    , [ "admin"  |> Encode.string
-                      , "system" |> Encode.string
-                      ] |> Encode.list
+                    , [ "admin"
+                      , "system"
+                      ] |> Encode.list Encode.string
                     )
                   ] |> Encode.object
                 )

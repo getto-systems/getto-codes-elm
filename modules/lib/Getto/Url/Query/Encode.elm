@@ -26,8 +26,8 @@ int = String.fromInt >> ValueEntry
 bool : Bool -> Value
 bool = ValueBool
 
-list : List Value -> Value
-list = List.map (\value -> ("", value)) >> ValueGroup
+list : (a -> Value) -> List a -> Value
+list encoder = List.map (\value -> ("", value |> encoder)) >> ValueGroup
 
 object : List ( String, Value ) -> Value
 object = List.map (\(name, value) -> ( name |> Url.percentEncode, value ) ) >> ValueGroup

@@ -1,5 +1,6 @@
 module GettoUpload.View.Html.Field exposing
   ( isError
+  , isPresent
   , textSmall
   , text
   , textLarge
@@ -26,7 +27,6 @@ import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Html as Html
 
 import Getto.Field as Field
-import Getto.Field.View as FieldView
 
 import File exposing ( File )
 import Set exposing ( Set )
@@ -36,9 +36,15 @@ import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-isError : FieldView.Model a -> List (H.Attribute msg)
-isError field =
-  if field |> FieldView.isError
+isPresent : Bool -> List (H.Attribute msg)
+isPresent presence =
+  if presence
+    then [ "is-present" |> A.class ]
+    else []
+
+isError : List String -> List (H.Attribute msg)
+isError err =
+  if err |> List.isEmpty |> not
     then [ "form-error" |> A.class ]
     else []
 
@@ -57,11 +63,11 @@ tel   = "tel"   |> input []
 date  = "date"  |> input []
 time  = "time"  |> input []
 
-input : List String -> String -> List (H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model String -> Html msg
+input : List String -> String -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model String -> Html msg
 input class type_ attr inputMsg changeMsg field =
   H.input
     ( [ type_ |> A.type_
-      , field |> FieldView.id |> A.id
+      , field |> Field.id |> A.id
       , inputMsg  |> E.onInput
       , changeMsg |> onChange
       ]
@@ -74,10 +80,10 @@ textarea       = textareaInput 8  []
 textareaLarge  = textareaInput 12 ["is-large"]
 textareaXLarge = textareaInput 16 ["is-xlarge"]
 
-textareaInput : Int -> List String -> List (H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model String -> Html msg
+textareaInput : Int -> List String -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model String -> Html msg
 textareaInput rows class attr inputMsg changeMsg field =
   H.textarea
-    ( [ field |> FieldView.id |> A.id
+    ( [ field |> Field.id |> A.id
       , rows  |> A.rows
       , inputMsg  |> E.onInput
       , changeMsg |> onChange
@@ -87,10 +93,10 @@ textareaInput rows class attr inputMsg changeMsg field =
     )
     []
 
-select : List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model String -> Html msg
+select : List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model String -> Html msg
 select options attr inputMsg changeMsg field =
   H.select
-    ( [ field |> FieldView.id |> A.id
+    ( [ field |> Field.id |> A.id
       , inputMsg  |> E.onInput
       , changeMsg |> onChange
       ]
@@ -105,7 +111,7 @@ select options attr inputMsg changeMsg field =
 radio       = radioList []
 radioInline = radioList ["is-inline"]
 
-radioList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model String -> Html msg
+radioList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model String -> Html msg
 radioList class options attr inputMsg changeMsg field =
   H.ul
     ( (class |> classAttr)
@@ -120,7 +126,7 @@ radioList class options attr inputMsg changeMsg field =
               , inputMsg  |> E.onInput
               , changeMsg |> onChange
               , value     |> A.value
-              , field |> FieldView.value |> (==) value |> A.checked
+              , field |> Field.value |> (==) value |> A.checked
               ] []
             , " " |> H.text
             , label |> H.text
@@ -133,7 +139,7 @@ checkbox       = checkList []
 checkboxInline = checkList ["is-inline"]
 checkboxBlock  = checkList ["is-block"]
 
-checkList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> FieldView.Model (Set String) -> Html msg
+checkList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model (Set String) -> Html msg
 checkList class options attr inputMsg changeMsg field =
   H.ul
     ( (class |> classAttr)
@@ -148,7 +154,7 @@ checkList class options attr inputMsg changeMsg field =
               , inputMsg  |> E.onInput
               , changeMsg |> onChange
               , value     |> A.value
-              , field |> FieldView.value |> Set.member value |> A.checked
+              , field |> Field.value |> Set.member value |> A.checked
               ] []
             , " " |> H.text
             , label |> H.text

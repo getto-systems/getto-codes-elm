@@ -58,7 +58,7 @@ setup =
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
   Transition.compose Model
-    (model |> Search.init |> Transition.map Search)
+    (model |> Search.init "search" |> Transition.map Search)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

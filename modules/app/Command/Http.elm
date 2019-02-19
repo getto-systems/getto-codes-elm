@@ -1,9 +1,9 @@
 module GettoUpload.Command.Http exposing
-  ( Payload
+  ( Tracker
   , Header
   , request
   , track
-  , payload
+  , tracker
   , get
   , post
   , put
@@ -23,7 +23,7 @@ import Json.Decode as Decode
 import Http
 import Task
 
-type Payload model header body = Payload String (model -> Request header body)
+type Tracker model header body = Tracker String (model -> Request header body)
 type Request header body
   = Get    (RequestInner header body QueryEncode.Value)
   | Post   (RequestInner header body Encode.Value)
@@ -44,8 +44,8 @@ type alias RequestInner header body params =
 
 type alias Header = ( String, String )
 
-request : String -> Payload model header body -> (HttpView.Migration header body -> msg) -> model -> Cmd msg
-request signature (Payload marker req) msg model =
+request : String -> Tracker model header body -> (HttpView.Migration header body -> msg) -> model -> Cmd msg
+request signature (Tracker marker req) msg model =
   let
     headers = .headers >> List.map (\(key,value) -> Http.header key value)
 
@@ -53,9 +53,9 @@ request signature (Payload marker req) msg model =
     json    = .params >> Http.jsonBody
     part    = .params >> Part.toBody
 
-    trackMarker = Just ( marker |> tracker signature )
+    trackMarker = Just ( marker |> toTrackMarker signature )
   in
-    [ HttpView.Load |> Task.succeed |> Task.perform msg
+    [ HttpView.load |> Task.succeed |> Task.perform msg
     , Mock.request <| -- Real.request <|
       case model |> req of
         Get data ->
@@ -110,8 +110,8 @@ request signature (Payload marker req) msg model =
           }
     ] |> Cmd.batch
 
-track : String -> Payload model header body -> (HttpView.Migration header body -> msg) -> Sub msg
-track signature (Payload marker _) msg =
+track : String -> Tracker model header body -> (HttpView.Migration header body -> msg) -> Sub msg
+track signature (Tracker marker _) msg =
   let
     toProgress progress =
       case progress of
@@ -124,13 +124,13 @@ track signature (Payload marker _) msg =
           |> Maybe.map (\size -> { current = data.received, size = size })
           |> HttpView.Receiving
   in
-    (toProgress >> HttpView.Transfer >> msg) |> Http.track (marker |> tracker signature)
+    (toProgress >> HttpView.transfer >> msg) |> Http.track (marker |> toTrackMarker signature)
 
-tracker : String -> String -> String
-tracker signature marker = signature ++ ":" ++ marker
+toTrackMarker : String -> String -> String
+toTrackMarker signature marker = signature ++ ":" ++ marker
 
-payload : String -> (model -> Request header body) -> Payload model header body
-payload = Payload
+tracker : String -> (model -> Request header body) -> Tracker model header body
+tracker = Tracker
 
 get : RequestInner header body QueryEncode.Value -> Request header body
 get = Get
