@@ -73,7 +73,9 @@ init signature model =
       }
     , search = HttpView.empty
     }
-  , fill
+  , [ fill
+    , Http.request signature search SearchStateChanged
+    ] |> Transition.batch
   )
 
 fill : FrameModel a -> Cmd msg
@@ -101,19 +103,7 @@ search = Http.tracker "search" <|
       Http.get
         { url     = "uploads" |> Api.url []
         , headers = model |> Api.headers
-        , params  = QueryEncode.object
-          [ ( "name",           m.form.name          |> Field.value |> QueryEncode.string )
-          , ( "age_gteq",       m.form.age_gteq      |> Field.value |> QueryEncode.string )
-          , ( "age_lteq",       m.form.age_lteq      |> Field.value |> QueryEncode.string )
-          , ( "email",          m.form.email         |> Field.value |> QueryEncode.string )
-          , ( "tel",            m.form.tel           |> Field.value |> QueryEncode.string )
-          , ( "birthday_gteq",  m.form.birthday_gteq |> Field.value |> QueryEncode.string )
-          , ( "birthday_lteq",  m.form.birthday_lteq |> Field.value |> QueryEncode.string )
-          , ( "start_at_gteq",  m.form.start_at_gteq |> Field.value |> QueryEncode.string )
-          , ( "start_at_lteq",  m.form.start_at_lteq |> Field.value |> QueryEncode.string )
-          , ( "gender",         m.form.gender        |> Field.value |> QueryEncode.string )
-          , ( "roles",          m.form.roles         |> Field.value |> Set.toList |> QueryEncode.list QueryEncode.string )
-          ]
+        , params  = m |> query
         , response =
           { header = HeaderDecode.succeed ()
           , body = Decode.succeed ()
@@ -122,10 +112,41 @@ search = Http.tracker "search" <|
         }
 
 query : Model -> QueryEncode.Value
-query model = QueryEncode.empty
+query model = QueryEncode.object
+  [ ( "name",           model.form.name          |> Field.value |> QueryEncode.string )
+  , ( "age_gteq",       model.form.age_gteq      |> Field.value |> QueryEncode.string )
+  , ( "age_lteq",       model.form.age_lteq      |> Field.value |> QueryEncode.string )
+  , ( "email",          model.form.email         |> Field.value |> QueryEncode.string )
+  , ( "tel",            model.form.tel           |> Field.value |> QueryEncode.string )
+  , ( "birthday_gteq",  model.form.birthday_gteq |> Field.value |> QueryEncode.string )
+  , ( "birthday_lteq",  model.form.birthday_lteq |> Field.value |> QueryEncode.string )
+  , ( "start_at_gteq",  model.form.start_at_gteq |> Field.value |> QueryEncode.string )
+  , ( "start_at_lteq",  model.form.start_at_lteq |> Field.value |> QueryEncode.string )
+  , ( "gender",         model.form.gender        |> Field.value |> QueryEncode.string )
+  , ( "roles",          model.form.roles         |> Field.value |> Set.toList |> QueryEncode.list QueryEncode.string )
+  ]
 
 queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model = model
+queryChanged names value model =
+  let
+    entryAt name = QueryDecode.entryAt (names ++ [name]) (QueryDecode.string "")
+    listAt  name = QueryDecode.listAt  (names ++ [name]) (QueryDecode.string "")
+  in
+    { model
+    | form =
+      model.form
+      |> Form.set name_          ( value |> entryAt "name"          )
+      |> Form.set age_gteq_      ( value |> entryAt "age_gteq"      )
+      |> Form.set age_lteq_      ( value |> entryAt "age_lteq"      )
+      |> Form.set email_         ( value |> entryAt "email"         )
+      |> Form.set tel_           ( value |> entryAt "tel"           )
+      |> Form.set birthday_gteq_ ( value |> entryAt "birthday_gteq" )
+      |> Form.set birthday_lteq_ ( value |> entryAt "birthday_lteq" )
+      |> Form.set start_at_gteq_ ( value |> entryAt "start_at_gteq" )
+      |> Form.set start_at_lteq_ ( value |> entryAt "start_at_lteq" )
+      |> Form.set gender_        ( value |> entryAt "gender"        )
+      |> Form.set roles_         ( value |> listAt  "roles" |> Set.fromList )
+    }
 
 store : Model -> Encode.Value
 store model = Encode.null
@@ -150,7 +171,12 @@ update msg model =
       )
     FieldChange -> ( model, Frame.storeApp )
 
-    SearchRequest -> ( model, Http.request model.signature search SearchStateChanged )
+    SearchRequest ->
+      ( model
+      , [ Http.request model.signature search SearchStateChanged
+        , Frame.pushUrl
+        ] |> Transition.batch
+      )
     SearchStateChanged mig -> ( { model | search = model.search |> HttpView.update mig }, Transition.none )
 
 contents : FrameModel a -> List (Html Msg)

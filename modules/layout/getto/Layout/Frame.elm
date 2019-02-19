@@ -18,7 +18,7 @@ module GettoUpload.Layout.Frame exposing
   , storeApp
   , clearLayout
   , clearApp
-  , search
+  , pushUrl
   , mapLayout
   , mapApp
   )
@@ -215,8 +215,8 @@ clearLayout (Model model) = Store.clear model.store.layout
 clearApp : Transition (Model layout app) annonymous
 clearApp (Model model) = Store.clear model.store.app
 
-search : Transition (Model layout app) annonymous
-search (Model model) = model.app |> Search.search model.search
+pushUrl : Transition (Model layout app) annonymous
+pushUrl (Model model) = model.app |> Search.pushUrl model.search
 
 
 mapLayout : Html layoutMsg -> Html (Msg layoutMsg appMsg)

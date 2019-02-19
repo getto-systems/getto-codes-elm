@@ -30,7 +30,7 @@ list : (a -> Value) -> List a -> Value
 list encoder = List.map (\value -> ("", value |> encoder)) >> ValueGroup
 
 object : List ( String, Value ) -> Value
-object = List.map (\(name, value) -> ( name |> Url.percentEncode, value ) ) >> ValueGroup
+object = List.map (\(name, value) -> ( name, value ) ) >> ValueGroup
 
 empty : Value
 empty = [] |> object
@@ -57,7 +57,7 @@ flatten parents (name, value) =
 
 toName : List String -> String
 toName names =
-  case names of
+  case names |> List.map Url.percentEncode of
     [] -> ""
     head :: tail ->
       head ++
@@ -68,7 +68,7 @@ toName names =
 
 toPair : ( List String, Maybe String ) -> String
 toPair (names,val) =
-  (names |> toName) ++
+  (names |> toName |> Url.percentEncode) ++
   (case val of
     Just value -> "=" ++ value
     Nothing    -> ""

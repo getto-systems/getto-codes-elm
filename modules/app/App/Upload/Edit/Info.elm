@@ -180,7 +180,10 @@ query model = QueryEncode.object
 
 queryChanged : List String -> QueryDecode.Value -> Model -> Model
 queryChanged names value model =
-  { model | id = value |> QueryDecode.entryAt (names ++ ["id"]) (QueryDecode.int 0) }
+  let
+    entryAt name = QueryDecode.entryAt (names ++ [name])
+  in
+    { model | id = value |> entryAt "id" (QueryDecode.int 0) }
 
 store : Model -> Encode.Value
 store model = Encode.object

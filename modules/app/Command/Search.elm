@@ -3,7 +3,7 @@ module GettoUpload.Command.Search exposing
   , Init
   , init
   , changed
-  , search
+  , pushUrl
   )
 
 import Getto.Command.Transition as Transition exposing ( Transition )
@@ -41,5 +41,5 @@ split url =
   |> Maybe.map QueryDecode.split
   |> Maybe.withDefault []
 
-search : Model model -> model -> Cmd annonymous
-search (Model model) = model.encode >> QueryEncode.encode >> Navigation.pushUrl model.key
+pushUrl : Model model -> model -> Cmd annonymous
+pushUrl (Model model) = model.encode >> QueryEncode.encode >> Navigation.pushUrl model.key
