@@ -11,7 +11,7 @@ suite =
     [ describe "decode"
       [ test "should decode query" <|
         \_ ->
-          [ "q%5Bname%5D=John"
+          [ "q%5B%255B%255D%5D=John"
           , "q%5Bage%5D=30"
           , "q%5Ben%5D"
           , "q%5Broles%5D%5B%5D=admin"
@@ -23,7 +23,7 @@ suite =
           |>
             (\query ->
               { query =
-                { name     = query |> Decode.entryAt ["q","name"] (Decode.string "")
+                { name     = query |> Decode.entryAt ["q","[]"]   (Decode.string "")
                 , none     = query |> Decode.entryAt ["q","none"] (Decode.string "")
                 , age      = query |> Decode.entryAt ["q","age"]  (Decode.int 0)
                 , zero     = query |> Decode.entryAt ["q","zero"] (Decode.int 0)
@@ -95,7 +95,7 @@ suite =
 
       , test "should decode special chars" <|
         \_ ->
-          ["%3F%5B%20%5D%3D%26=%5B%20%5D%3D%26%3F"]
+          ["%253F%255B%2520%255D%253D%2526=%5B%20%5D%3D%26%3F"]
           |> (Decode.entryAt ["?[ ]=&"] (Decode.string ""))
           |> Expect.equal "[ ]=&?"
 

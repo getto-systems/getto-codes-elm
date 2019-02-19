@@ -5,6 +5,7 @@ module GettoUpload.View.Html.Button exposing
   , save
   , edit
   , cancel
+  , search
   )
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Html as Html
@@ -64,3 +65,8 @@ cancel msg text =
 button : List (H.Attribute msg) -> List (Html msg) -> Html msg
 button attr =
   H.button ( ("button" |> A.type_) :: attr )
+
+search : String -> Html msg
+search text =
+  H.button []
+    [ text |> H.text ]

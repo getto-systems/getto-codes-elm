@@ -41,7 +41,7 @@ type alias SearchModel msg =
 search : SearchModel msg -> Html msg
 search model =
   H.section [ "search" |> A.class ]
-    [ H.form []
+    [ H.form [ model.msg.search |> E.onSubmit ]
       [ H.section []
         [ H.div []
           [ H.table []
@@ -52,17 +52,6 @@ search model =
                     [ H.th [] [ name |> model.i18n.field |> H.text ]
                     , H.td []
                       [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
-                      ]
-                    ]
-                  ]
-              , case model.form |> View.age of
-                (name,present,form) ->
-                  [ H.tr ( present |> FieldHtml.isPresent )
-                    [ H.th [] [ name |> model.i18n.field |> H.text ]
-                    , H.td []
-                      [ form.gteq.field |> FieldHtml.number [] (model.msg.input form.gteq.prop) model.msg.change
-                      , " ～ " |> H.text
-                      , form.lteq.field |> FieldHtml.number [] (model.msg.input form.lteq.prop) model.msg.change
                       ]
                     ]
                   ]
@@ -81,6 +70,23 @@ search model =
                     [ H.th [] [ name |> model.i18n.field |> H.text ]
                     , H.td []
                       [ form.field |> FieldHtml.tel [] (model.msg.input form.prop) model.msg.change
+                      ]
+                    ]
+                  ]
+              ]
+            ]
+          ]
+        , H.div []
+          [ H.table []
+            [ H.tbody [] <| List.concat
+              [ case model.form |> View.age of
+                (name,present,form) ->
+                  [ H.tr ( present |> FieldHtml.isPresent )
+                    [ H.th [] [ name |> model.i18n.field |> H.text ]
+                    , H.td []
+                      [ form.gteq.field |> FieldHtml.number [] (model.msg.input form.gteq.prop) model.msg.change
+                      , " ～ " |> H.text
+                      , form.lteq.field |> FieldHtml.number [] (model.msg.input form.lteq.prop) model.msg.change
                       ]
                     ]
                   ]
@@ -106,7 +112,13 @@ search model =
                       ]
                     ]
                   ]
-              , case model.form |> View.gender of
+              ]
+            ]
+          ]
+        , H.div []
+          [ H.table []
+            [ H.tbody [] <| List.concat
+              [ case model.form |> View.gender of
                 (name,present,form) ->
                   [ H.tr ( present |> FieldHtml.isPresent )
                     [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -135,7 +147,7 @@ search model =
             , progress |> HttpHtml.progress
             ]
           HttpView.Ready error ->
-            [ "search" |> model.i18n.form |> ButtonHtml.save model.msg.search
+            [ "search" |> model.i18n.form |> ButtonHtml.search
             , error |> HttpHtml.error model.i18n.http
             ]
       ]

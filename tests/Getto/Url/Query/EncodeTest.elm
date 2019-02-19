@@ -28,7 +28,7 @@ suite =
               ] |> Encode.object
           in
             value |> Encode.encode
-            |> Expect.equal "?q[name]=John&q[age]=30&q[enabled]&q[roles][]=admin&q[roles][]=system&s=name.desc"
+            |> Expect.equal "?q%5Bname%5D=John&q%5Bage%5D=30&q%5Benabled%5D&q%5Broles%5D%5B%5D=admin&q%5Broles%5D%5B%5D=system&s=name.desc"
 
       , test "should encode simple string" <|
         \_ ->
@@ -92,6 +92,6 @@ suite =
             value = [ ( "?[ ]=&", "[ ]=&?" |> Encode.string ) ] |> Encode.object
           in
             value |> Encode.encode
-            |> Expect.equal "?%3F%5B%20%5D%3D%26=%5B%20%5D%3D%26%3F"
+            |> Expect.equal "?%253F%255B%2520%255D%253D%2526=%5B%20%5D%3D%26%3F"
       ]
     ]
