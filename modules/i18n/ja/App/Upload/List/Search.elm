@@ -1,18 +1,27 @@
 module GettoUpload.I18n.App.Upload.List.Search exposing
-  ( title
-  , entry
+  ( field
+  , gender
   )
 
-title : String -> String
-title name =
+field : String -> String
+field name =
   case name of
-    "select-file" -> "ファイル選択"
+    "name"     -> "名前"
+    "age"      -> "年齢"
+    "email"    -> "メール"
+    "tel"      -> "電話番号"
+    "birthday" -> "誕生日"
+    "start_at" -> "開始時間"
+    "gender"   -> "性別"
+    "roles"    -> "権限"
 
     _ -> name
 
-entry : String -> String
-entry name =
+gender : String -> String
+gender name =
   case name of
-    "order" -> "発注書"
+    "male"   -> "男性"
+    "female" -> "女性"
+    "other"  -> "その他"
 
     _ -> name

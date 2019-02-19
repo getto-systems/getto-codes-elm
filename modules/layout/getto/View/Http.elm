@@ -1,15 +1,21 @@
 module GettoUpload.View.Http exposing
   ( Model
-  , Migration(..)
+  , Migration
   , State(..)
   , Response
   , Progress(..)
   , Error(..)
   , empty
   , clear
-  , response
+  , toResponse
+  , load
+  , transfer
+  , success
+  , failure
+  , isSuccess
   , update
   , state
+  , response
   , header
   , body
   , progress
@@ -63,11 +69,29 @@ empty = Model
 clear : Model header body -> Model header body
 clear (Model model) = Model { model | response = Nothing }
 
-response : header -> body -> Response header body
-response headerData bodyData = Response
+toResponse : header -> body -> Response header body
+toResponse headerData bodyData = Response
   { header = headerData
   , body   = bodyData
   }
+
+load : Migration header body
+load = Load
+
+transfer : Progress -> Migration header body
+transfer = Transfer
+
+success : Response header body -> Migration header body
+success = Success
+
+failure : Error -> Migration header body
+failure = Failure
+
+isSuccess : Migration header body -> Maybe (Response header body)
+isSuccess mig =
+  case mig of
+    Success res -> Just res
+    _ -> Nothing
 
 update : Migration header body -> Model header body -> Model header body
 update migration (Model model) =
@@ -80,12 +104,14 @@ update migration (Model model) =
 state : Model header body -> State
 state (Model model) = model.state
 
+response : Model header body -> Maybe (Response header body)
+response (Model model) = model.response
+
 header : Response header body -> header
 header (Response res) = res.header
 
-body : Model header body -> Maybe body
-body (Model model) =
-  model.response |> Maybe.map (\(Response res) -> res.body)
+body : Response header body -> body
+body (Response res) = res.body
 
 progress : Maybe Progress -> Maybe ( Bool, Int )
 progress data =

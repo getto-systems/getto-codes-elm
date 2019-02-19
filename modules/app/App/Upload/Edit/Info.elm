@@ -32,6 +32,8 @@ import Getto.Http.Header.Decode as HeaderDecode
 import Getto.Http.Part as Part
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
+import Getto.Field.Form as Form
+import Getto.Field.Validate as Validate
 
 import Browser.Navigation as Navigation
 import File exposing ( File )
@@ -57,11 +59,11 @@ type alias Model =
 type Msg
   = Edit
   | Static
-  | FieldInput (View.Prop String) String
-  | FieldCheck (View.Prop (Set String)) String
+  | FieldInput (Form.Prop View.Form String) String
+  | FieldCheck (Form.Prop View.Form (Set String)) String
   | FieldChange
-  | FileRequest (View.Prop (List File))
-  | FileSelect (View.Prop (List File)) File
+  | FileRequest (Form.Prop View.Form (List File))
+  | FileSelect (Form.Prop View.Form (List File)) File
   | GetStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
   | PutRequest
   | PutStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
@@ -104,8 +106,8 @@ fill = Frame.app >> .info >>
     ]
   )
 
-get : Http.Payload (FrameModel a) View.ResponseHeader View.ResponseBody
-get = Http.payload "get" <|
+get : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
+get = Http.tracker "get" <|
   \model ->
     let
       m = model |> Frame.app |> .info
@@ -114,15 +116,12 @@ get = Http.payload "get" <|
         { url     = "upload/:id" |> Api.url ( m |> pathInfo )
         , headers = model |> Api.headers
         , params  = QueryEncode.empty
-        , response =
-          { header = HeaderDecode.succeed ()
-          , body   = decoder
-          }
+        , response = response
         , timeout = 10 * 1000
         }
 
-put : Http.Payload (FrameModel a) View.ResponseHeader View.ResponseBody
-put = Http.payload "put" <|
+put : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
+put = Http.tracker "put" <|
   \model ->
     let
       m = model |> Frame.app |> .info
@@ -130,23 +129,19 @@ put = Http.payload "put" <|
       Http.put
         { url     = "upload/:id/info" |> Api.url ( m |> pathInfo )
         , headers = model |> Api.headers
-        , params  =
-          Encode.object
-            [ ( "name",      m.form.name     |> Field.value |> Encode.string )
-            , ( "memo",      m.form.memo     |> Field.value |> Encode.string )
-            , ( "age",       m.form.age      |> Field.value |> Encode.string )
-            , ( "email",     m.form.email    |> Field.value |> Encode.string )
-            , ( "tel",       m.form.tel      |> Field.value |> Encode.string )
-            , ( "birthday",  m.form.birthday |> Field.value |> Encode.string )
-            , ( "start_at",  m.form.start_at |> Field.value |> Encode.string )
-            , ( "gender",    m.form.gender   |> Field.value |> Encode.string )
-            , ( "quality",   m.form.quality  |> Field.value |> Encode.string )
-            , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
-            ]
-        , response =
-          { header = HeaderDecode.succeed ()
-          , body = decoder
-          }
+        , params  = Encode.object
+          [ ( "name",      m.form.name     |> Field.value |> Encode.string )
+          , ( "memo",      m.form.memo     |> Field.value |> Encode.string )
+          , ( "age",       m.form.age      |> Field.value |> Encode.string )
+          , ( "email",     m.form.email    |> Field.value |> Encode.string )
+          , ( "tel",       m.form.tel      |> Field.value |> Encode.string )
+          , ( "birthday",  m.form.birthday |> Field.value |> Encode.string )
+          , ( "start_at",  m.form.start_at |> Field.value |> Encode.string )
+          , ( "gender",    m.form.gender   |> Field.value |> Encode.string )
+          , ( "quality",   m.form.quality  |> Field.value |> Encode.string )
+          , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+          ]
+        , response = response
         , timeout = 10 * 1000
         }
 
@@ -155,26 +150,28 @@ pathInfo model =
   [ ( "id", model.id |> String.fromInt )
   ]
 
-decoder : Decode.Decoder View.ResponseBody
-decoder = Decode.map2 View.ResponseBody
-  ( Decode.at ["info"]
-    ( Decode.map5 View.ResponseInfo
-      (Decode.at ["name"]  Decode.string)
-      (Decode.at ["memo"]  Decode.string)
-      (Decode.at ["age"]   Decode.int)
-      (Decode.at ["email"] Decode.string)
-      (Decode.at ["tel"]   Decode.string)
+response =
+  { header = HeaderDecode.succeed ()
+  , body = Decode.map2 View.ResponseBody
+    ( Decode.at ["info"]
+      ( Decode.map5 View.ResponseInfo
+        (Decode.at ["name"]  Decode.string)
+        (Decode.at ["memo"]  Decode.string)
+        (Decode.at ["age"]   Decode.int)
+        (Decode.at ["email"] Decode.string)
+        (Decode.at ["tel"]   Decode.string)
+      )
     )
-  )
-  ( Decode.at ["detail"]
-    ( Decode.map5 View.ResponseDetail
-      (Decode.at ["birthday"] Decode.string)
-      (Decode.at ["start_at"] Decode.string)
-      (Decode.at ["gender"]   Decode.string)
-      (Decode.at ["quality"]  Decode.string)
-      (Decode.at ["roles"]   (Decode.string |> Decode.list |> Decode.map Set.fromList))
+    ( Decode.at ["detail"]
+      ( Decode.map5 View.ResponseDetail
+        (Decode.at ["birthday"] Decode.string)
+        (Decode.at ["start_at"] Decode.string)
+        (Decode.at ["gender"]   Decode.string)
+        (Decode.at ["quality"]  Decode.string)
+        (Decode.at ["roles"]   (Decode.string |> Decode.list |> Decode.map Set.fromList))
+      )
     )
-  )
+  }
 
 query : Model -> QueryEncode.Value
 query model = QueryEncode.object
@@ -204,16 +201,16 @@ storeChanged value model =
   { model
   | form =
     model.form
-    |> View.update name_     ( value |> SafeDecode.at ["name"]     (SafeDecode.string "") )
-    |> View.update memo_     ( value |> SafeDecode.at ["memo"]     (SafeDecode.string "") )
-    |> View.update age_      ( value |> SafeDecode.at ["age"]      (SafeDecode.string "") )
-    |> View.update email_    ( value |> SafeDecode.at ["email"]    (SafeDecode.string "") )
-    |> View.update tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
-    |> View.update birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
-    |> View.update start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
-    |> View.update gender_   ( value |> SafeDecode.at ["gender"]   (SafeDecode.string "") )
-    |> View.update quality_  ( value |> SafeDecode.at ["quality"]  (SafeDecode.string "") )
-    |> View.update roles_    ( value |> SafeDecode.at ["roles"]    (SafeDecode.list (SafeDecode.string "")) |> Set.fromList )
+    |> Form.set name_     ( value |> SafeDecode.at ["name"]     (SafeDecode.string "") )
+    |> Form.set memo_     ( value |> SafeDecode.at ["memo"]     (SafeDecode.string "") )
+    |> Form.set age_      ( value |> SafeDecode.at ["age"]      (SafeDecode.string "") )
+    |> Form.set email_    ( value |> SafeDecode.at ["email"]    (SafeDecode.string "") )
+    |> Form.set tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
+    |> Form.set birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
+    |> Form.set start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
+    |> Form.set gender_   ( value |> SafeDecode.at ["gender"]   (SafeDecode.string "") )
+    |> Form.set quality_  ( value |> SafeDecode.at ["quality"]  (SafeDecode.string "") )
+    |> Form.set roles_    ( value |> SafeDecode.at ["roles"]    (SafeDecode.list (SafeDecode.string "")) |> Set.fromList )
   }
 
 subscriptions : Model -> Sub Msg
@@ -235,18 +232,18 @@ update msg model =
       )
 
     FieldInput prop value ->
-      ( { model | form = model.form |> View.update prop value }
+      ( { model | form = model.form |> Form.set prop value }
       , Transition.none
       )
     FieldCheck prop value ->
-      ( { model | form = model.form |> View.toggle prop value }
+      ( { model | form = model.form |> Form.toggle prop value }
       , Transition.none
       )
     FieldChange -> ( model, Frame.storeApp )
 
     FileRequest prop -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
     FileSelect prop file ->
-      ( { model | form = model.form |> View.update prop [file] }
+      ( { model | form = model.form |> Form.set prop [file] }
       , Transition.none
       )
 
@@ -258,11 +255,8 @@ update msg model =
     PutRequest -> ( model, Http.request model.signature put PutStateChanged )
     PutStateChanged mig ->
       ( { model
-        | put = model.put |> HttpView.update mig
-        , form = model.form |>
-          case mig of
-            HttpView.Success _ -> View.static
-            _ -> identity
+        | put  = model.put  |> HttpView.update mig
+        , form = model.form |> View.done mig
         }
       , Transition.none
       )
@@ -270,25 +264,25 @@ update msg model =
 edit : Model -> View.Form -> View.Form
 edit model form =
   let
-    response =
-      case model.put |> HttpView.body of
-        Just res -> Just res
-        Nothing  -> model.get |> HttpView.body
+    res =
+      [ model.put, model.get ]
+      |> List.filterMap (HttpView.response >> Maybe.map HttpView.body)
+      |> List.head
   in
-    case response of
+    case res of
       Nothing -> form
       Just body ->
         form
-        |> View.update name_     body.info.name
-        |> View.update memo_     body.info.memo
-        |> View.update age_     (body.info.age |> String.fromInt)
-        |> View.update email_    body.info.email
-        |> View.update tel_      body.info.tel
-        |> View.update birthday_ body.detail.birthday
-        |> View.update start_at_ body.detail.start_at
-        |> View.update gender_   body.detail.gender
-        |> View.update quality_  body.detail.quality
-        |> View.update roles_    body.detail.roles
+        |> Form.set name_     body.info.name
+        |> Form.set memo_     body.info.memo
+        |> Form.set age_     (body.info.age |> String.fromInt)
+        |> Form.set email_    body.info.email
+        |> Form.set tel_      body.info.tel
+        |> Form.set birthday_ body.detail.birthday
+        |> Form.set start_at_ body.detail.start_at
+        |> Form.set gender_   body.detail.gender
+        |> Form.set quality_  body.detail.quality
+        |> Form.set roles_    body.detail.roles
 
 contents : FrameModel a -> List (Html Msg)
 contents model =
@@ -297,32 +291,33 @@ contents model =
     ]
   ]
 
-name_     = View.prop .name     (\v m -> { m | name     = v })
-memo_     = View.prop .memo     (\v m -> { m | memo     = v })
-age_      = View.prop .age      (\v m -> { m | age      = v })
-email_    = View.prop .email    (\v m -> { m | email    = v })
-tel_      = View.prop .tel      (\v m -> { m | tel      = v })
-birthday_ = View.prop .birthday (\v m -> { m | birthday = v })
-start_at_ = View.prop .start_at (\v m -> { m | start_at = v })
-gender_   = View.prop .gender   (\v m -> { m | gender   = v })
-quality_  = View.prop .quality  (\v m -> { m | quality  = v })
-roles_    = View.prop .roles    (\v m -> { m | roles    = v })
+name_     = Form.prop .name     (\v m -> { m | name     = v })
+memo_     = Form.prop .memo     (\v m -> { m | memo     = v })
+age_      = Form.prop .age      (\v m -> { m | age      = v })
+email_    = Form.prop .email    (\v m -> { m | email    = v })
+tel_      = Form.prop .tel      (\v m -> { m | tel      = v })
+birthday_ = Form.prop .birthday (\v m -> { m | birthday = v })
+start_at_ = Form.prop .start_at (\v m -> { m | start_at = v })
+gender_   = Form.prop .gender   (\v m -> { m | gender   = v })
+quality_  = Form.prop .quality  (\v m -> { m | quality  = v })
+roles_    = Form.prop .roles    (\v m -> { m | roles    = v })
 
 info : FrameModel a -> Html Msg
 info model = L.lazy
   (\m -> Html.info
     { title = "info"
     , form = m.form |> View.compose
-      ( name_,     [ m.form.name |> Field.blank "blank" ] )
-      ( memo_,     [] )
-      ( age_,      [] )
-      ( email_,    [] )
-      ( tel_,      [] )
-      ( birthday_, [] )
-      ( start_at_, [] )
-      ( gender_,   [] )
-      ( quality_,  [] )
-      ( roles_,    [] )
+      { name     = ( name_,     [ m.form.name |> Validate.blank "blank" ] )
+      , memo     = ( memo_,     [] )
+      , age      = ( age_,      [] )
+      , email    = ( email_,    [] )
+      , tel      = ( tel_,      [] )
+      , birthday = ( birthday_, [] )
+      , start_at = ( start_at_, [] )
+      , gender   = ( gender_,   [] )
+      , quality  = ( quality_,  [] )
+      , roles    = ( roles_,    [] )
+      }
     , get = m.get
     , put = m.put
     , options =

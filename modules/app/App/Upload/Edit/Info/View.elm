@@ -1,17 +1,15 @@
 module GettoUpload.App.Upload.Edit.Info.View exposing
   ( Form
-  , State(..)
+  , Init
   , View
+  , State(..)
   , ResponseHeader
   , ResponseBody
   , ResponseInfo
   , ResponseDetail
-  , Prop
   , edit
   , static
-  , update
-  , toggle
-  , prop
+  , done
   , compose
   , state
   , name
@@ -25,9 +23,11 @@ module GettoUpload.App.Upload.Edit.Info.View exposing
   , quality
   , roles
   )
+import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
-import Getto.Field.View as FieldView
+import Getto.Field.Form as Form
+import Getto.Field.Validate as Validate
 
 import File exposing ( File )
 import Set exposing ( Set )
@@ -46,21 +46,33 @@ type alias Form =
   , roles    : Field.Model (Set String)
   }
 
+type alias Init =
+  { name     : Validate.Init Form String
+  , memo     : Validate.Init Form String
+  , age      : Validate.Init Form String
+  , email    : Validate.Init Form String
+  , tel      : Validate.Init Form String
+  , birthday : Validate.Init Form String
+  , start_at : Validate.Init Form String
+  , gender   : Validate.Init Form String
+  , quality  : Validate.Init Form String
+  , roles    : Validate.Init Form (Set String)
+  }
+
 type View = View State Bool
-  { name     : Entry String
-  , memo     : Entry String
-  , age      : Entry String
-  , email    : Entry String
-  , tel      : Entry String
-  , birthday : Entry String
-  , start_at : Entry String
-  , gender   : Entry String
-  , quality  : Entry String
-  , roles    : Entry (Set String)
+  { name     : Validate.Model (Form.Model Form String)
+  , memo     : Validate.Model (Form.Model Form String)
+  , age      : Validate.Model (Form.Model Form String)
+  , email    : Validate.Model (Form.Model Form String)
+  , tel      : Validate.Model (Form.Model Form String)
+  , birthday : Validate.Model (Form.Model Form String)
+  , start_at : Validate.Model (Form.Model Form String)
+  , gender   : Validate.Model (Form.Model Form String)
+  , quality  : Validate.Model (Form.Model Form String)
+  , roles    : Validate.Model (Form.Model Form (Set String))
   }
 
 type alias ResponseHeader = ()
-
 type alias ResponseBody =
   { info   : ResponseInfo
   , detail : ResponseDetail
@@ -84,85 +96,59 @@ type State
   = Static
   | Edit
 
-type alias Entry a =
-  { field : FieldView.Model a
-  , prop  : Prop a
-  }
-
-type Prop a = Prop (Getter a) (Setter a)
-type alias Getter a = Form -> Field.Model a
-type alias Setter a = Field.Model a -> Form -> Form
-
-type alias Validate a = ( Prop a, List (Maybe String) )
-
 edit : Form -> Form
 edit form = { form | state = Edit }
 
 static : Form -> Form
 static form = { form | state = Static }
 
-update : Prop a -> a -> Form -> Form
-update (Prop get set) value form =
-  form |> set (form |> get |> Field.update value)
+done : HttpView.Migration ResponseHeader ResponseBody -> Form -> Form
+done mig =
+  case mig |> HttpView.isSuccess of
+    Just _  -> static
+    Nothing -> identity
 
-toggle : Prop (Set comparable) -> comparable -> Form -> Form
-toggle (Prop get set) value form =
-  form |> set (form |> get |> Field.toggle value)
-
-
-prop : Getter a -> Setter a -> Prop a
-prop = Prop
-
-compose : Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate String -> Validate (Set String) -> Form -> View
-compose name_ memo_ age_ email_ tel_ birthday_ start_at_ gender_ quality_ roles_ form =
+compose : Init -> Form -> View
+compose model form =
   View form.state
     ( List.concat
-      [ name_     |> Tuple.second
-      , memo_     |> Tuple.second
-      , age_      |> Tuple.second
-      , email_    |> Tuple.second
-      , tel_      |> Tuple.second
-      , birthday_ |> Tuple.second
-      , start_at_ |> Tuple.second
-      , gender_   |> Tuple.second
-      , quality_  |> Tuple.second
-      , roles_    |> Tuple.second
+      [ model.name     |> Tuple.second
+      , model.memo     |> Tuple.second
+      , model.age      |> Tuple.second
+      , model.email    |> Tuple.second
+      , model.tel      |> Tuple.second
+      , model.birthday |> Tuple.second
+      , model.start_at |> Tuple.second
+      , model.gender   |> Tuple.second
+      , model.quality  |> Tuple.second
+      , model.roles    |> Tuple.second
       ]
       |> List.any ((/=) Nothing)
     )
-    { name     = form |> entry name_
-    , memo     = form |> entry memo_
-    , age      = form |> entry age_
-    , email    = form |> entry email_
-    , tel      = form |> entry tel_
-    , birthday = form |> entry birthday_
-    , start_at = form |> entry start_at_
-    , gender   = form |> entry gender_
-    , quality  = form |> entry quality_
-    , roles    = form |> entry roles_
+    { name     = form |> Validate.init model.name
+    , memo     = form |> Validate.init model.memo
+    , age      = form |> Validate.init model.age
+    , email    = form |> Validate.init model.email
+    , tel      = form |> Validate.init model.tel
+    , birthday = form |> Validate.init model.birthday
+    , start_at = form |> Validate.init model.start_at
+    , gender   = form |> Validate.init model.gender
+    , quality  = form |> Validate.init model.quality
+    , roles    = form |> Validate.init model.roles
     }
-
-entry : Validate a -> Form -> Entry a
-entry ((Prop get set),errors) form =
-  { field = form |> get |> FieldView.init (errors |> List.filterMap identity)
-  , prop  = Prop get set
-  }
 
 
 state : View -> (State,Bool)
 state (View st error _) = ( st, error )
 
 
-name     (View st _ form) = form.name     |> view st
-memo     (View st _ form) = form.memo     |> view st
-age      (View st _ form) = form.age      |> view st
-email    (View st _ form) = form.email    |> view st
-tel      (View st _ form) = form.tel      |> view st
-birthday (View st _ form) = form.birthday |> view st
-start_at (View st _ form) = form.start_at |> view st
-gender   (View st _ form) = form.gender   |> view st
-quality  (View st _ form) = form.quality  |> view st
-roles    (View st _ form) = form.roles    |> view st
-
-view : State -> Entry a -> ( State, FieldView.Model a, Prop a )
-view st m = ( st, m.field, m.prop )
+name     (View st _ form) = ( st, form.name     |> Validate.expose )
+memo     (View st _ form) = ( st, form.memo     |> Validate.expose )
+age      (View st _ form) = ( st, form.age      |> Validate.expose )
+email    (View st _ form) = ( st, form.email    |> Validate.expose )
+tel      (View st _ form) = ( st, form.tel      |> Validate.expose )
+birthday (View st _ form) = ( st, form.birthday |> Validate.expose )
+start_at (View st _ form) = ( st, form.start_at |> Validate.expose )
+gender   (View st _ form) = ( st, form.gender   |> Validate.expose )
+quality  (View st _ form) = ( st, form.quality  |> Validate.expose )
+roles    (View st _ form) = ( st, form.roles    |> Validate.expose )

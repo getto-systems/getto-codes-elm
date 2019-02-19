@@ -40,25 +40,25 @@ request data =
     Just (Mock delay rawHeader rawBody) ->
       [ delay * 1 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 1, size = 4 } |> HttpView.Transfer)
+        |> Task.map (\_ -> HttpView.Sending { current = 1, size = 4 } |> HttpView.transfer)
       , delay * 2 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 2, size = 4 } |> HttpView.Transfer)
+        |> Task.map (\_ -> HttpView.Sending { current = 2, size = 4 } |> HttpView.transfer)
       , delay * 3 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 3, size = 4 } |> HttpView.Transfer)
+        |> Task.map (\_ -> HttpView.Sending { current = 3, size = 4 } |> HttpView.transfer)
       , delay * 4 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Proccessing |> HttpView.Transfer)
+        |> Task.map (\_ -> HttpView.Proccessing |> HttpView.transfer)
       , delay * 5 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Receiving (Just { current = 1, size = 4 }) |> HttpView.Transfer)
+        |> Task.map (\_ -> HttpView.Receiving (Just { current = 1, size = 4 }) |> HttpView.transfer)
       , delay * 6 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Receiving (Just { current = 2, size = 4 }) |> HttpView.Transfer)
+        |> Task.map (\_ -> HttpView.Receiving (Just { current = 2, size = 4 }) |> HttpView.transfer)
       , delay * 7 / 8
         |> Process.sleep
-        |> Task.map (\_ -> HttpView.Receiving (Just { current = 3, size = 4 }) |> HttpView.Transfer)
+        |> Task.map (\_ -> HttpView.Receiving (Just { current = 3, size = 4 }) |> HttpView.transfer)
 
       , delay
         |> Process.sleep
@@ -66,15 +66,15 @@ request data =
           (\_ ->
             case rawHeader |> HeaderDecode.decode data.response.header of
               Err headerError ->
-                headerError |> HeaderDecode.errorToString |> HttpView.BadHeader |> HttpView.Failure
+                headerError |> HeaderDecode.errorToString |> HttpView.BadHeader |> HttpView.failure
 
               Ok header ->
                 case rawBody |> Decode.decodeValue data.response.body of
                   Err bodyError ->
-                    bodyError |> Decode.errorToString >> HttpView.BadBody |> HttpView.Failure
+                    bodyError |> Decode.errorToString >> HttpView.BadBody |> HttpView.failure
 
                   Ok body ->
-                    body |> HttpView.response header |> HttpView.Success
+                    body |> HttpView.toResponse header |> HttpView.success
           )
 
       ] |> List.map (Task.perform data.msg) |> Cmd.batch

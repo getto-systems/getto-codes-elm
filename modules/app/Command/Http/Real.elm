@@ -74,10 +74,10 @@ expectJson msg decoder =
                   |> HttpView.BadBody
                   |> Err
 
-                Ok body -> body |> HttpView.response header |> Ok
+                Ok body -> body |> HttpView.toResponse header |> Ok
 
 toMigration : Result HttpView.Error (HttpView.Response header body) -> HttpView.Migration header body
 toMigration result =
   case result of
-    Ok  res -> res |> HttpView.Success
-    Err err -> err |> HttpView.Failure
+    Ok  res -> res |> HttpView.success
+    Err err -> err |> HttpView.failure

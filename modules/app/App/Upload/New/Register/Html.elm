@@ -10,7 +10,7 @@ import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
-import Getto.Field.View as FieldView
+import Getto.Field.Form as Form
 
 import File exposing ( File )
 import Set exposing ( Set )
@@ -19,10 +19,10 @@ import Html.Attributes as A
 import Html.Events as E
 
 
-type alias RegisterModel header body msg =
-  { title  : String
-  , form : View.View
-  , http : HttpView.Model header body
+type alias RegisterModel msg =
+  { title : String
+  , form  : View.View
+  , http  : HttpView.Model View.ResponseHeader View.ResponseBody
   , options :
     { gender  : List ( String, String )
     , quality : List ( String, String )
@@ -30,10 +30,10 @@ type alias RegisterModel header body msg =
     }
   , msg :
     { upload : msg
-    , input  : View.Prop String -> String -> msg
-    , check  : View.Prop (Set String) -> String -> msg
+    , input  : Form.Prop View.Form String -> String -> msg
+    , check  : Form.Prop View.Form (Set String) -> String -> msg
     , change : msg
-    , select : View.Prop (List File) -> msg
+    , select : Form.Prop View.Form (List File) -> msg
     }
   , i18n :
     { title : String -> String
@@ -44,7 +44,7 @@ type alias RegisterModel header body msg =
     }
   }
 
-register : RegisterModel header body msg -> Html msg
+register : RegisterModel msg -> Html msg
 register model =
   H.section []
     [ H.form []
@@ -52,124 +52,124 @@ register model =
       , H.table []
         [ H.tbody [] <| List.concat
           [ case model.form |> View.name of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.text [] (model.msg.input prop) model.msg.change
+                  [ [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.text of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ "select-file" |> model.i18n.form |> ButtonHtml.select (model.msg.select prop)
-                    , field |> FieldView.value |> FieldHtml.files
+                  [ [ "select-file" |> model.i18n.form |> ButtonHtml.select (model.msg.select form.prop)
+                    , form.field |> Field.value |> FieldHtml.files
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.memo of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.textarea [] (model.msg.input prop) model.msg.change
+                  [ [ form.field |> FieldHtml.textarea [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.age of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.number [] (model.msg.input prop) model.msg.change
+                  [ [ form.field |> FieldHtml.number [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.email of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.email [] (model.msg.input prop) model.msg.change
+                  [ [ form.field |> FieldHtml.email [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.tel of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.tel [] (model.msg.input prop) model.msg.change
+                  [ [ form.field |> FieldHtml.tel [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.birthday of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.date [] (model.msg.input prop) model.msg.change
+                  [ [ form.field |> FieldHtml.date [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.start_at of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.time [] (model.msg.input prop) model.msg.change
+                  [ [ form.field |> FieldHtml.time [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.gender of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.select model.options.gender [] (model.msg.input prop) model.msg.change
+                  [ [ form.field |> FieldHtml.select model.options.gender [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.quality of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.radio model.options.quality [] (model.msg.input prop) model.msg.change
+                  [ [ form.field |> FieldHtml.radio model.options.quality [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.roles of
-            (field,prop) ->
-              [ H.tr ( field |> FieldHtml.isError )
-                [ H.th [] [ field |> FieldView.name |> model.i18n.field |> H.text ]
+            (name,errors,form) ->
+              [ H.tr ( errors |> FieldHtml.isError )
+                [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ field |> FieldHtml.checkbox model.options.roles [] (model.msg.check prop) model.msg.change
+                  [ [ form.field |> FieldHtml.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
                     ]
-                  , field |> FieldView.errors |> FieldHtml.errors model.i18n.error
+                  , errors |> FieldHtml.errors model.i18n.error
                   ]
                 ]
               ]

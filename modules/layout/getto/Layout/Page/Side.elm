@@ -69,8 +69,8 @@ init signature model =
   , Http.request signature badge BadgeStateChanged
   )
 
-badge : Http.Payload (FrameModel a app) View.ResponseHeader View.ResponseBody
-badge = Http.payload "badge" <|
+badge : Http.Tracker (FrameModel a app) View.ResponseHeader View.ResponseBody
+badge = Http.tracker "badge" <|
   \model ->
     Http.get
       { url     = "layout/menu/badge" |> Api.url []
@@ -240,8 +240,8 @@ nav model = L.lazy3
           |> Maybe.andThen
             (\name ->
               side.badge
-              |> HttpView.body
-              |> Maybe.andThen (.badge >> Dict.get name)
+              |> HttpView.response
+              |> Maybe.andThen (HttpView.body >> .badge >> Dict.get name)
             )
       , i18n = menuI18n
       }

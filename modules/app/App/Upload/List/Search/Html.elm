@@ -1,70 +1,142 @@
 module GettoUpload.App.Upload.List.Search.Html exposing
   ( search
   )
+import GettoUpload.App.Upload.List.Search.View as View
 import GettoUpload.View.Html as Html
+import GettoUpload.View.Html.Button as ButtonHtml
+import GettoUpload.View.Html.Field as FieldHtml
+import GettoUpload.View.Html.Http as HttpHtml
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Http as HttpView
 
-import File exposing ( File )
+import Getto.Field as Field
+import Getto.Field.Form as Form
+
+import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
 
 
-type alias SearchModel header body msg =
-  { title : String
-  , entries :
-    { file :
-      { name : String
-      , file : Maybe File
-      }
+type alias SearchModel msg =
+  { form  : View.View
+  , http  : HttpView.Model View.ResponseHeader View.ResponseBody
+  , options :
+    { gender : List ( String, String )
+    , roles  : List ( String, String )
     }
-  , state : HttpView.State header body
   , msg :
-    { submit : msg
-    , select : msg
+    { search : msg
+    , input  : Form.Prop View.Form String -> String -> msg
+    , check  : Form.Prop View.Form (Set String) -> String -> msg
+    , change : msg
     }
   , i18n :
-    { title : String -> String
-    , entry : String -> String
+    { field : String -> String
     , form  : String -> String
     , http  : HttpView.Error -> String
     }
   }
 
-search : SearchModel header body msg -> Html msg
+search : SearchModel msg -> Html msg
 search model =
-  H.section []
-    [ H.form [ model.msg.submit |> E.onSubmit ]
-      [ H.h2 [] [ model.title |> model.i18n.title |> H.text ]
-      , H.table []
-        [ H.tbody []
-          [ H.tr []
-            [ H.th [] [ model.entries.file.name |> model.i18n.entry |> H.text ]
-            , H.td [] <|
-              case model.entries.file.file of
-                Nothing ->
-                  [ H.button [ "button" |> A.type_, model.msg.select |> E.onClick ]
-                    [ "select-file" |> model.i18n.form |> H.text
+  H.section [ "search" |> A.class ]
+    [ H.form []
+      [ H.section []
+        [ H.div []
+          [ H.table []
+            [ H.tbody [] <| List.concat
+              [ case model.form |> View.name of
+                (name,present,form) ->
+                  [ H.tr ( present |> FieldHtml.isPresent )
+                    [ H.th [] [ name |> model.i18n.field |> H.text ]
+                    , H.td []
+                      [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
+                      ]
                     ]
                   ]
-                Just file ->
-                  [ H.p [] [ file |> File.name |> H.text ]
-                  , H.button [ "button" |> A.type_, model.msg.select |> E.onClick ]
-                    [ "re-select-file" |> model.i18n.form |> H.text
+              , case model.form |> View.age of
+                (name,present,form) ->
+                  [ H.tr ( present |> FieldHtml.isPresent )
+                    [ H.th [] [ name |> model.i18n.field |> H.text ]
+                    , H.td []
+                      [ form.gteq.field |> FieldHtml.number [] (model.msg.input form.gteq.prop) model.msg.change
+                      , " ～ " |> H.text
+                      , form.lteq.field |> FieldHtml.number [] (model.msg.input form.lteq.prop) model.msg.change
+                      ]
                     ]
                   ]
+              , case model.form |> View.email of
+                (name,present,form) ->
+                  [ H.tr ( present |> FieldHtml.isPresent )
+                    [ H.th [] [ name |> model.i18n.field |> H.text ]
+                    , H.td []
+                      [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
+                      ]
+                    ]
+                  ]
+              , case model.form |> View.tel of
+                (name,present,form) ->
+                  [ H.tr ( present |> FieldHtml.isPresent )
+                    [ H.th [] [ name |> model.i18n.field |> H.text ]
+                    , H.td []
+                      [ form.field |> FieldHtml.tel [] (model.msg.input form.prop) model.msg.change
+                      ]
+                    ]
+                  ]
+              , case model.form |> View.birthday of
+                (name,present,form) ->
+                  [ H.tr ( present |> FieldHtml.isPresent )
+                    [ H.th [] [ name |> model.i18n.field |> H.text ]
+                    , H.td []
+                      [ form.gteq.field |> FieldHtml.date [] (model.msg.input form.gteq.prop) model.msg.change
+                      , " ～ " |> H.text
+                      , form.lteq.field |> FieldHtml.date [] (model.msg.input form.lteq.prop) model.msg.change
+                      ]
+                    ]
+                  ]
+              , case model.form |> View.start_at of
+                (name,present,form) ->
+                  [ H.tr ( present |> FieldHtml.isPresent )
+                    [ H.th [] [ name |> model.i18n.field |> H.text ]
+                    , H.td []
+                      [ form.gteq.field |> FieldHtml.time [] (model.msg.input form.gteq.prop) model.msg.change
+                      , " ～ " |> H.text
+                      , form.lteq.field |> FieldHtml.time [] (model.msg.input form.lteq.prop) model.msg.change
+                      ]
+                    ]
+                  ]
+              , case model.form |> View.gender of
+                (name,present,form) ->
+                  [ H.tr ( present |> FieldHtml.isPresent )
+                    [ H.th [] [ name |> model.i18n.field |> H.text ]
+                    , H.td []
+                      [ form.field |> FieldHtml.select model.options.gender [] (model.msg.input form.prop) model.msg.change
+                      ]
+                    ]
+                  ]
+              , case model.form |> View.roles of
+                (name,present,form) ->
+                  [ H.tr ( present |> FieldHtml.isPresent )
+                    [ H.th [] [ name |> model.i18n.field |> H.text ]
+                    , H.td []
+                      [ form.field |> FieldHtml.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
+                      ]
+                    ]
+                  ]
+              ]
             ]
           ]
         ]
-      , H.footer []
-        [ H.button [ "is-save" |> A.class ] [ "save" |> model.i18n.form |> H.text ]
-        , case model.state of
-          HttpView.Empty      -> "" |> H.text
-          HttpView.Loading    -> Icon.fas "spinner" |> Html.icon ["fa-spin"]
-          HttpView.Progress _ -> Icon.fas "spinner" |> Html.icon ["fa-spin"]
-          HttpView.Success  _ -> H.em [ "badge is-small is-success" |> A.class ] [ "OK" |> H.text ]
-          HttpView.Failure error -> error |> model.i18n.http |> H.text
-        ]
+      , H.footer [] <|
+        case model.http |> HttpView.state of
+          HttpView.Connecting progress ->
+            [ "searching" |> model.i18n.form |> ButtonHtml.connecting
+            , progress |> HttpHtml.progress
+            ]
+          HttpView.Ready error ->
+            [ "search" |> model.i18n.form |> ButtonHtml.save model.msg.search
+            , error |> HttpHtml.error model.i18n.http
+            ]
       ]
     ]
