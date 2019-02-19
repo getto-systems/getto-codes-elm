@@ -113,7 +113,7 @@ search = Http.tracker "search" <|
 
 query : Model -> QueryEncode.Value
 query model = QueryEncode.object
-  [ ( "[ ]=&?",           model.form.name          |> Field.value |> QueryEncode.string )
+  [ ( "name",           model.form.name          |> Field.value |> QueryEncode.string )
   , ( "age_gteq",       model.form.age_gteq      |> Field.value |> QueryEncode.string )
   , ( "age_lteq",       model.form.age_lteq      |> Field.value |> QueryEncode.string )
   , ( "email",          model.form.email         |> Field.value |> QueryEncode.string )
@@ -135,7 +135,7 @@ queryChanged names value model =
     { model
     | form =
       model.form
-      |> Form.set name_          ( value |> entryAt "[ ]=&?"          )
+      |> Form.set name_          ( value |> entryAt "name"          )
       |> Form.set age_gteq_      ( value |> entryAt "age_gteq"      )
       |> Form.set age_lteq_      ( value |> entryAt "age_lteq"      )
       |> Form.set email_         ( value |> entryAt "email"         )
