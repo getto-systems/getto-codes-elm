@@ -3,8 +3,7 @@
 prepare_production_replace(){
   sed \
     -e 's|$KEYCLOAK_URL|'$KEYCLOAK_URL'|g' \
-    -e 's|$API_URL|http://'$LABO_IP':'$LABO_PORT_PREFIX'81|g' \
-    -e 's|$RELOAD_URL|ws://'$LABO_IP':'$LABO_PORT_PREFIX'80|g' \
+    -e 's|$API_URL|'$API_URL'|g' \
     $1 > $2
 }
 
