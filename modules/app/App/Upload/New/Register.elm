@@ -94,7 +94,6 @@ fill = Frame.app >> .register >>
     , m.form.tel      |> Dom.string
     , m.form.birthday |> Dom.string
     , m.form.start_at |> Dom.string
-    , m.form.gender   |> Dom.string
     ]
   )
 

@@ -3,7 +3,9 @@ module GettoUpload.I18n.App exposing
   , menu
   , role
   , form
+  , paging
   )
+import GettoUpload.View.Html.Field as FieldHtml
 import GettoUpload.Extension.Href as Href
 
 menu : String -> String
@@ -51,3 +53,11 @@ form name =
     "searching" -> "検索中"
 
     _ -> name
+
+paging : FieldHtml.Paging -> String
+paging info =
+  [ info.page + 1 |> String.fromInt
+  , "/"
+  , info.max |> String.fromInt
+  , "ページ"
+  ] |> String.join " "
