@@ -28,8 +28,8 @@ getto_elm_routes_main(){
 
     echo $path
 
-    "$render" -d "$json" -t config/templates/html.ejs   -f public/dist/${path}.html
-    "$render" -d "$json" -t config/templates/config.ejs -f public/dist/_config/${path}.js
+    "$render" -d "$json" -t tmp/templates/html.ejs   -f public/dist/${path}.html
+    "$render" -d "$json" -t tmp/templates/config.ejs -f public/dist/_config/${path}.js
   done
 
   sleep 1

@@ -110,9 +110,10 @@ search = Http.tracker "search" <|
           { header = HeaderDecode.map View.ResponseHeader
             ( HeaderDecode.at "x-paging-max" HeaderDecode.int )
           , body = Decode.list
-            ( Decode.map2 View.Upload
-              ( Decode.at ["id"]   Decode.int )
-              ( Decode.at ["name"] Decode.string )
+            ( Decode.map3 View.Upload
+              ( Decode.at ["id"]     Decode.int )
+              ( Decode.at ["name"]   Decode.string )
+              ( Decode.at ["gender"] Decode.string )
             )
           }
         , timeout = 10 * 1000
@@ -285,8 +286,12 @@ contentPaging model = L.lazy
 
 contentTable : FrameModel a -> Html Msg
 contentTable model = L.lazy
-  (\m ->
-    "" |> H.text
+  (\m -> Html.table
+    { http = m.search
+    , i18n =
+      { field = I18n.field
+      }
+    }
   )
   (model |> Frame.app |> .search)
 

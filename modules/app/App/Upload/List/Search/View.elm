@@ -66,8 +66,9 @@ type alias ResponseHeader =
   }
 type alias ResponseBody = List Upload
 type alias Upload =
-  { id   : Int
-  , name : String
+  { id     : Int
+  , name   : String
+  , gender : String
   }
 
 

@@ -8,7 +8,7 @@
 <title>GETTO Upload</title>
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
-<link rel="stylesheet" href="https://css.getto.systems/0.12.0/getto.css">
+<link rel="stylesheet" href="https://css.getto.systems/0.13.0/getto.css">
 
 </head>
 <body>
@@ -39,7 +39,7 @@
   </div>
 </div>
 
-<script defer src="http://getto.workstation:10380/auth/js/keycloak.js" id="keycloak"></script>
+<script defer src="$KEYCLOAK_URL/auth/js/keycloak.js" id="keycloak"></script>
 <script defer src="/dist/_config/<%= info.path %>.js"></script>
 <script defer src="/dist/_app/getto_upload/app/<%= info.path %>/page.elm.js"></script>
 <script defer src="/dist/_vendor/getto-detect.js"></script>

@@ -1,6 +1,7 @@
 module GettoUpload.App.Upload.List.Search.Html exposing
   ( search
   , paging
+  , table
   )
 import GettoUpload.App.Upload.List.Search.View as View
 import GettoUpload.View.Html as Html
@@ -167,6 +168,7 @@ type alias PagingModel msg =
 paging : PagingModel msg -> Html msg
 paging model =
   case model.http |> HttpView.response of
+    Nothing -> "" |> H.text
     Just res ->
       let
         header = res |> HttpView.header
@@ -175,4 +177,113 @@ paging model =
         if body |> List.isEmpty
           then "" |> H.text
           else { page = model.page, max = header.max } |> FieldHtml.paging model.i18n.paging model.msg.page
-    _ -> "" |> H.text
+
+
+type alias TableModel =
+  { http : HttpView.Model View.ResponseHeader View.ResponseBody
+  , i18n :
+    { field : String -> String
+    }
+  }
+
+type Row
+  = Upload View.Upload
+  | Role Row String
+  --| Comment Row View.Comment
+  --| CommentRole Row String
+
+table : TableModel -> Html msg
+table model = "" |> H.text
+            {-
+  case model.http |> HttpView.response of
+    Nothing -> "" |> H.text
+    Just res ->
+      let
+        body = res |> HttpView.body
+        sum = 18
+        roleLength = 2
+        genders =
+          [ { value = "male"
+            , sum = 2
+            }
+          , { value = "female"
+            , sum = 3
+            }
+          , { value = "other"
+            , sum = 1
+            }
+          ]
+      in
+        body |> List.map Upload |> Table.table
+          (\upload -> [])
+          [ Table.cell ( Table.None, Table.Double )
+            (Table.th [] [ "id" |> model.i18n.field |> H.text ])
+            (Table.th [] [ "sum" |> model.i18n.field |> H.text ])
+            (\(Upload upload) ->
+              Table.td [] [ upload.id |> String.fromInt |> H.text ]
+            )
+          , Table.group
+            (Table.th [] [ "info" |> model.i18n.field |> H.text ])
+            [ Table.cell ( Table.Single, Table.None )
+              (Table.th [] [ "name" |> model.i18n.field |> H.text ])
+              (Table.td [] [ sum |> String.fromInt |> H.text ])
+              (\(Upload upload) ->
+                Table.td [] [ upload.name |> H.text ]
+              )
+            , Table.cell ( Table.None, Table.None )
+              (Table.th [] [ "gender" |> model.i18n.field |> H.text ])
+              (Table.none)
+              (\(Upload upload) ->
+                Table.td [] [ upload.gender |> H.text ]
+              )
+            , Table.union roleLength ( Table.None, Table.None )
+              (Table.th [] [ "roles" |> model.i18n.field |> H.text ])
+              (Table.none)
+              (\(Upload upload) -> upload.roles |> List.map (Upload upload |> Role))
+              (\(Role (Upload upload) role) ->
+                Table.td [] [ role |> H.text ]
+              )
+            , Table.rows
+              (\(Upload upload) -> upload.roles |> List.map (Upload upload |> Role))
+              [ Table.cell ( Table.None, Table.None )
+                (Table.th [] [ "roles" |> model.i18n.field |> H.text ])
+                (Table.none)
+                (\(Role (Upload upload) role) ->
+                  Table.td [] [ role |> H.text ]
+                )
+              ]
+            , Table.parts genders
+              (\gender ->
+                [ Table.cell ( Table.None, Table.None )
+                  (Table.th [] [ gender.value |> H.text ])
+                  (Table.td [] [ gender.sum |> String.fromInt |> H.text ])
+                  (\(Upload upload) ->
+                    Table.td []
+                      [ if upload.gender == gender.value
+                        then "matched" |> H.text
+                        else "" |> H.text
+                      ]
+                  )
+                ]
+              )
+            , Table.rows
+              (\(Upload upload) -> upload.comments |> List.map (Upload upload |> Comment))
+              [ Table.cell ( Table.None, Table.None )
+                (Table.th [] [ "comment" |> model.i18n.field |> H.text ])
+                (Table.none)
+                (\(Comment (Upload upload) comment) ->
+                  Table.td [] [ comment.memo |> H.text ]
+                )
+              , Table.rows
+                (\(Comment upload comment) -> comment.roles |> List.map (Comment upload comment |> CommentRole))
+                [ Table.cell ( Table.None, Table.None )
+                  (Table.th [] [ "roles" |> model.i18n.field |> H.text ])
+                  (Table.none)
+                  (\(CommentRole (Comment (Upload upload) comment) role) ->
+                    Table.td [] [ role |> H.text ]
+                  )
+                ]
+              ]
+            ]
+          ]
+            -}

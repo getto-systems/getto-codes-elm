@@ -3,7 +3,7 @@ module GettoUpload.Command.Http.Mock exposing
   )
 import GettoUpload.Command.Http.Real as Real
 import GettoUpload.View.Http as HttpView
-import GettoUpload.Env.App as Env
+import GettoUpload.Env as Env
 
 import Getto.Http.Header.Decode as HeaderDecode
 
@@ -170,14 +170,17 @@ mock =
         ] |> Dict.fromList
       )
       ( Encode.list Encode.object
-        [ [ ( "id",   1        |> Encode.int )
-          , ( "name", "text-1" |> Encode.string )
+        [ [ ( "id",     1        |> Encode.int )
+          , ( "name",   "text-1" |> Encode.string )
+          , ( "gender", "male"   |> Encode.string )
           ]
-        , [ ( "id",   2        |> Encode.int )
-          , ( "name", "text-2" |> Encode.string )
+        , [ ( "id",     2        |> Encode.int )
+          , ( "name",   "text-2" |> Encode.string )
+          , ( "gender", "female" |> Encode.string )
           ]
-        , [ ( "id",   3        |> Encode.int )
-          , ( "name", "text-3" |> Encode.string )
+        , [ ( "id",     3        |> Encode.int )
+          , ( "name",   "text-3" |> Encode.string )
+          , ( "gender", "other"  |> Encode.string )
           ]
         ]
       )
