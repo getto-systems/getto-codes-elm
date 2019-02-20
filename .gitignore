@@ -1,7 +1,15 @@
+/.envrc.secret
+
 /.elm/
 /elm-stuff/
 /node_modules/
+/tmp/
 
 /public/dist/_app/
+/public/dist/_config/
+/public/dist/**/*.html
 
 /package-lock.json
+
+/headers.json
+/modules/Env.elm

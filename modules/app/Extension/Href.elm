@@ -6,7 +6,7 @@ module GettoUpload.Extension.Href exposing
   , keycloak
   , toString
   )
-import GettoUpload.Env.App as Env
+import GettoUpload.Env as Env
 
 import Getto.Url.Query.Encode as QueryEncode
 

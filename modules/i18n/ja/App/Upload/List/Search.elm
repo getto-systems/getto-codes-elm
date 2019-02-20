@@ -6,6 +6,7 @@ module GettoUpload.I18n.App.Upload.List.Search exposing
 field : String -> String
 field name =
   case name of
+    "id"       -> "ID"
     "name"     -> "名前"
     "age"      -> "年齢"
     "email"    -> "メール"

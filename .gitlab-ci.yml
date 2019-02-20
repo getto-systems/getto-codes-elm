@@ -3,6 +3,7 @@ image: node:11.9.0-stretch
 test:
   script:
     - npm install
+    - ./bin/prepare-production.sh
     - ./bin/test.sh
 
 release:
