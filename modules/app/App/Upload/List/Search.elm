@@ -45,6 +45,7 @@ type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
   { signature : String
   , form      : View.Form
+  , page      : Int
   , search    : HttpView.Model View.ResponseHeader View.ResponseBody
   }
 
@@ -52,6 +53,7 @@ type Msg
   = FieldInput (Form.Prop View.Form String) String
   | FieldCheck (Form.Prop View.Form (Set String)) String
   | FieldChange
+  | PageTo String
   | SearchRequest
   | SearchStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
 
@@ -71,6 +73,7 @@ init signature model =
       , gender        = Field.init signature "gender"        ""
       , roles         = Field.init signature "roles"         Set.empty
       }
+    , page = 0
     , search = HttpView.empty
     }
   , [ fill
@@ -90,7 +93,6 @@ fill = Frame.app >> .search >>
     , m.form.birthday_lteq |> Dom.string
     , m.form.start_at_gteq |> Dom.string
     , m.form.start_at_lteq |> Dom.string
-    , m.form.gender        |> Dom.string
     ]
   )
 
@@ -105,47 +107,57 @@ search = Http.tracker "search" <|
         , headers = model |> Api.headers
         , params  = m |> query
         , response =
-          { header = HeaderDecode.succeed ()
-          , body = Decode.succeed ()
+          { header = HeaderDecode.map View.ResponseHeader
+            ( HeaderDecode.at "x-paging-max" HeaderDecode.int )
+          , body = Decode.list
+            ( Decode.map2 View.Upload
+              ( Decode.at ["id"]   Decode.int )
+              ( Decode.at ["name"] Decode.string )
+            )
           }
         , timeout = 10 * 1000
         }
 
 query : Model -> QueryEncode.Value
 query model = QueryEncode.object
-  [ ( "name",           model.form.name          |> Field.value |> QueryEncode.string )
-  , ( "age_gteq",       model.form.age_gteq      |> Field.value |> QueryEncode.string )
-  , ( "age_lteq",       model.form.age_lteq      |> Field.value |> QueryEncode.string )
-  , ( "email",          model.form.email         |> Field.value |> QueryEncode.string )
-  , ( "tel",            model.form.tel           |> Field.value |> QueryEncode.string )
-  , ( "birthday_gteq",  model.form.birthday_gteq |> Field.value |> QueryEncode.string )
-  , ( "birthday_lteq",  model.form.birthday_lteq |> Field.value |> QueryEncode.string )
-  , ( "start_at_gteq",  model.form.start_at_gteq |> Field.value |> QueryEncode.string )
-  , ( "start_at_lteq",  model.form.start_at_lteq |> Field.value |> QueryEncode.string )
-  , ( "gender",         model.form.gender        |> Field.value |> QueryEncode.string )
-  , ( "roles",          model.form.roles         |> Field.value |> Set.toList |> QueryEncode.list QueryEncode.string )
+  [ ( "q"
+    , [ ( "name",           model.form.name          |> Field.value |> QueryEncode.string )
+      , ( "age_gteq",       model.form.age_gteq      |> Field.value |> QueryEncode.string )
+      , ( "age_lteq",       model.form.age_lteq      |> Field.value |> QueryEncode.string )
+      , ( "email",          model.form.email         |> Field.value |> QueryEncode.string )
+      , ( "tel",            model.form.tel           |> Field.value |> QueryEncode.string )
+      , ( "birthday_gteq",  model.form.birthday_gteq |> Field.value |> QueryEncode.string )
+      , ( "birthday_lteq",  model.form.birthday_lteq |> Field.value |> QueryEncode.string )
+      , ( "start_at_gteq",  model.form.start_at_gteq |> Field.value |> QueryEncode.string )
+      , ( "start_at_lteq",  model.form.start_at_lteq |> Field.value |> QueryEncode.string )
+      , ( "gender",         model.form.gender        |> Field.value |> QueryEncode.string )
+      , ( "roles",          model.form.roles         |> Field.value |> Set.toList |> QueryEncode.list QueryEncode.string )
+      ] |> QueryEncode.object
+    )
+  , ( "page", model.page |> QueryEncode.int )
   ]
 
 queryChanged : List String -> QueryDecode.Value -> Model -> Model
 queryChanged names value model =
   let
-    entryAt name = QueryDecode.entryAt (names ++ [name]) (QueryDecode.string "")
-    listAt  name = QueryDecode.listAt  (names ++ [name]) (QueryDecode.string "")
+    qEntryAt name = QueryDecode.entryAt (names ++ ["q",name]) (QueryDecode.string "")
+    qListAt  name = QueryDecode.listAt  (names ++ ["q",name]) (QueryDecode.string "")
   in
     { model
     | form =
       model.form
-      |> Form.set name_          ( value |> entryAt "name"          )
-      |> Form.set age_gteq_      ( value |> entryAt "age_gteq"      )
-      |> Form.set age_lteq_      ( value |> entryAt "age_lteq"      )
-      |> Form.set email_         ( value |> entryAt "email"         )
-      |> Form.set tel_           ( value |> entryAt "tel"           )
-      |> Form.set birthday_gteq_ ( value |> entryAt "birthday_gteq" )
-      |> Form.set birthday_lteq_ ( value |> entryAt "birthday_lteq" )
-      |> Form.set start_at_gteq_ ( value |> entryAt "start_at_gteq" )
-      |> Form.set start_at_lteq_ ( value |> entryAt "start_at_lteq" )
-      |> Form.set gender_        ( value |> entryAt "gender"        )
-      |> Form.set roles_         ( value |> listAt  "roles" |> Set.fromList )
+      |> Form.set name_          ( value |> qEntryAt "name"          )
+      |> Form.set age_gteq_      ( value |> qEntryAt "age_gteq"      )
+      |> Form.set age_lteq_      ( value |> qEntryAt "age_lteq"      )
+      |> Form.set email_         ( value |> qEntryAt "email"         )
+      |> Form.set tel_           ( value |> qEntryAt "tel"           )
+      |> Form.set birthday_gteq_ ( value |> qEntryAt "birthday_gteq" )
+      |> Form.set birthday_lteq_ ( value |> qEntryAt "birthday_lteq" )
+      |> Form.set start_at_gteq_ ( value |> qEntryAt "start_at_gteq" )
+      |> Form.set start_at_lteq_ ( value |> qEntryAt "start_at_lteq" )
+      |> Form.set gender_        ( value |> qEntryAt "gender"        )
+      |> Form.set roles_         ( value |> qListAt  "roles" |> Set.fromList )
+    , page = value |> QueryDecode.entryAt (names ++ ["page"]) (QueryDecode.int 0)
     }
 
 store : Model -> Encode.Value
@@ -171,8 +183,15 @@ update msg model =
       )
     FieldChange -> ( model, Frame.storeApp )
 
+    PageTo page ->
+      ( { model | page = page |> String.toInt |> Maybe.withDefault 0 }
+      , [ Http.request model.signature search SearchStateChanged
+        , Frame.pushUrl
+        ] |> Transition.batch
+      )
+
     SearchRequest ->
-      ( model
+      ( { model | page = 0 }
       , [ Http.request model.signature search SearchStateChanged
         , Frame.pushUrl
         ] |> Transition.batch
@@ -182,8 +201,14 @@ update msg model =
 contents : FrameModel a -> List (Html Msg)
 contents model =
   [ H.section [ A.class "list" ]
-    [ model |> contentSearch
-    , model |> contentData
+    [ H.section [ "search" |> A.class ]
+      [ model |> contentSearch
+      ]
+    , H.section [ "data" |> A.class ]
+      [ model |> contentPaging
+      , model |> contentTable
+      , model |> contentPaging
+      ]
     ]
   ]
 
@@ -243,9 +268,24 @@ contentSearch model = L.lazy
   )
   (model |> Frame.app |> .search)
 
-contentData : FrameModel a -> Html Msg
-contentData model = L.lazy
-  (\s ->
+contentPaging : FrameModel a -> Html Msg
+contentPaging model = L.lazy
+  (\m -> Html.paging
+    { page = m.page
+    , http = m.search
+    , msg =
+      { page = PageTo
+      }
+    , i18n =
+      { paging = AppI18n.paging
+      }
+    }
+  )
+  (model |> Frame.app |> .search)
+
+contentTable : FrameModel a -> Html Msg
+contentTable model = L.lazy
+  (\m ->
     "" |> H.text
   )
   (model |> Frame.app |> .search)

@@ -4,6 +4,7 @@ module GettoUpload.App.Upload.List.Search.View exposing
   , View
   , ResponseHeader
   , ResponseBody
+  , Upload
   , compose
   , name
   , age
@@ -60,8 +61,14 @@ type View = View
   , start_at : Present.Model (Form.Between Form String)
   }
 
-type alias ResponseHeader = ()
-type alias ResponseBody = ()
+type alias ResponseHeader =
+  { max : Int
+  }
+type alias ResponseBody = List Upload
+type alias Upload =
+  { id   : Int
+  , name : String
+  }
 
 
 compose : Init -> Form -> View

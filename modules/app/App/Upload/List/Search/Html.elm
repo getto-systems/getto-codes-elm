@@ -1,5 +1,6 @@
 module GettoUpload.App.Upload.List.Search.Html exposing
   ( search
+  , paging
   )
 import GettoUpload.App.Upload.List.Search.View as View
 import GettoUpload.View.Html as Html
@@ -40,115 +41,138 @@ type alias SearchModel msg =
 
 search : SearchModel msg -> Html msg
 search model =
-  H.section [ "search" |> A.class ]
-    [ H.form [ model.msg.search |> E.onSubmit ]
-      [ H.section []
-        [ H.div []
-          [ H.table []
-            [ H.tbody [] <| List.concat
-              [ case model.form |> View.name of
-                (name,present,form) ->
-                  [ H.tr ( present |> FieldHtml.isPresent )
-                    [ H.th [] [ name |> model.i18n.field |> H.text ]
-                    , H.td []
-                      [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
-                      ]
+  H.form [ model.msg.search |> E.onSubmit ]
+    [ H.section []
+      [ H.div []
+        [ H.table []
+          [ H.tbody [] <| List.concat
+            [ case model.form |> View.name of
+              (name,present,form) ->
+                [ H.tr ( present |> FieldHtml.isPresent )
+                  [ H.th [] [ name |> model.i18n.field |> H.text ]
+                  , H.td []
+                    [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
                     ]
                   ]
-              , case model.form |> View.email of
-                (name,present,form) ->
-                  [ H.tr ( present |> FieldHtml.isPresent )
-                    [ H.th [] [ name |> model.i18n.field |> H.text ]
-                    , H.td []
-                      [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
-                      ]
+                ]
+            , case model.form |> View.email of
+              (name,present,form) ->
+                [ H.tr ( present |> FieldHtml.isPresent )
+                  [ H.th [] [ name |> model.i18n.field |> H.text ]
+                  , H.td []
+                    [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
                     ]
                   ]
-              , case model.form |> View.tel of
-                (name,present,form) ->
-                  [ H.tr ( present |> FieldHtml.isPresent )
-                    [ H.th [] [ name |> model.i18n.field |> H.text ]
-                    , H.td []
-                      [ form.field |> FieldHtml.tel [] (model.msg.input form.prop) model.msg.change
-                      ]
+                ]
+            , case model.form |> View.tel of
+              (name,present,form) ->
+                [ H.tr ( present |> FieldHtml.isPresent )
+                  [ H.th [] [ name |> model.i18n.field |> H.text ]
+                  , H.td []
+                    [ form.field |> FieldHtml.tel [] (model.msg.input form.prop) model.msg.change
                     ]
                   ]
-              ]
-            ]
-          ]
-        , H.div []
-          [ H.table []
-            [ H.tbody [] <| List.concat
-              [ case model.form |> View.age of
-                (name,present,form) ->
-                  [ H.tr ( present |> FieldHtml.isPresent )
-                    [ H.th [] [ name |> model.i18n.field |> H.text ]
-                    , H.td []
-                      [ form.gteq.field |> FieldHtml.number [] (model.msg.input form.gteq.prop) model.msg.change
-                      , " ～ " |> H.text
-                      , form.lteq.field |> FieldHtml.number [] (model.msg.input form.lteq.prop) model.msg.change
-                      ]
-                    ]
-                  ]
-              , case model.form |> View.birthday of
-                (name,present,form) ->
-                  [ H.tr ( present |> FieldHtml.isPresent )
-                    [ H.th [] [ name |> model.i18n.field |> H.text ]
-                    , H.td []
-                      [ form.gteq.field |> FieldHtml.date [] (model.msg.input form.gteq.prop) model.msg.change
-                      , " ～ " |> H.text
-                      , form.lteq.field |> FieldHtml.date [] (model.msg.input form.lteq.prop) model.msg.change
-                      ]
-                    ]
-                  ]
-              , case model.form |> View.start_at of
-                (name,present,form) ->
-                  [ H.tr ( present |> FieldHtml.isPresent )
-                    [ H.th [] [ name |> model.i18n.field |> H.text ]
-                    , H.td []
-                      [ form.gteq.field |> FieldHtml.time [] (model.msg.input form.gteq.prop) model.msg.change
-                      , " ～ " |> H.text
-                      , form.lteq.field |> FieldHtml.time [] (model.msg.input form.lteq.prop) model.msg.change
-                      ]
-                    ]
-                  ]
-              ]
-            ]
-          ]
-        , H.div []
-          [ H.table []
-            [ H.tbody [] <| List.concat
-              [ case model.form |> View.gender of
-                (name,present,form) ->
-                  [ H.tr ( present |> FieldHtml.isPresent )
-                    [ H.th [] [ name |> model.i18n.field |> H.text ]
-                    , H.td []
-                      [ form.field |> FieldHtml.select model.options.gender [] (model.msg.input form.prop) model.msg.change
-                      ]
-                    ]
-                  ]
-              , case model.form |> View.roles of
-                (name,present,form) ->
-                  [ H.tr ( present |> FieldHtml.isPresent )
-                    [ H.th [] [ name |> model.i18n.field |> H.text ]
-                    , H.td []
-                      [ form.field |> FieldHtml.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
-                      ]
-                    ]
-                  ]
-              ]
+                ]
             ]
           ]
         ]
-      , H.footer [] <|
-        case model.http |> HttpView.state of
-          HttpView.Connecting progress ->
-            [ "searching" |> model.i18n.form |> ButtonHtml.connecting
-            , progress |> HttpHtml.progress
+      , H.div []
+        [ H.table []
+          [ H.tbody [] <| List.concat
+            [ case model.form |> View.age of
+              (name,present,form) ->
+                [ H.tr ( present |> FieldHtml.isPresent )
+                  [ H.th [] [ name |> model.i18n.field |> H.text ]
+                  , H.td []
+                    [ form.gteq.field |> FieldHtml.number [] (model.msg.input form.gteq.prop) model.msg.change
+                    , " ～ " |> H.text
+                    , form.lteq.field |> FieldHtml.number [] (model.msg.input form.lteq.prop) model.msg.change
+                    ]
+                  ]
+                ]
+            , case model.form |> View.birthday of
+              (name,present,form) ->
+                [ H.tr ( present |> FieldHtml.isPresent )
+                  [ H.th [] [ name |> model.i18n.field |> H.text ]
+                  , H.td []
+                    [ form.gteq.field |> FieldHtml.date [] (model.msg.input form.gteq.prop) model.msg.change
+                    , " ～ " |> H.text
+                    , form.lteq.field |> FieldHtml.date [] (model.msg.input form.lteq.prop) model.msg.change
+                    ]
+                  ]
+                ]
+            , case model.form |> View.start_at of
+              (name,present,form) ->
+                [ H.tr ( present |> FieldHtml.isPresent )
+                  [ H.th [] [ name |> model.i18n.field |> H.text ]
+                  , H.td []
+                    [ form.gteq.field |> FieldHtml.time [] (model.msg.input form.gteq.prop) model.msg.change
+                    , " ～ " |> H.text
+                    , form.lteq.field |> FieldHtml.time [] (model.msg.input form.lteq.prop) model.msg.change
+                    ]
+                  ]
+                ]
             ]
-          HttpView.Ready error ->
-            [ "search" |> model.i18n.form |> ButtonHtml.search
-            , error |> HttpHtml.error model.i18n.http
+          ]
+        ]
+      , H.div []
+        [ H.table []
+          [ H.tbody [] <| List.concat
+            [ case model.form |> View.gender of
+              (name,present,form) ->
+                [ H.tr ( present |> FieldHtml.isPresent )
+                  [ H.th [] [ name |> model.i18n.field |> H.text ]
+                  , H.td []
+                    [ form.field |> FieldHtml.select model.options.gender [] (model.msg.input form.prop) model.msg.change
+                    ]
+                  ]
+                ]
+            , case model.form |> View.roles of
+              (name,present,form) ->
+                [ H.tr ( present |> FieldHtml.isPresent )
+                  [ H.th [] [ name |> model.i18n.field |> H.text ]
+                  , H.td []
+                    [ form.field |> FieldHtml.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
+                    ]
+                  ]
+                ]
             ]
+          ]
+        ]
       ]
+    , H.footer [] <|
+      case model.http |> HttpView.state of
+        HttpView.Connecting progress ->
+          [ "searching" |> model.i18n.form |> ButtonHtml.connecting
+          , progress |> HttpHtml.progress
+          ]
+        HttpView.Ready error ->
+          [ "search" |> model.i18n.form |> ButtonHtml.search
+          , error |> HttpHtml.error model.i18n.http
+          ]
     ]
+
+
+type alias PagingModel msg =
+  { page : Int
+  , http : HttpView.Model View.ResponseHeader View.ResponseBody
+  , msg :
+    { page : String -> msg
+    }
+  , i18n :
+    { paging : FieldHtml.Paging -> String
+    }
+  }
+
+paging : PagingModel msg -> Html msg
+paging model =
+  case model.http |> HttpView.response of
+    Just res ->
+      let
+        header = res |> HttpView.header
+        body   = res |> HttpView.body
+      in
+        if body |> List.isEmpty
+          then "" |> H.text
+          else { page = model.page, max = header.max } |> FieldHtml.paging model.i18n.paging model.msg.page
+    _ -> "" |> H.text

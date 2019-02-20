@@ -1,5 +1,6 @@
 module GettoUpload.View.Html.Field exposing
-  ( isError
+  ( Paging
+  , isError
   , isPresent
   , textSmall
   , text
@@ -22,6 +23,7 @@ module GettoUpload.View.Html.Field exposing
   , files
   , errors
   , onChange
+  , paging
   )
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Html as Html
@@ -35,6 +37,11 @@ import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
+
+type alias Paging =
+  { page : Int
+  , max  : Int
+  }
 
 isPresent : Bool -> List (H.Attribute msg)
 isPresent presence =
@@ -104,7 +111,11 @@ select options attr inputMsg changeMsg field =
     )
     ( options |> List.map
       (\(value,label) ->
-        H.option [ value |> A.value ] [ label |> H.text ]
+        H.option
+          [ value |> A.value
+          , (value == (field |> Field.value)) |> A.selected
+          ]
+          [ label |> H.text ]
       )
     )
 
@@ -194,3 +205,31 @@ errors i18n = List.map
 onChange : msg -> H.Attribute msg
 onChange msg =
   Decode.succeed msg |> E.on "change"
+
+paging : (Paging -> String) -> (String -> msg) -> Paging -> Html msg
+paging i18n msg info =
+  let
+    options =
+      List.range 0 (info.max - 1) |> List.map
+        (\page ->
+          ( page |> String.fromInt
+          , page == info.page
+          , { page = page, max = info.max } |> i18n
+          )
+        )
+  in
+    if options |> List.isEmpty
+      then "" |> H.text
+      else
+        H.nav []
+          [ H.select [ msg |> E.onInput ]
+            ( options |> List.map
+              (\(value,selected,label) ->
+                H.option
+                  [ value    |> A.value
+                  , selected |> A.selected
+                  ]
+                  [ label |> H.text ]
+              )
+            )
+          ]

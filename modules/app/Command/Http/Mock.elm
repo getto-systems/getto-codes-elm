@@ -36,7 +36,7 @@ type Request
 
 request : RequestData header body msg -> Cmd msg
 request data =
-  case mock |> Dict.get ( data.method, data.url ) of
+  case mock |> Dict.get ( data.method, data.url |> String.split "?" |> List.head |> Maybe.withDefault "" ) of
     Just (Mock delay rawHeader rawBody) ->
       [ delay * 1 / 8
         |> Process.sleep
@@ -159,6 +159,26 @@ mock =
             , ( "roles",    ["upload"] |> Encode.list Encode.string )
             ] |> Encode.object
           )
+        ]
+      )
+    --}
+    )
+  , ( ( "GET", "uploads" )
+    {--, Real --}
+    {--}, Mock 1000
+      ( [ ( "x-paging-max", "10" )
+        ] |> Dict.fromList
+      )
+      ( Encode.list Encode.object
+        [ [ ( "id",   1        |> Encode.int )
+          , ( "name", "text-1" |> Encode.string )
+          ]
+        , [ ( "id",   2        |> Encode.int )
+          , ( "name", "text-2" |> Encode.string )
+          ]
+        , [ ( "id",   3        |> Encode.int )
+          , ( "name", "text-3" |> Encode.string )
+          ]
         ]
       )
     --}
