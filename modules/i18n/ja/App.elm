@@ -4,8 +4,9 @@ module GettoUpload.I18n.App exposing
   , role
   , form
   , paging
+  , table
   )
-import GettoUpload.View.Html.Field as FieldHtml
+import GettoUpload.View.Html.Input as Input
 import GettoUpload.Extension.Href as Href
 
 menu : String -> String
@@ -54,10 +55,17 @@ form name =
 
     _ -> name
 
-paging : FieldHtml.Paging -> String
+paging : Input.Paging -> String
 paging info =
   [ info.page + 1 |> String.fromInt
   , "/"
   , info.max |> String.fromInt
   , "ページ"
   ] |> String.join " "
+
+table : String -> String
+table name =
+  case name of
+    "empty-data" -> "データがありません"
+
+    _ -> name

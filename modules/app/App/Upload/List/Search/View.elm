@@ -69,6 +69,7 @@ type alias Upload =
   { id     : Int
   , name   : String
   , gender : String
+  , roles  : List String
   }
 
 

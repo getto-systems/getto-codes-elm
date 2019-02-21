@@ -165,7 +165,7 @@ mock =
     )
   , ( ( "GET", "uploads" )
     {--, Real --}
-    {--}, Mock 1000
+    {--}, Mock 300
       ( [ ( "x-paging-max", "10" )
         ] |> Dict.fromList
       )
@@ -173,14 +173,17 @@ mock =
         [ [ ( "id",     1        |> Encode.int )
           , ( "name",   "text-1" |> Encode.string )
           , ( "gender", "male"   |> Encode.string )
+          , ( "roles", ["admin"] |> Encode.list Encode.string )
           ]
         , [ ( "id",     2        |> Encode.int )
           , ( "name",   "text-2" |> Encode.string )
           , ( "gender", "female" |> Encode.string )
+          , ( "roles", [] |> Encode.list Encode.string )
           ]
         , [ ( "id",     3        |> Encode.int )
           , ( "name",   "text-3" |> Encode.string )
           , ( "gender", "other"  |> Encode.string )
+          , ( "roles", ["admin","upload"] |> Encode.list Encode.string )
           ]
         ]
       )
