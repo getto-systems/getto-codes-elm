@@ -5,14 +5,16 @@ module GettoUpload.App.Upload.List.Search.Html exposing
   )
 import GettoUpload.App.Upload.List.Search.View as View
 import GettoUpload.View.Html as Html
-import GettoUpload.View.Html.Button as ButtonHtml
-import GettoUpload.View.Html.Field as FieldHtml
-import GettoUpload.View.Html.Http as HttpHtml
+import GettoUpload.View.Html.Button as Button
+import GettoUpload.View.Html.Input as Input
+import GettoUpload.View.Html.Http as Http
+import GettoUpload.View.Html.Table as TableView
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
 import Getto.Field.Form as Form
+import Getto.Html.Table as Table
 
 import Set exposing ( Set )
 import Html as H exposing ( Html )
@@ -49,28 +51,28 @@ search model =
           [ H.tbody [] <| List.concat
             [ case model.form |> View.name of
               (name,present,form) ->
-                [ H.tr ( present |> FieldHtml.isPresent )
+                [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
+                    [ form.field |> Input.text [] (model.msg.input form.prop) model.msg.change
                     ]
                   ]
                 ]
             , case model.form |> View.email of
               (name,present,form) ->
-                [ H.tr ( present |> FieldHtml.isPresent )
+                [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
+                    [ form.field |> Input.text [] (model.msg.input form.prop) model.msg.change
                     ]
                   ]
                 ]
             , case model.form |> View.tel of
               (name,present,form) ->
-                [ H.tr ( present |> FieldHtml.isPresent )
+                [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.field |> FieldHtml.tel [] (model.msg.input form.prop) model.msg.change
+                    [ form.field |> Input.tel [] (model.msg.input form.prop) model.msg.change
                     ]
                   ]
                 ]
@@ -82,34 +84,34 @@ search model =
           [ H.tbody [] <| List.concat
             [ case model.form |> View.age of
               (name,present,form) ->
-                [ H.tr ( present |> FieldHtml.isPresent )
+                [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.gteq.field |> FieldHtml.number [] (model.msg.input form.gteq.prop) model.msg.change
+                    [ form.gteq.field |> Input.number [] (model.msg.input form.gteq.prop) model.msg.change
                     , " ～ " |> H.text
-                    , form.lteq.field |> FieldHtml.number [] (model.msg.input form.lteq.prop) model.msg.change
+                    , form.lteq.field |> Input.number [] (model.msg.input form.lteq.prop) model.msg.change
                     ]
                   ]
                 ]
             , case model.form |> View.birthday of
               (name,present,form) ->
-                [ H.tr ( present |> FieldHtml.isPresent )
+                [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.gteq.field |> FieldHtml.date [] (model.msg.input form.gteq.prop) model.msg.change
+                    [ form.gteq.field |> Input.date [] (model.msg.input form.gteq.prop) model.msg.change
                     , " ～ " |> H.text
-                    , form.lteq.field |> FieldHtml.date [] (model.msg.input form.lteq.prop) model.msg.change
+                    , form.lteq.field |> Input.date [] (model.msg.input form.lteq.prop) model.msg.change
                     ]
                   ]
                 ]
             , case model.form |> View.start_at of
               (name,present,form) ->
-                [ H.tr ( present |> FieldHtml.isPresent )
+                [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.gteq.field |> FieldHtml.time [] (model.msg.input form.gteq.prop) model.msg.change
+                    [ form.gteq.field |> Input.time [] (model.msg.input form.gteq.prop) model.msg.change
                     , " ～ " |> H.text
-                    , form.lteq.field |> FieldHtml.time [] (model.msg.input form.lteq.prop) model.msg.change
+                    , form.lteq.field |> Input.time [] (model.msg.input form.lteq.prop) model.msg.change
                     ]
                   ]
                 ]
@@ -121,19 +123,19 @@ search model =
           [ H.tbody [] <| List.concat
             [ case model.form |> View.gender of
               (name,present,form) ->
-                [ H.tr ( present |> FieldHtml.isPresent )
+                [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.field |> FieldHtml.select model.options.gender [] (model.msg.input form.prop) model.msg.change
+                    [ form.field |> Input.select model.options.gender [] (model.msg.input form.prop) model.msg.change
                     ]
                   ]
                 ]
             , case model.form |> View.roles of
               (name,present,form) ->
-                [ H.tr ( present |> FieldHtml.isPresent )
+                [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.field |> FieldHtml.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
+                    [ form.field |> Input.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
                     ]
                   ]
                 ]
@@ -144,12 +146,12 @@ search model =
     , H.footer [] <|
       case model.http |> HttpView.state of
         HttpView.Connecting progress ->
-          [ "searching" |> model.i18n.form |> ButtonHtml.connecting
-          , progress |> HttpHtml.progress
+          [ "searching" |> model.i18n.form |> Button.connecting
+          , progress |> Http.progress
           ]
         HttpView.Ready error ->
-          [ "search" |> model.i18n.form |> ButtonHtml.search
-          , error |> HttpHtml.error model.i18n.http
+          [ "search" |> model.i18n.form |> Button.search
+          , error |> Http.error model.i18n.http
           ]
     ]
 
@@ -161,7 +163,7 @@ type alias PagingModel msg =
     { page : String -> msg
     }
   , i18n :
-    { paging : FieldHtml.Paging -> String
+    { paging : Input.Paging -> String
     }
   }
 
@@ -176,25 +178,19 @@ paging model =
       in
         if body |> List.isEmpty
           then "" |> H.text
-          else { page = model.page, max = header.max } |> FieldHtml.paging model.i18n.paging model.msg.page
+          else { page = model.page, max = header.max } |> Input.paging model.i18n.paging model.msg.page
 
 
 type alias TableModel =
   { http : HttpView.Model View.ResponseHeader View.ResponseBody
   , i18n :
     { field : String -> String
+    , table : String -> String
     }
   }
 
-type Row
-  = Upload View.Upload
-  | Role Row String
-  --| Comment Row View.Comment
-  --| CommentRole Row String
-
 table : TableModel -> Html msg
-table model = "" |> H.text
-            {-
+table model =
   case model.http |> HttpView.response of
     Nothing -> "" |> H.text
     Just res ->
@@ -214,47 +210,54 @@ table model = "" |> H.text
             }
           ]
       in
-        body |> List.map Upload |> Table.table
-          (\upload -> [])
-          [ Table.cell ( Table.None, Table.Double )
-            (Table.th [] [ "id" |> model.i18n.field |> H.text ])
-            (Table.th [] [ "sum" |> model.i18n.field |> H.text ])
-            (\(Upload upload) ->
-              Table.td [] [ upload.id |> String.fromInt |> H.text ]
-            )
+        body |> Table.table TableView.attr ("empty-data" |> model.i18n.table |> TableView.emptyData)
+          [ Table.column ( Table.None, Table.Double )
+            { header  = Table.th [] [ "id" |> model.i18n.field |> H.text ]
+            , summary = Table.empty
+            , content = \upload ->
+              Table.td [ "is-center" |> A.class ]
+                [ H.p [] [ upload.id |> String.fromInt |> H.text ] ]
+            }
           , Table.group
-            (Table.th [] [ "info" |> model.i18n.field |> H.text ])
-            [ Table.cell ( Table.Single, Table.None )
-              (Table.th [] [ "name" |> model.i18n.field |> H.text ])
-              (Table.td [] [ sum |> String.fromInt |> H.text ])
-              (\(Upload upload) ->
-                Table.td [] [ upload.name |> H.text ]
-              )
-            , Table.cell ( Table.None, Table.None )
-              (Table.th [] [ "gender" |> model.i18n.field |> H.text ])
-              (Table.none)
-              (\(Upload upload) ->
-                Table.td [] [ upload.gender |> H.text ]
-              )
-            , Table.union roleLength ( Table.None, Table.None )
-              (Table.th [] [ "roles" |> model.i18n.field |> H.text ])
-              (Table.none)
-              (\(Upload upload) -> upload.roles |> List.map (Upload upload |> Role))
-              (\(Role (Upload upload) role) ->
-                Table.td [] [ role |> H.text ]
-              )
+            { header = Table.th [] [ "info" |> model.i18n.field |> H.text ]
+            }
+            [ Table.column ( Table.None, Table.None )
+              { header  = Table.th [] [ "name" |> model.i18n.field |> H.text ]
+              , summary = Table.th [] [ "sum" |> model.i18n.field |> H.text ]
+              , content = \upload ->
+                Table.td []
+                  [ H.p [] [ upload.name |> H.text ] ]
+              }
+            , Table.column ( Table.None, Table.Single )
+              { header  = Table.th [] [ "gender" |> model.i18n.field |> H.text ]
+              , summary = Table.td [] [ H.p [] [ sum |> String.fromInt |> H.text ] ]
+              , content = \upload ->
+                Table.td []
+                  [ H.p [] [ upload.gender |> H.text ] ]
+              }
+            , Table.union ( Table.None, Table.None )
+              { header  = Table.th [] [ "roles" |> model.i18n.field |> H.text ]
+              , summary = Table.empty
+              , colspan = roleLength
+              , data    = \upload ->
+                upload.roles |> List.map
+                  (\role -> { role = role, upload = upload })
+              , content = \data ->
+                Table.td [] [ H.p [] [ data.role |> H.text ] ]
+              }
+            {-
             , Table.rows
               (\(Upload upload) -> upload.roles |> List.map (Upload upload |> Role))
-              [ Table.cell ( Table.None, Table.None )
+              [ Table.column ( Table.None, Table.None )
                 (Table.th [] [ "roles" |> model.i18n.field |> H.text ])
-                (Table.none)
+                (Table.empty)
                 (\(Role (Upload upload) role) ->
                   Table.td [] [ role |> H.text ]
                 )
               ]
             , Table.parts genders
               (\gender ->
-                [ Table.cell ( Table.None, Table.None )
+                [ Table.column ( Table.None, Table.None )
                   (Table.th [] [ gender.value |> H.text ])
                   (Table.td [] [ gender.sum |> String.fromInt |> H.text ])
                   (\(Upload upload) ->
@@ -268,22 +271,22 @@ table model = "" |> H.text
               )
             , Table.rows
               (\(Upload upload) -> upload.comments |> List.map (Upload upload |> Comment))
-              [ Table.cell ( Table.None, Table.None )
+              [ Table.column ( Table.None, Table.None )
                 (Table.th [] [ "comment" |> model.i18n.field |> H.text ])
-                (Table.none)
+                (Table.empty)
                 (\(Comment (Upload upload) comment) ->
                   Table.td [] [ comment.memo |> H.text ]
                 )
               , Table.rows
                 (\(Comment upload comment) -> comment.roles |> List.map (Comment upload comment |> CommentRole))
-                [ Table.cell ( Table.None, Table.None )
+                [ Table.column ( Table.None, Table.None )
                   (Table.th [] [ "roles" |> model.i18n.field |> H.text ])
-                  (Table.none)
+                  (Table.empty)
                   (\(CommentRole (Comment (Upload upload) comment) role) ->
                     Table.td [] [ role |> H.text ]
                   )
                 ]
               ]
+            -}
             ]
           ]
-            -}

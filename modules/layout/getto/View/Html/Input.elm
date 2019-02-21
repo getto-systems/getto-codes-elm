@@ -1,4 +1,4 @@
-module GettoUpload.View.Html.Field exposing
+module GettoUpload.View.Html.Input exposing
   ( Paging
   , isError
   , isPresent

@@ -3,9 +3,9 @@ module GettoUpload.App.Upload.New.Register.Html exposing
   )
 import GettoUpload.App.Upload.New.Register.View as View
 import GettoUpload.View.Html as Html
-import GettoUpload.View.Html.Button as ButtonHtml
-import GettoUpload.View.Html.Field as FieldHtml
-import GettoUpload.View.Html.Http as HttpHtml
+import GettoUpload.View.Html.Button as Button
+import GettoUpload.View.Html.Input as Input
+import GettoUpload.View.Html.Http as Http
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Http as HttpView
 
@@ -53,123 +53,123 @@ register model =
         [ H.tbody [] <| List.concat
           [ case model.form |> View.name of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.text [] (model.msg.input form.prop) model.msg.change
+                  [ [ form.field |> Input.text [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.text of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ "select-file" |> model.i18n.form |> ButtonHtml.select (model.msg.select form.prop)
-                    , form.field |> Field.value |> FieldHtml.files
+                  [ [ "select-file" |> model.i18n.form |> Button.select (model.msg.select form.prop)
+                    , form.field |> Field.value |> Input.files
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.memo of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.textarea [] (model.msg.input form.prop) model.msg.change
+                  [ [ form.field |> Input.textarea [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.age of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.number [] (model.msg.input form.prop) model.msg.change
+                  [ [ form.field |> Input.number [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.email of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.email [] (model.msg.input form.prop) model.msg.change
+                  [ [ form.field |> Input.email [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.tel of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.tel [] (model.msg.input form.prop) model.msg.change
+                  [ [ form.field |> Input.tel [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.birthday of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.date [] (model.msg.input form.prop) model.msg.change
+                  [ [ form.field |> Input.date [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.start_at of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.time [] (model.msg.input form.prop) model.msg.change
+                  [ [ form.field |> Input.time [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.gender of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.select model.options.gender [] (model.msg.input form.prop) model.msg.change
+                  [ [ form.field |> Input.select model.options.gender [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.quality of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.radio model.options.quality [] (model.msg.input form.prop) model.msg.change
+                  [ [ form.field |> Input.radio model.options.quality [] (model.msg.input form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
           , case model.form |> View.roles of
             (name,errors,form) ->
-              [ H.tr ( errors |> FieldHtml.isError )
+              [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> FieldHtml.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
+                  [ [ form.field |> Input.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
                     ]
-                  , errors |> FieldHtml.errors model.i18n.error
+                  , errors |> Input.errors model.i18n.error
                   ]
                 ]
               ]
@@ -178,17 +178,17 @@ register model =
       , H.footer [] <|
         case model.http |> HttpView.state of
           HttpView.Connecting progress ->
-            [ "uploading" |> model.i18n.form |> ButtonHtml.connecting
-            , progress |> HttpHtml.progress
+            [ "uploading" |> model.i18n.form |> Button.connecting
+            , progress |> Http.progress
             ]
           HttpView.Ready error ->
             if model.form |> View.hasError
               then
-                [ "has-error" |> model.i18n.form |> ButtonHtml.error
+                [ "has-error" |> model.i18n.form |> Button.error
                 ]
               else
-                [ "upload" |> model.i18n.form |> ButtonHtml.save model.msg.upload
-                , error |> HttpHtml.error model.i18n.http
+                [ "upload" |> model.i18n.form |> Button.save model.msg.upload
+                , error |> Http.error model.i18n.http
                 ]
       ]
     ]
