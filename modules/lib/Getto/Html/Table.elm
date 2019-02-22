@@ -52,9 +52,10 @@ type alias BorderAttribute msg = ( BorderStyle, BorderStyle ) -> List (H.Attribu
 render : Config msg -> List (Struct.Column row (HtmlCell msg)) -> List row -> Html msg
 render config columns list =
   let
-    data = list
-      |> Struct.build config.emptyContent columns
-      |> Struct.render (cell config.attr.border) empty
+    data = list |> Struct.render columns
+      { emptyContent = config.emptyContent
+      , render       = cell config.attr.border
+      }
 
     thead = List.concat
       [ data.header  |> List.map (H.tr [])
@@ -68,7 +69,7 @@ render config columns list =
       , H.tbody [] tbody
       ]
 
-cell : BorderAttribute msg -> Struct.Border -> Struct.CellInfo -> Struct.Cell (HtmlCell msg) -> Html msg
+cell : BorderAttribute msg -> Struct.Render (HtmlCell msg) (Html msg)
 cell attr border info data =
   let
     base = List.concat
