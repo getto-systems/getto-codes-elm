@@ -66,8 +66,7 @@ type BorderStyle
 
 type Cell a
   = Empty
-  | Th a
-  | Td a
+  | Cell a
 
 type alias Table a =
   { header  : List (List a)
