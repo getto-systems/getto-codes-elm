@@ -110,11 +110,19 @@ search = Http.tracker "search" <|
           { header = HeaderDecode.map View.ResponseHeader
             ( HeaderDecode.at "x-paging-max" HeaderDecode.int )
           , body = Decode.list
-            ( Decode.map4 View.Upload
-              ( Decode.at ["id"]     Decode.int )
-              ( Decode.at ["name"]   Decode.string )
-              ( Decode.at ["gender"] Decode.string )
-              ( Decode.at ["roles"] (Decode.list Decode.string) )
+            ( Decode.map5 View.Upload
+              ( Decode.at ["id"]        Decode.int )
+              ( Decode.at ["name"]      Decode.string )
+              ( Decode.at ["gender"]    Decode.string )
+              ( Decode.at ["roles"]    (Decode.list Decode.string) )
+              ( Decode.at ["comments"] (Decode.list (Decode.map3 View.Comment
+                ( Decode.at ["user"]   Decode.string )
+                ( Decode.at ["text"]   Decode.string )
+                ( Decode.at ["likes"] (Decode.list (Decode.map2 View.Like
+                  ( Decode.at ["user"]   Decode.string )
+                  ( Decode.at ["text"]   Decode.string )
+                )) )
+              )) )
             )
           }
         , timeout = 10 * 1000

@@ -1,7 +1,7 @@
 module Getto.Html.Table exposing
   ( BorderStyle(..)
-  , Position(..)
-  , Attribute
+  , BorderPosition(..)
+  , Config
   , Cell
   , table
   , column
@@ -50,17 +50,18 @@ type Header msg
   | UnionHeader { border : Border, cell : Cell msg, colspan : Int }
 
 type Summary msg
-  = Summary { border : Border, cell : Cell msg }
+  = Summary      { border : Border, cell : Cell msg }
+  | UnionSummary { border : Border, cell : Cell msg, colspan : Int }
 
 type Content msg
   = Content      { border : Border, cells        : List (Cell msg) }
   | UnionContent { border : Border, cellLists    : List (List (Cell msg)),    colspan : Int }
-  | RowsContent  {                  contentLists : List (List (Content msg)), colspan : Int }
+  | RowsContent  { border : Border, contentLists : List (List (Content msg)), colspan : Int }
 
 type Build msg
   = Build      { border : Border, cell       : Cell msg,                colspan : Int }
   | UnionBuild { border : Border, cells      : List (Cell msg),         colspan : Int }
-  | RowsBuild  {                  buildLists : List (List (Build msg)), colspan : Int }
+  | RowsBuild  { border : Border, buildLists : List (List (Build msg)), colspan : Int }
 
 type alias Border = ( BorderStyle, BorderStyle )
 
@@ -69,7 +70,7 @@ type BorderStyle
   | Single
   | Double
 
-type Position
+type BorderPosition
   = Left
   | Right
 
@@ -78,27 +79,29 @@ type Cell msg
   | Th (List (H.Attribute msg)) (List (Html msg))
   | Td (List (H.Attribute msg)) (List (Html msg))
 
-type alias Attribute msg =
-  { table   : { thead : Int } -> List (H.Attribute msg)
-  , summary : List (H.Attribute msg)
-  , cell    : BorderAttribute msg
+type alias Config msg =
+  { attr :
+    { table   : { thead : Int } -> List (H.Attribute msg)
+    , summary : List (H.Attribute msg)
+    , cell    : BorderAttribute msg
+    }
+  , emptyContent : Cell msg
   }
-type alias BorderAttribute msg = ( BorderStyle, Position ) -> List (H.Attribute msg)
+type alias BorderAttribute msg = ( BorderStyle, BorderPosition ) -> List (H.Attribute msg)
 
-table : Attribute msg -> Cell msg -> List (Column row msg) -> List row -> Html msg
-table attr emptyData columns list =
+table : Config msg -> List (Column row msg) -> List row -> Html msg
+table config columns list =
   let
-    struct = list |> build emptyData columns
+    struct = list |> build config.emptyContent columns
 
     thead = List.concat
-      [ struct.header  |> toHeaderRows attr.cell |> List.map (H.tr [])
-      , struct.summary |> toSummaryRows attr.summary attr.cell
+      [ struct.header  |> toHeaderRows config.attr.cell |> List.map (H.tr [])
+      , struct.summary |> toSummaryRows config.attr.summary config.attr.cell
       ]
 
-    -- TODO この tr に行から生成した attr を指定したいのだが・・・
-    tbody = struct.content |> toContentRows attr.cell |> List.map (H.tr [])
+    tbody = struct.content |> toContentRows config.attr.cell |> List.map (H.tr [])
   in
-    H.table ( { thead = thead |> List.length } |> attr.table )
+    H.table ( { thead = thead |> List.length } |> config.attr.table )
       [ H.thead [] thead
       , H.tbody [] tbody
       ]
@@ -116,7 +119,7 @@ type alias SummaryStruct msg = Maybe (List (Summary msg))
 type alias ContentStruct msg = List (List (Build msg))
 
 build : Cell msg -> List (Column row msg) -> List row -> Struct msg
-build emptyData columns list =
+build emptyContent columns list =
   let
     struct = columns |> List.foldl
       (\col acc ->
@@ -159,7 +162,7 @@ build emptyData columns list =
   in
     { header  = struct.header  |> buildHeader
     , summary = struct.summary |> buildSummary
-    , content = struct.content |> buildContent |> transpose |> withAlert emptyData struct.summary
+    , content = struct.content |> buildContent |> withAlert emptyContent struct.summary
     }
 
 buildHeader : List (Header msg) -> HeaderStruct msg
@@ -176,13 +179,19 @@ buildHeader headers =
 
 buildSummary : List (Summary msg) -> SummaryStruct msg
 buildSummary summaries =
-  if summaries |> List.all (\(Summary data) -> data.cell == Empty)
-    then Nothing
-    else Just summaries
+  let
+    summaryCell summary =
+      case summary of
+        Summary      data -> data.cell
+        UnionSummary data -> data.cell
+  in
+    if summaries |> List.all (summaryCell >> (==) Empty)
+      then Nothing
+      else Just summaries
 
 buildContent : List (Content msg) -> List (List (Build msg))
-buildContent = List.map <|
-  \content ->
+buildContent = List.map
+  (\content ->
     case content of
       Content data ->
         data.cells |> List.map
@@ -203,10 +212,13 @@ buildContent = List.map <|
       RowsContent data ->
         data.contentLists |> List.map
           (\contents -> RowsBuild
-            { buildLists = contents |> buildContent
+            { border     = data.border
+            , buildLists = contents |> buildContent
             , colspan    = data.colspan
             }
           )
+  )
+  >> transpose
 
 transpose : List (List a) -> List (List a)
 transpose listOfLists =
@@ -219,23 +231,19 @@ transpose listOfLists =
     List.foldr (List.map2 (::)) (List.repeat rowsLength []) listOfLists
 
 withAlert : Cell msg -> List (Summary msg) -> List (List (Build msg)) -> List (List (Build msg))
-withAlert emptyData summaries builds =
+withAlert emptyContent summaries builds =
   if builds |> List.isEmpty |> not
     then builds
     else
       let
         border =
-          ( case summaries |> List.head of
-            Just (Summary data) -> data.border |> Tuple.first
-            Nothing -> None
-          , case summaries |> List.reverse |> List.head of
-            Just (Summary data) -> data.border |> Tuple.second
-            Nothing -> None
+          ( summaries |> List.head                 |> summaryBorder Tuple.first
+          , summaries |> List.reverse |> List.head |> summaryBorder Tuple.second
           )
       in
         [ [ Build
             { border  = border
-            , cell    = emptyData
+            , cell    = emptyContent
             , colspan = summaries |> List.length
             }
           ]
@@ -287,11 +295,16 @@ toSummaryRows attr borderAttr =
     (\summaries ->
       [ summaries
         |> List.map
-          (\(Summary data) ->
-            data.cell |> cell borderAttr data.border
-              { colspan = 1
-              , rowspan = 1
-              }
+          (\summary ->
+            case summary of
+              Summary data -> data.cell |> cell borderAttr data.border
+                { colspan = 1
+                , rowspan = 1
+                }
+              UnionSummary data -> data.cell |> cell borderAttr data.border
+                { colspan = data.colspan
+                , rowspan = 1
+                }
           )
         |> H.tr attr
       ]
@@ -339,7 +352,7 @@ toContentRows borderAttr = List.concatMap <|
                 ( data.buildLists |> toContentRows borderAttr ) ++
                 ( if paddingLength > 0
                     then
-                      [ [ empty |> cell borderAttr (data.buildLists |> buildBorder)
+                      [ [ empty |> cell borderAttr data.border
                           { colspan = data.colspan
                           , rowspan = paddingLength
                           }
@@ -427,39 +440,17 @@ column border model = Column
   , content = \list -> Content { border = border, cells = list |> List.map model.content }
   }
 
-type alias GroupModel msg =
-  { header : Cell msg
-  }
-
-group : GroupModel msg -> List (Column row msg) -> Column row msg
-group model columns =
-  let
-    summary f data =
-      case data of
-        Column d -> Just d.summary
-        Group  d -> d.summaries |> f |> List.head
-        Union  d -> Just d.summary
-        Parts  d -> d.summaries |> f |> List.head
-        Rows   d -> d.summaries |> f |> List.head
-
-    border =
-      ( case columns |> List.head |> Maybe.andThen (summary identity) of
-        Just (Summary data) -> data.border |> Tuple.first
-        Nothing -> None
-      , case columns |> List.reverse |> List.head |> Maybe.andThen (summary List.reverse) of
-        Just (Summary data) -> data.border |> Tuple.second
-        Nothing -> None
-      )
-  in
-    Group
-      { header = GroupHeader
-        { border   = border
-        , cell     = model.header
-        , children = columns |> columnHeaders
-        }
-      , summaries = columns |> columnSummaries
-      , contents  = \list -> columns |> columnContents list
+group : Cell msg -> List (Column row msg) -> Column row msg
+group header columns =
+  Group
+    { header = GroupHeader
+      { border   = columns |> columnBorder
+      , cell     = header
+      , children = columns |> columnHeaders
       }
+    , summaries = columns |> columnSummaries
+    , contents  = \list -> columns |> columnContents list
+    }
 
 type alias UnionModel row data msg =
   { header  : Cell msg
@@ -471,8 +462,8 @@ type alias UnionModel row data msg =
 
 union : Border -> UnionModel row data msg -> Column row msg
 union border model = Union
-  { header  = UnionHeader { border = border, cell = model.header, colspan = model.colspan }
-  , summary = Summary     { border = border, cell = model.summary }
+  { header  = UnionHeader  { border = border, cell = model.header,  colspan = model.colspan }
+  , summary = UnionSummary { border = border, cell = model.summary, colspan = model.colspan }
   , content = \list -> UnionContent
     { border    = border
     , cellLists = list |> List.map ( model.data >> List.map model.content )
@@ -500,7 +491,8 @@ rows data columns =
       { headers   = columns |> columnHeaders
       , summaries = summaries
       , content   = \list -> RowsContent
-        { contentLists = list |> List.map (\row -> columns |> columnContents (row |> data))
+        { border       = columns |> columnBorder
+        , contentLists = list |> List.map (\row -> columns |> columnContents (row |> data))
         , colspan      = summaries |> List.length
         }
       }
@@ -534,6 +526,32 @@ columnContents list = List.concatMap <|
       Union  data -> [ list |> data.content ]
       Parts  data -> ( list |> data.contents )
       Rows   data -> [ list |> data.content ]
+
+
+columnBorder : List (Column row msg) -> Border
+columnBorder columns =
+  let
+    summary f col =
+      case col of
+        Column data -> Just data.summary
+        Group  data -> data.summaries |> f |> List.head
+        Union  data -> Just data.summary
+        Parts  data -> data.summaries |> f |> List.head
+        Rows   data -> data.summaries |> f |> List.head
+  in
+    ( columns |> List.head                 |> Maybe.andThen (summary identity)     |> summaryBorder Tuple.first
+    , columns |> List.reverse |> List.head |> Maybe.andThen (summary List.reverse) |> summaryBorder Tuple.second
+    )
+
+
+summaryBorder : (Border -> BorderStyle) -> Maybe (Summary msg) -> BorderStyle
+summaryBorder f = Maybe.map
+  (\summary ->
+    case summary of
+      Summary      data -> data.border |> f
+      UnionSummary data -> data.border |> f
+  )
+  >> Maybe.withDefault None
 
 
 empty : Cell msg

@@ -210,83 +210,110 @@ table model =
             }
           ]
       in
-        body |> Table.table TableView.attr ("empty-data" |> model.i18n.table |> TableView.emptyData)
+        body |> Table.table ( { emptyMessage = "empty-data" |> model.i18n.table } |> TableView.config )
           [ Table.column ( Table.None, Table.Double )
             { header  = Table.th [] [ "id" |> model.i18n.field |> H.text ]
             , summary = Table.empty
             , content = \upload ->
-              Table.td [ "is-center" |> A.class ]
-                [ H.p [] [ upload.id |> String.fromInt |> H.text ] ]
+              Table.td [ "is-center" |> A.class ] [ H.p [] [ upload.id |> String.fromInt |> H.text ] ]
             }
-          , Table.group
-            { header = Table.th [] [ "info" |> model.i18n.field |> H.text ]
-            }
+          , Table.group ( Table.th [] [ "info" |> model.i18n.field |> H.text ] )
             [ Table.column ( Table.None, Table.None )
               { header  = Table.th [] [ "name" |> model.i18n.field |> H.text ]
               , summary = Table.th [] [ "sum" |> model.i18n.field |> H.text ]
               , content = \upload ->
-                Table.td []
-                  [ H.p [] [ upload.name |> H.text ] ]
+                Table.td [] [ H.p [] [ upload.name |> H.text ] ]
               }
             , Table.column ( Table.None, Table.Single )
               { header  = Table.th [] [ "gender" |> model.i18n.field |> H.text ]
               , summary = Table.td [] [ H.p [] [ sum |> String.fromInt |> H.text ] ]
               , content = \upload ->
-                Table.td []
-                  [ H.p [] [ upload.gender |> H.text ] ]
+                Table.td [] [ H.p [] [ upload.gender |> H.text ] ]
               }
             , Table.union ( Table.None, Table.None )
               { header  = Table.th [] [ "roles" |> model.i18n.field |> H.text ]
               , summary = Table.empty
               , colspan = roleLength
-              , data    = \upload ->
-                upload.roles |> List.map
-                  (\role -> { role = role, upload = upload })
-              , content = \data ->
-                Table.td [] [ H.p [] [ data.role |> H.text ] ]
+              , data    = \upload -> upload.roles |> List.map (\role -> ( upload, role ))
+              , content = \(upload,role) ->
+                Table.td [] [ H.p [] [ role |> H.text ] ]
               }
-            {-
-            , Table.rows
-              (\(Upload upload) -> upload.roles |> List.map (Upload upload |> Role))
-              [ Table.column ( Table.None, Table.None )
-                (Table.th [] [ "roles" |> model.i18n.field |> H.text ])
-                (Table.empty)
-                (\(Role (Upload upload) role) ->
-                  Table.td [] [ role |> H.text ]
-                )
-              ]
             , Table.parts genders
               (\gender ->
                 [ Table.column ( Table.None, Table.None )
-                  (Table.th [] [ gender.value |> H.text ])
-                  (Table.td [] [ gender.sum |> String.fromInt |> H.text ])
-                  (\(Upload upload) ->
-                    Table.td []
-                      [ if upload.gender == gender.value
-                        then "matched" |> H.text
-                        else "" |> H.text
+                  { header  = Table.th [] [ gender.value |> H.text ]
+                  , summary = Table.td [ "is-center" |> A.class ]
+                    [ H.p [] [ gender.sum |> String.fromInt |> H.text ] ]
+                  , content = \upload ->
+                    Table.td [ "is-center" |> A.class ]
+                      [ H.p []
+                        [ if upload.gender == gender.value
+                          then Icon.far "check-circle" |> Html.icon []
+                          else "" |> H.text
+                        ]
                       ]
-                  )
+                  }
+                , Table.column ( Table.None, Table.None )
+                  { header  = Table.th [] [ gender.value |> H.text ]
+                  , summary = Table.td [ "is-center" |> A.class ]
+                    [ H.p [] [ gender.sum |> String.fromInt |> H.text ] ]
+                  , content = \upload ->
+                    Table.td [ "is-center" |> A.class ]
+                      [ H.p []
+                        [ if upload.gender /= gender.value
+                          then Icon.fas "times" |> Html.icon []
+                          else "" |> H.text
+                        ]
+                      ]
+                  }
                 ]
               )
-            , Table.rows
-              (\(Upload upload) -> upload.comments |> List.map (Upload upload |> Comment))
+            , Table.rows ( \upload -> upload.roles |> List.map (\role -> ( upload, role )) )
               [ Table.column ( Table.None, Table.None )
-                (Table.th [] [ "comment" |> model.i18n.field |> H.text ])
-                (Table.empty)
-                (\(Comment (Upload upload) comment) ->
-                  Table.td [] [ comment.memo |> H.text ]
-                )
-              , Table.rows
-                (\(Comment upload comment) -> comment.roles |> List.map (Comment upload comment |> CommentRole))
-                [ Table.column ( Table.None, Table.None )
-                  (Table.th [] [ "roles" |> model.i18n.field |> H.text ])
-                  (Table.empty)
-                  (\(CommentRole (Comment (Upload upload) comment) role) ->
-                    Table.td [] [ role |> H.text ]
-                  )
+                { header  = Table.th [] [ "roles" |> model.i18n.field |> H.text ]
+                , summary = Table.empty
+                , content = \(upload,role) ->
+                  Table.td [] [ H.p [] [ role |> H.text ] ]
+                }
+              , Table.column ( Table.None, Table.None )
+                { header  = Table.th [] [ "roles" |> model.i18n.field |> H.text ]
+                , summary = Table.empty
+                , content = \(upload,role) ->
+                  Table.td [] [ H.p [] [ role |> H.text ] ]
+                }
+              ]
+            , Table.group ( Table.th [] [ "comment" |> model.i18n.field |> H.text ] )
+              [ Table.rows ( \upload -> upload.comments |> List.map (\comment -> ( upload, comment )) )
+                [ Table.column ( Table.Single, Table.None )
+                  { header  = Table.th [] [ "user" |> model.i18n.field |> H.text ]
+                  , summary = Table.empty
+                  , content = \(upload,comment) ->
+                    Table.td [] [ H.p [] [ comment.user |> H.text ] ]
+                  }
+                , Table.column ( Table.None, Table.None )
+                  { header  = Table.th [] [ "text" |> model.i18n.field |> H.text ]
+                  , summary = Table.empty
+                  , content = \(upload,comment) ->
+                    Table.td [] [ H.p [] [ comment.text |> H.text ] ]
+                  }
+                , Table.group ( Table.th [] [ "like" |> model.i18n.field |> H.text ] )
+                  [ Table.rows
+                    ( \(upload,comment) -> comment.likes |> List.map (\like -> ( upload, comment, like )) )
+                    [ Table.column ( Table.Single, Table.None )
+                      { header  = Table.th [] [ "user" |> model.i18n.field |> H.text ]
+                      , summary = Table.empty
+                      , content = \(upload,comment,like) ->
+                        Table.td [] [ H.p [] [ like.user |> H.text ] ]
+                      }
+                    , Table.column ( Table.None, Table.None )
+                      { header  = Table.th [] [ "text" |> model.i18n.field |> H.text ]
+                      , summary = Table.empty
+                      , content = \(upload,comment,like) ->
+                        Table.td [] [ H.p [] [ like.text |> H.text ] ]
+                      }
+                    ]
+                  ]
                 ]
               ]
-            -}
             ]
           ]

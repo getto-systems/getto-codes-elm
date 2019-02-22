@@ -5,6 +5,8 @@ module GettoUpload.App.Upload.List.Search.View exposing
   , ResponseHeader
   , ResponseBody
   , Upload
+  , Comment
+  , Like
   , compose
   , name
   , age
@@ -66,10 +68,20 @@ type alias ResponseHeader =
   }
 type alias ResponseBody = List Upload
 type alias Upload =
-  { id     : Int
-  , name   : String
-  , gender : String
-  , roles  : List String
+  { id       : Int
+  , name     : String
+  , gender   : String
+  , roles    : List String
+  , comments : List Comment
+  }
+type alias Comment =
+  { user : String
+  , text : String
+  , likes : List Like
+  }
+type alias Like =
+  { user : String
+  , text : String
   }
 
 
