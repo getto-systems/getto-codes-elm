@@ -25,7 +25,8 @@ type BorderStyle
   | Double
 
 type alias HtmlCell msg =
-  { attr : List (H.Attribute msg)
+  { tag  : List (H.Attribute msg) -> List (Html msg) -> Html msg
+  , attr : List (H.Attribute msg)
   , body : List (Html msg)
   }
 
@@ -80,9 +81,8 @@ cell attr border info data =
       ]
   in
     case data of
-      Struct.Empty   -> H.td base []
-      Struct.Th html -> H.th (base ++ html.attr) html.body
-      Struct.Td html -> H.td (base ++ html.attr) html.body
+      Struct.Empty     -> H.td base []
+      Struct.Cell html -> html.tag (base ++ html.attr) html.body
 
 mapBorderStyle : Struct.BorderStyle -> BorderStyle
 mapBorderStyle style =
@@ -95,13 +95,15 @@ empty : Struct.Cell (HtmlCell msg)
 empty = Struct.Empty
 
 th : List (H.Attribute msg) -> List (Html msg) -> Struct.Cell (HtmlCell msg)
-th attr body = Struct.Th
-  { attr = attr
+th attr body = Struct.Cell
+  { tag  = H.th
+  , attr = attr
   , body = body
   }
 
 td : List (H.Attribute msg) -> List (Html msg) -> Struct.Cell (HtmlCell msg)
-td attr body = Struct.Td
-  { attr = attr
+td attr body = Struct.Cell
+  { tag  = H.td
+  , attr = attr
   , body = body
   }
