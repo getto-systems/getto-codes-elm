@@ -69,7 +69,7 @@ render config columns list =
       , H.tbody [] tbody
       ]
 
-cell : BorderAttribute msg -> Struct.Border -> Struct.CellInfo -> Struct.Cell (HtmlCell msg) -> Html msg
+cell : BorderAttribute msg -> Struct.Render (HtmlCell msg) (Html msg)
 cell attr border info data =
   let
     base = List.concat

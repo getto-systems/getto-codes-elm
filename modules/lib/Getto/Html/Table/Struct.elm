@@ -1,10 +1,8 @@
 module Getto.Html.Table.Struct exposing
   ( Column
-  , Border
   , BorderStyle(..)
   , Cell(..)
   , Render
-  , CellInfo
   , render
   , column
   , group
@@ -89,8 +87,8 @@ type alias HeaderStruct a =
 type alias SummaryStruct a = Maybe (List (Summary a))
 type alias ContentStruct a = List (List (Build a))
 
-type alias Render a content = Border -> CellInfo -> Cell a -> content
-type alias CellInfo =
+type alias Render a content = Border -> RenderInfo -> Cell a -> content
+type alias RenderInfo =
   { colspan : Int
   , rowspan : Int
   }
