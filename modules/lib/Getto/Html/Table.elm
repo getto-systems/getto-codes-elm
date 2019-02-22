@@ -363,21 +363,6 @@ toContentRows borderAttr = List.concatMap <|
         )
         []
 
-buildBorder : ContentStruct msg -> Border
-buildBorder builds =
-  ( case builds |> List.head of
-    Just (Build      data :: _) -> data.border |> Tuple.first
-    Just (UnionBuild data :: _) -> data.border |> Tuple.first
-    Just (RowsBuild  data :: _) -> data.buildLists |> buildBorder |> Tuple.first
-    _ -> None
-
-  , case builds |> List.reverse |> List.head of
-    Just (Build      data :: _) -> data.border |> Tuple.second
-    Just (UnionBuild data :: _) -> data.border |> Tuple.second
-    Just (RowsBuild  data :: _) -> data.buildLists |> buildBorder |> Tuple.second
-    _ -> None
-  )
-
 fill : List (List a) -> List (List a) -> List (List a)
 fill list acc =
   let
