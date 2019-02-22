@@ -1,7 +1,7 @@
 module Getto.Html.Table exposing
   ( Config
   , BorderStyle(..)
-  , table
+  , render
   , column
   , group
   , union
@@ -49,12 +49,12 @@ type alias Config msg =
   }
 type alias BorderAttribute msg = ( BorderStyle, BorderStyle ) -> List (H.Attribute msg)
 
-table : Config msg -> List (Struct.Column row (HtmlCell msg)) -> List row -> Html msg
-table config columns list =
+render : Config msg -> List (Struct.Column row (HtmlCell msg)) -> List row -> Html msg
+render config columns list =
   let
     data = list
       |> Struct.build config.emptyContent columns
-      |> Struct.table (render config.attr.border) empty
+      |> Struct.render (cell config.attr.border) empty
 
     thead = List.concat
       [ data.header  |> List.map (H.tr [])
@@ -68,8 +68,8 @@ table config columns list =
       , H.tbody [] tbody
       ]
 
-render : BorderAttribute msg -> Struct.Border -> Struct.CellInfo -> Struct.Cell (HtmlCell msg) -> Html msg
-render attr border info data =
+cell : BorderAttribute msg -> Struct.Border -> Struct.CellInfo -> Struct.Cell (HtmlCell msg) -> Html msg
+cell attr border info data =
   let
     base = List.concat
       [ [ info.rowspan |> A.rowspan

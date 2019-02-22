@@ -5,7 +5,7 @@ module Getto.Html.Table.Struct exposing
   , Cell(..)
   , Render
   , CellInfo
-  , table
+  , render
   , build
   , column
   , group
@@ -96,11 +96,11 @@ type alias CellInfo =
   , rowspan : Int
   }
 
-table : Render a content -> Cell a -> Struct a -> Table content
-table render emptyCell struct =
-  { header  = struct.header  |> toHeaderRows  render
-  , summary = struct.summary |> toSummaryRows render
-  , content = struct.content |> toContentRows render emptyCell
+render : Render a content -> Cell a -> Struct a -> Table content
+render f emptyCell struct =
+  { header  = struct.header  |> toHeaderRows  f
+  , summary = struct.summary |> toSummaryRows f
+  , content = struct.content |> toContentRows f emptyCell
   }
 
 build : Cell a -> List (Column row a) -> List row -> Struct a
@@ -236,7 +236,7 @@ withAlert emptyContent summaries builds =
 
 
 toHeaderRows : Render a content -> HeaderStruct a -> List (List content)
-toHeaderRows render struct =
+toHeaderRows f struct =
   let
     width header =
       case header of
@@ -251,7 +251,7 @@ toHeaderRows render struct =
       (\cellValue -> fill <|
         case cellValue of
           Header data ->
-            [ data.cell |> render data.border
+            [ data.cell |> f data.border
               { colspan = 1
               , rowspan = struct.rowspan
               }
@@ -260,32 +260,32 @@ toHeaderRows render struct =
             if data.colspan == 0
               then []
               else
-                [ data.cell |> render data.border
+                [ data.cell |> f data.border
                   { colspan = data.colspan
                   , rowspan = struct.rowspan
                   }
                 ] :: []
           GroupHeader data ->
-            [ data.cell |> render data.border
+            [ data.cell |> f data.border
               { colspan = data.children |> fullWidth
               , rowspan = 1
               }
-            ] :: ( { headers = data.children, rowspan = struct.rowspan - 1 } |> toHeaderRows render )
+            ] :: ( { headers = data.children, rowspan = struct.rowspan - 1 } |> toHeaderRows f )
       )
       []
 
 toSummaryRows : Render a content -> SummaryStruct a -> List (List content)
-toSummaryRows render =
+toSummaryRows f =
   Maybe.map
     (\summaries ->
       [ summaries |> List.map
         (\summary ->
           case summary of
-            Summary data -> data.cell |> render data.border
+            Summary data -> data.cell |> f data.border
               { colspan = 1
               , rowspan = 1
               }
-            UnionSummary data -> data.cell |> render data.border
+            UnionSummary data -> data.cell |> f data.border
               { colspan = data.colspan
               , rowspan = 1
               }
@@ -295,7 +295,7 @@ toSummaryRows render =
   >> Maybe.withDefault []
 
 toContentRows : Render a content -> Cell a -> ContentStruct a -> List (List content)
-toContentRows render emptyCell = List.concatMap <|
+toContentRows f emptyCell = List.concatMap <|
   \row ->
     let
       depth content =
@@ -311,7 +311,7 @@ toContentRows render emptyCell = List.concatMap <|
         (\col -> fill <|
           case col of
             Build data ->
-              [ [ data.cell |> render data.border
+              [ [ data.cell |> f data.border
                   { colspan = data.colspan
                   , rowspan = rowspan
                   }
@@ -322,7 +322,7 @@ toContentRows render emptyCell = List.concatMap <|
                   ( emptyCell |> List.repeat ( data.colspan - (data.cells |> List.length)) )
                 )
                 |> List.map
-                  (render data.border
+                  (f data.border
                     { colspan = 1
                     , rowspan = rowspan
                     }
@@ -332,10 +332,10 @@ toContentRows render emptyCell = List.concatMap <|
               let
                 paddingLength = rowspan - (data.buildLists |> fullDepth)
               in
-                ( data.buildLists |> toContentRows render emptyCell ) ++
+                ( data.buildLists |> toContentRows f emptyCell ) ++
                 ( if paddingLength > 0
                     then
-                      [ [ emptyCell |> render data.border
+                      [ [ emptyCell |> f data.border
                           { colspan = data.colspan
                           , rowspan = paddingLength
                           }
