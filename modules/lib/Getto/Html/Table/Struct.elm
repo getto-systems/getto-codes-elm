@@ -6,7 +6,6 @@ module Getto.Html.Table.Struct exposing
   , Render
   , CellInfo
   , render
-  , build
   , column
   , group
   , union
@@ -96,15 +95,23 @@ type alias CellInfo =
   , rowspan : Int
   }
 
-render : Render a content -> Cell a -> Struct a -> Table content
-render f emptyCell struct =
-  { header  = struct.header  |> toHeaderRows  f
-  , summary = struct.summary |> toSummaryRows f
-  , content = struct.content |> toContentRows f emptyCell
+type alias Config a content =
+  { emptyContent : Cell a
+  , render : Render a content
   }
 
-build : Cell a -> List (Column row a) -> List row -> Struct a
-build emptyContent columns list =
+render : List (Column row a) -> Config a content -> List row -> Table content
+render columns config list =
+  let
+    struct = list |> build columns config.emptyContent
+  in
+    { header  = struct.header  |> toHeaderRows  config.render
+    , summary = struct.summary |> toSummaryRows config.render
+    , content = struct.content |> toContentRows config.render
+    }
+
+build : List (Column row a) -> Cell a -> List row -> Struct a
+build columns emptyContent list =
   let
     struct = columns |> List.foldl
       (\col acc ->
@@ -147,7 +154,7 @@ build emptyContent columns list =
   in
     { header  = struct.header  |> buildHeader
     , summary = struct.summary |> buildSummary
-    , content = struct.content |> buildContent |> withAlert emptyContent struct.summary
+    , content = struct.content |> buildContent |> withEmptyContent emptyContent struct.summary
     }
 
 buildHeader : List (Header a) -> HeaderStruct a
@@ -215,8 +222,8 @@ transpose listOfLists =
   in
     List.foldr (List.map2 (::)) (List.repeat rowsLength []) listOfLists
 
-withAlert : Cell a -> List (Summary a) -> List (List (Build a)) -> List (List (Build a))
-withAlert emptyContent summaries builds =
+withEmptyContent : Cell a -> List (Summary a) -> List (List (Build a)) -> List (List (Build a))
+withEmptyContent emptyContent summaries builds =
   if builds |> List.isEmpty |> not
     then builds
     else
@@ -294,8 +301,8 @@ toSummaryRows f =
     )
   >> Maybe.withDefault []
 
-toContentRows : Render a content -> Cell a -> ContentStruct a -> List (List content)
-toContentRows f emptyCell = List.concatMap <|
+toContentRows : Render a content -> ContentStruct a -> List (List content)
+toContentRows f = List.concatMap <|
   \row ->
     let
       depth content =
@@ -319,7 +326,7 @@ toContentRows f emptyCell = List.concatMap <|
               ]
             UnionBuild data ->
               [ ( data.cells ++
-                  ( emptyCell |> List.repeat ( data.colspan - (data.cells |> List.length)) )
+                  ( Empty |> List.repeat ( data.colspan - (data.cells |> List.length)) )
                 )
                 |> List.map
                   (f data.border
@@ -332,10 +339,10 @@ toContentRows f emptyCell = List.concatMap <|
               let
                 paddingLength = rowspan - (data.buildLists |> fullDepth)
               in
-                ( data.buildLists |> toContentRows f emptyCell ) ++
+                ( data.buildLists |> toContentRows f ) ++
                 ( if paddingLength > 0
                     then
-                      [ [ emptyCell |> f data.border
+                      [ [ Empty |> f data.border
                           { colspan = data.colspan
                           , rowspan = paddingLength
                           }
