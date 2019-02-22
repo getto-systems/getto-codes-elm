@@ -210,7 +210,7 @@ table model =
             }
           ]
       in
-        body |> Table.table ( { emptyMessage = "empty-data" |> model.i18n.table } |> TableView.config )
+        body |> Table.render (TableView.config model.i18n.table)
           [ Table.column ( Table.none, Table.double )
             { header  = Table.th [] [ "id" |> model.i18n.field |> H.text ]
             , summary = Table.empty

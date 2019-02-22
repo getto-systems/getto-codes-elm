@@ -7,12 +7,8 @@ import Getto.Html.Table as Table
 import Html as H
 import Html.Attributes as A
 
-type alias ConfigModel =
-  { emptyMessage : String
-  }
-
-config : ConfigModel -> Table.Config msg
-config model =
+config : (String -> String) -> Table.Config msg
+config i18n =
   { attr =
     { table = \data ->
       [ [ "div-auto-size: none"
@@ -36,6 +32,6 @@ config model =
     }
   , emptyContent = Table.td []
     [ H.p [ "alert" |> A.class ]
-      [ model.emptyMessage |> H.text ]
+      [ "empty-data" |> i18n |> H.text ]
     ]
   }
