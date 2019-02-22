@@ -22,13 +22,17 @@ config model =
         |> A.attribute "_fixedhead"
       ]
     , summary = [ "border-top-single" |> A.class ]
-    , cell = \border -> List.map A.class <|
-      case border of
-        ( Table.None, _ ) -> []
-        ( Table.Single, Table.Left ) -> ["border-left"]
-        ( Table.Double, Table.Left ) -> ["border-left-double"]
-        ( Table.Single, Table.Right ) -> ["border-right"]
-        ( Table.Double, Table.Right ) -> ["border-right-double"]
+    , border = \(left,right) ->
+      [ case left of
+        Table.None -> []
+        Table.Single -> ["border-left"]
+        Table.Double -> ["border-left-double"]
+      , case right of
+        Table.None -> []
+        Table.Single -> ["border-right"]
+        Table.Double -> ["border-right-double"]
+      ]
+      |> List.concat |> List.map A.class
     }
   , emptyContent = Table.td []
     [ H.p [ "alert" |> A.class ]
