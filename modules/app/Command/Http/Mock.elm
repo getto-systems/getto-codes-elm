@@ -174,16 +174,43 @@ mock =
           , ( "name",   "text-1" |> Encode.string )
           , ( "gender", "male"   |> Encode.string )
           , ( "roles", ["admin"] |> Encode.list Encode.string )
+          , ( "comments", []     |> Encode.list Encode.object )
           ]
         , [ ( "id",     2        |> Encode.int )
           , ( "name",   "text-2" |> Encode.string )
           , ( "gender", "female" |> Encode.string )
           , ( "roles", [] |> Encode.list Encode.string )
+          , ( "comments"
+            , [ [ ( "user", "master" |> Encode.string )
+                , ( "text", "LGTM" |> Encode.string )
+                , ( "likes", [] |> Encode.list Encode.object )
+                ]
+              , [ ( "user", "guest" |> Encode.string )
+                , ( "text", "looks goot to me" |> Encode.string )
+                , ( "likes"
+                  , [ [ ( "user", "master" |> Encode.string )
+                      , ( "text", "looks great to me!" |> Encode.string )
+                      ]
+                    , [ ( "user", "guest" |> Encode.string )
+                      , ( "text", "i agree" |> Encode.string )
+                      ]
+                    ] |> Encode.list Encode.object
+                  )
+                ]
+              ] |> Encode.list Encode.object
+            )
           ]
         , [ ( "id",     3        |> Encode.int )
           , ( "name",   "text-3" |> Encode.string )
           , ( "gender", "other"  |> Encode.string )
           , ( "roles", ["admin","upload"] |> Encode.list Encode.string )
+          , ( "comments"
+            , [ [ ( "user", "master" |> Encode.string )
+                , ( "text", "this is great!" |> Encode.string )
+                , ( "likes", [] |> Encode.list Encode.object )
+                ]
+              ] |> Encode.list Encode.object
+            )
           ]
         ]
       )
