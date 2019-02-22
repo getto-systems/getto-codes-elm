@@ -493,7 +493,6 @@ columnBorder columns =
     , columns |> List.reverse |> List.head |> Maybe.andThen (summary List.reverse) |> summaryBorder Tuple.second
     )
 
-
 summaryBorder : (Border -> BorderStyle) -> Maybe (Summary a) -> BorderStyle
 summaryBorder f = Maybe.map
   (\summary ->

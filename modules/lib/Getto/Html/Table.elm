@@ -81,7 +81,7 @@ cell attr border info data =
       ]
   in
     case data of
-      Struct.Empty     -> H.td base []
+      Struct.Empty -> H.td base []
       Struct.Cell html -> html.tag (base ++ html.attr) html.body
 
 mapBorderStyle : Struct.BorderStyle -> BorderStyle
@@ -90,6 +90,7 @@ mapBorderStyle style =
     Struct.None -> None
     Struct.Single -> Single
     Struct.Double -> Double
+
 
 empty : Struct.Cell (HtmlCell msg)
 empty = Struct.Empty
