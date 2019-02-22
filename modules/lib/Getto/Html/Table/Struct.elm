@@ -178,7 +178,7 @@ buildSummary summaries =
       then Nothing
       else Just summaries
 
-buildContent : List (Content a) -> List (List (Build a))
+buildContent : List (Content a) -> ContentStruct a
 buildContent = List.map
   (\content ->
     case content of
@@ -219,7 +219,7 @@ transpose listOfLists =
   in
     List.foldr (List.map2 (::)) (List.repeat rowsLength []) listOfLists
 
-withEmptyContent : Cell a -> List (Summary a) -> List (List (Build a)) -> List (List (Build a))
+withEmptyContent : Cell a -> List (Summary a) -> ContentStruct a -> ContentStruct a
 withEmptyContent emptyContent summaries builds =
   if builds |> List.isEmpty |> not
     then builds
