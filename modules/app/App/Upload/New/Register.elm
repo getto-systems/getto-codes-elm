@@ -39,6 +39,7 @@ import Getto.Field.Validate as Validate
 import Browser.Navigation as Navigation
 import File exposing ( File )
 import File.Select
+import Random
 import Set exposing ( Set )
 import Json.Encode as Encode
 import Json.Decode as Decode
@@ -50,13 +51,15 @@ import Html.Lazy as L
 type alias FrameModel a = Frame.Model Layout.Model { a | register : Model }
 type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
-  { signature : String
+  { tmpId     : Maybe String
+  , signature : String
   , form      : View.Form
   , upload    : HttpView.Model View.ResponseHeader View.ResponseBody
   }
 
 type Msg
-  = FieldInput (Form.Prop View.Form String) String
+  = TmpId Int
+  | FieldInput (Form.Prop View.Form String) String
   | FieldCheck (Form.Prop View.Form (Set String)) String
   | FieldChange
   | FileRequest (Form.Prop View.Form (List File))
@@ -66,7 +69,8 @@ type Msg
 
 init : String -> Frame.InitModel -> ( Model, FrameTransition a )
 init signature model =
-  ( { signature = signature
+  ( { tmpId     = Nothing
+    , signature = signature
     , form =
       { name     = Field.init signature "name"     ""
       , text     = Field.init signature "text"     []
@@ -82,7 +86,7 @@ init signature model =
       }
     , upload = HttpView.empty
     }
-  , Transition.none
+  , always <| Random.generate TmpId (Random.int 0 1000000)
   )
 
 upload : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
@@ -116,41 +120,60 @@ upload = Http.tracker "upload" <|
         }
 
 store : Model -> Encode.Value
-store model = Encode.object
-  [ ( "name",     model.form.name     |> Field.value |> Encode.string )
-  , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
-  , ( "age",      model.form.age      |> Field.value |> Encode.string )
-  , ( "email",    model.form.email    |> Field.value |> Encode.string )
-  , ( "tel",      model.form.tel      |> Field.value |> Encode.string )
-  , ( "birthday", model.form.birthday |> Field.value |> Encode.string )
-  , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
-  , ( "gender",   model.form.gender   |> Field.value |> Encode.string )
-  , ( "quality",  model.form.quality  |> Field.value |> Encode.string )
-  , ( "roles",    model.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
-  ]
+store model =
+  case model.tmpId of
+    Nothing -> Encode.null
+    Just tmpId -> Encode.object
+      [ ( tmpId
+        , [ ( "name",     model.form.name     |> Field.value |> Encode.string )
+          , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
+          , ( "age",      model.form.age      |> Field.value |> Encode.string )
+          , ( "email",    model.form.email    |> Field.value |> Encode.string )
+          , ( "tel",      model.form.tel      |> Field.value |> Encode.string )
+          , ( "birthday", model.form.birthday |> Field.value |> Encode.string )
+          , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
+          , ( "gender",   model.form.gender   |> Field.value |> Encode.string )
+          , ( "quality",  model.form.quality  |> Field.value |> Encode.string )
+          , ( "roles",    model.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+          ] |> Encode.object
+        )
+      ]
 
 storeChanged : Decode.Value -> Model -> Model
 storeChanged value model =
-  { model
-  | form =
-    model.form
-    |> Form.set name_     ( value |> SafeDecode.at ["name"]     (SafeDecode.string "") )
-    |> Form.set memo_     ( value |> SafeDecode.at ["memo"]     (SafeDecode.string "") )
-    |> Form.set age_      ( value |> SafeDecode.at ["age"]      (SafeDecode.string "") )
-    |> Form.set email_    ( value |> SafeDecode.at ["email"]    (SafeDecode.string "") )
-    |> Form.set tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
-    |> Form.set birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
-    |> Form.set start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
-    |> Form.set gender_   ( value |> SafeDecode.at ["gender"]   (SafeDecode.string "") )
-    |> Form.set quality_  ( value |> SafeDecode.at ["quality"]  (SafeDecode.string "") )
-    |> Form.set roles_    ( value |> SafeDecode.at ["roles"]    (SafeDecode.list (SafeDecode.string "")) |> Set.fromList )
-  }
+  case model.tmpId of
+    Nothing -> model
+    Just tmpId ->
+      let
+        obj = value |> SafeDecode.valueAt [tmpId]
+        decode name decoder = Decode.decodeValue (Decode.at [name] decoder) >> Result.toMaybe
+      in
+        { model
+        | form =
+          model.form
+          |> Form.setIf name_     ( obj |> decode "name"     Decode.string )
+          |> Form.setIf memo_     ( obj |> decode "memo"     Decode.string )
+          |> Form.setIf age_      ( obj |> decode "age"      Decode.string )
+          |> Form.setIf email_    ( obj |> decode "email"    Decode.string )
+          |> Form.setIf tel_      ( obj |> decode "tel"      Decode.string )
+          |> Form.setIf birthday_ ( obj |> decode "birthday" Decode.string )
+          |> Form.setIf start_at_ ( obj |> decode "start_at" Decode.string )
+          |> Form.setIf gender_   ( obj |> decode "gender"   Decode.string )
+          |> Form.setIf quality_  ( obj |> decode "quality"  Decode.string )
+          |> Form.setIf roles_    ( obj |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
+        }
 
 query : Model -> QueryEncode.Value
-query model = QueryEncode.empty
+query model =
+  case model.tmpId of
+    Nothing    -> QueryEncode.empty
+    Just tmpId -> [ ( "tmpId", tmpId |> QueryEncode.string ) ] |> QueryEncode.object
 
 queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model = model
+queryChanged names value model =
+  { model
+  | tmpId = value |> QueryDecode.entryAt (names++["tmpId"]) QueryDecode.string
+  }
 
 fill : Model -> List ( String, String )
 fill model =
@@ -170,6 +193,14 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
+    TmpId tmpId ->
+      case model.tmpId of
+        Just _ -> ( model, Transition.none )
+        Nothing ->
+          ( { model | tmpId = tmpId |> String.fromInt |> Just }
+          , Frame.pushUrl
+          )
+
     FieldInput prop value ->
       ( { model | form = model.form |> Form.set prop value }
       , Transition.none
