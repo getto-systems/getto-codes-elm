@@ -136,7 +136,11 @@ type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition (M
 update : LayoutUpdater layout app layoutMsg -> AppUpdater layout app appMsg -> Msg layoutMsg appMsg  -> Model layout app -> ( Model layout app, Cmd (Msg layoutMsg appMsg) )
 update layoutUpdater appUpdater message model =
   case message of
-    UrlChange url -> model |> searchChanged url |> Command.none
+    {- search を変更したときには cmd ( request や fill ) を発行したいが、
+     - onUrlChange のタイミングで常に cmd を発行するかは場合によると思う
+     - onUrlChange を無視すると困る場合に遭遇してからどうするのが良いか考える
+     -}
+    UrlChange url -> model |> Command.none
     UrlRequest urlRequest ->
       case urlRequest of
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )

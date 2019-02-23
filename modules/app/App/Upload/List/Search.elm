@@ -82,6 +82,7 @@ init signature model =
     }
   , [ fill
     , Http.request signature search SearchStateChanged
+    , Frame.pushUrl
     ] |> Transition.batch
   )
 
