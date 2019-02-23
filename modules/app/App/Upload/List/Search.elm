@@ -162,29 +162,28 @@ query model = QueryEncode.object
 queryChanged : List String -> QueryDecode.Value -> Model -> Model
 queryChanged names value model =
   let
-    -- TODO QueryDecode のデフォルトを field や page, sort のデフォルトにしたい
-    qEntryAt name = QueryDecode.entryAt (names ++ ["q",name]) (QueryDecode.string "")
-    qListAt  name = QueryDecode.listAt  (names ++ ["q",name]) (QueryDecode.string "")
+    qEntryAt name = QueryDecode.entryAt (names ++ ["q",name]) QueryDecode.string
+    qListAt  name = QueryDecode.listAt  (names ++ ["q",name]) QueryDecode.string
   in
     { model
     | form =
       model.form
-      |> Form.set name_          ( value |> qEntryAt "name"          )
-      |> Form.set age_gteq_      ( value |> qEntryAt "age_gteq"      )
-      |> Form.set age_lteq_      ( value |> qEntryAt "age_lteq"      )
-      |> Form.set email_         ( value |> qEntryAt "email"         )
-      |> Form.set tel_           ( value |> qEntryAt "tel"           )
-      |> Form.set birthday_gteq_ ( value |> qEntryAt "birthday_gteq" )
-      |> Form.set birthday_lteq_ ( value |> qEntryAt "birthday_lteq" )
-      |> Form.set start_at_gteq_ ( value |> qEntryAt "start_at_gteq" )
-      |> Form.set start_at_lteq_ ( value |> qEntryAt "start_at_lteq" )
-      |> Form.set gender_        ( value |> qEntryAt "gender"        )
-      |> Form.set roles_         ( value |> qListAt  "roles" |> Set.fromList )
-    , page = value |> QueryDecode.entryAt (names ++ ["p"]) (QueryDecode.int 0)
+      |> Form.setIf name_          ( value |> qEntryAt "name"          )
+      |> Form.setIf age_gteq_      ( value |> qEntryAt "age_gteq"      )
+      |> Form.setIf age_lteq_      ( value |> qEntryAt "age_lteq"      )
+      |> Form.setIf email_         ( value |> qEntryAt "email"         )
+      |> Form.setIf tel_           ( value |> qEntryAt "tel"           )
+      |> Form.setIf birthday_gteq_ ( value |> qEntryAt "birthday_gteq" )
+      |> Form.setIf birthday_lteq_ ( value |> qEntryAt "birthday_lteq" )
+      |> Form.setIf start_at_gteq_ ( value |> qEntryAt "start_at_gteq" )
+      |> Form.setIf start_at_lteq_ ( value |> qEntryAt "start_at_lteq" )
+      |> Form.setIf gender_        ( value |> qEntryAt "gender"        )
+      |> Form.setIf roles_         ( value |> qListAt  "roles" |> Maybe.map Set.fromList )
+    , page = value |> QueryDecode.entryAt (names ++ ["p"]) QueryDecode.int |> Maybe.withDefault model.page
     , sort =
-      ( value |> QueryDecode.entryAt (names ++ ["s","column"]) (QueryDecode.string "id")
-      , value |> QueryDecode.entryAt (names ++ ["s","order"])  (QueryDecode.string "")
-      ) |> Sort.fromString
+      ( value |> QueryDecode.entryAt (names ++ ["s","column"]) QueryDecode.string
+      , value |> QueryDecode.entryAt (names ++ ["s","order"])  QueryDecode.string
+      ) |> Sort.fromString |> Maybe.withDefault model.sort
     }
 
 store : Model -> Encode.Value

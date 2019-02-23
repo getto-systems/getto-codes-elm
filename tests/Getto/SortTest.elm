@@ -20,27 +20,33 @@ suite =
     , describe "fromString"
       [ test "should decode from ( column, 'down' )" <|
         \_ ->
-          ( "id", "down" ) |> Sort.fromString |> Sort.expose
+          ( Just "id", Just "down" ) |> Sort.fromString |> Maybe.map Sort.expose
           |> Expect.equal
-            ( "id"
-            , "down"
-            )
+            ( Just ( "id", "down") )
 
       , test "should decode from ( column, 'up' )" <|
         \_ ->
-          ( "id", "up" ) |> Sort.fromString |> Sort.expose
+          ( Just "id", Just "up" ) |> Sort.fromString |> Maybe.map Sort.expose
           |> Expect.equal
-            ( "id"
-            , "up"
-            )
+            ( Just ( "id", "up" ) )
 
-      , test "should decode from ( column, 'unknown-order' )" <|
+      , test "should return Nothing from ( column, 'unknown-order' )" <|
         \_ ->
-          ( "id", "unknown-order" ) |> Sort.fromString |> Sort.expose
+          ( Just "id", Just "unknown-order" ) |> Sort.fromString |> Maybe.map Sort.expose
           |> Expect.equal
-            ( "id"
-            , "down"
-            )
+            Nothing
+
+      , test "should return Nothing from ( column, Nothing )" <|
+        \_ ->
+          ( Just "id", Nothing ) |> Sort.fromString
+          |> Expect.equal
+            Nothing
+
+      , test "should return Nothing from ( Nothing, 'down' )" <|
+        \_ ->
+          ( Nothing, Just "down" ) |> Sort.fromString
+          |> Expect.equal
+            Nothing
       ]
     , describe "state"
       [ test "should return current order and next sort" <|

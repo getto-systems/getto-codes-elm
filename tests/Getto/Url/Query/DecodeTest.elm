@@ -1,5 +1,5 @@
 module Getto.Url.Query.DecodeTest exposing (..)
-import Getto.Url.Query.Decode as Decode
+import Getto.Url.Query.Decode as QueryDecode
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
@@ -17,87 +17,79 @@ suite =
           , "q%5Broles%5D%5B%5D=admin"
           , "q%5Broles%5D%5B%5D=system"
           , "q%5Bnums%5D%5B%5D=1"
-          , "q%5Bnums%5D%5B%5D=value"
+          , "q%5Bnums%5D%5B%5D=2"
+          , "q%5Bfails%5D%5B%5D=1"
+          , "q%5Bfails%5D%5B%5D=value"
           , "s=name.desc"
           ]
           |>
             (\query ->
               { query =
-                { name     = query |> Decode.entryAt ["q","[]"]   (Decode.string "")
-                , none     = query |> Decode.entryAt ["q","none"] (Decode.string "")
-                , age      = query |> Decode.entryAt ["q","age"]  (Decode.int 0)
-                , zero     = query |> Decode.entryAt ["q","zero"] (Decode.int 0)
-                , enabled  = query |> Decode.boolAt  ["q","en"]
-                , disabled = query |> Decode.boolAt  ["q","dis"]
-                , roles    = query |> Decode.listAt  ["q","roles"] (Decode.string "")
-                , numbers  = query |> Decode.listAt  ["q","nums"]  (Decode.int 0)
-                , empty    = query |> Decode.listAt  ["q","empty"] (Decode.string "")
+                { name     = query |> QueryDecode.entryAt ["q","[]"]   QueryDecode.string
+                , none     = query |> QueryDecode.entryAt ["q","none"] QueryDecode.string
+                , age      = query |> QueryDecode.entryAt ["q","age"]  QueryDecode.int
+                , zero     = query |> QueryDecode.entryAt ["q","zero"] QueryDecode.int
+                , enabled  = query |> QueryDecode.boolAt  ["q","en"]
+                , disabled = query |> QueryDecode.boolAt  ["q","dis"]
+                , roles    = query |> QueryDecode.listAt  ["q","roles"] QueryDecode.string
+                , numbers  = query |> QueryDecode.listAt  ["q","nums"]  QueryDecode.int
+                , fails    = query |> QueryDecode.listAt  ["q","fails"] QueryDecode.int
+                , empty    = query |> QueryDecode.listAt  ["q","empty"] QueryDecode.string
                 }
-              , sort = query |> Decode.entryAt ["s"] (Decode.string "")
+              , sort = query |> QueryDecode.entryAt ["s"] QueryDecode.string
               }
             )
           |> Expect.equal
             { query =
-              { name     = "John"
-              , none     = ""
-              , age      = 30
-              , zero     = 0
-              , enabled  = True
-              , disabled = False
-              , roles    = ["admin","system"]
-              , numbers  = [1,0]
-              , empty    = []
+              { name     = Just "John"
+              , none     = Nothing
+              , age      = Just 30
+              , zero     = Nothing
+              , enabled  = Just True
+              , disabled = Just False
+              , roles    = Just ["admin","system"]
+              , numbers  = Just [1,2]
+              , fails    = Nothing
+              , empty    = Nothing
               }
-            , sort = "name.desc"
+            , sort = Just "name.desc"
             }
 
       , test "should decode simple string" <|
         \_ ->
-          Just "value"
-          |> Decode.string ""
-          |> Expect.equal "value"
-
-      , test "should return default string with nothing" <|
-        \_ ->
-          Nothing
-          |> Decode.string ""
-          |> Expect.equal ""
+          "value"
+          |> QueryDecode.string
+          |> Expect.equal (Just "value")
 
       , test "should decode simple int" <|
         \_ ->
-          Just "12"
-          |> Decode.int 0
-          |> Expect.equal 12
+          "12"
+          |> QueryDecode.int
+          |> Expect.equal (Just 12)
 
-      , test "should return default int with nothing" <|
+      , test "should return Nothing if decode failed" <|
         \_ ->
-          Nothing
-          |> Decode.int 0
-          |> Expect.equal 0
-
-      , test "should return empty dict if decode failed" <|
-        \_ ->
-          Just ""
-          |> Decode.int 0
-          |> Expect.equal 0
+          ""
+          |> QueryDecode.int
+          |> Expect.equal Nothing
 
       , test "should decode boolean true" <|
         \_ ->
           ["value"]
-          |> (Decode.boolAt ["value"])
-          |> Expect.equal True
+          |> (QueryDecode.boolAt ["value"])
+          |> Expect.equal (Just True)
 
       , test "should decode boolean false" <|
         \_ ->
           [""]
-          |> (Decode.boolAt ["value"])
-          |> Expect.equal False
+          |> (QueryDecode.boolAt ["value"])
+          |> Expect.equal (Just False)
 
       , test "should decode special chars" <|
         \_ ->
           ["%253F%255B%2520%255D%253D%2526=%5B%20%5D%3D%26%3F"]
-          |> (Decode.entryAt ["?[ ]=&"] (Decode.string ""))
-          |> Expect.equal "[ ]=&?"
+          |> (QueryDecode.entryAt ["?[ ]=&"] QueryDecode.string)
+          |> Expect.equal (Just "[ ]=&?")
 
       , test "should decode first entry with several entries" <|
         \_ ->
@@ -105,8 +97,8 @@ suite =
           , "entry=value2"
           , "entry=value3"
           ]
-          |> (Decode.entryAt ["entry"] (Decode.string ""))
-          |> Expect.equal "value"
+          |> (QueryDecode.entryAt ["entry"] QueryDecode.string)
+          |> Expect.equal (Just "value")
 
       , test "should decode first entry with several entries that decode successful or failed" <|
         \_ ->
@@ -114,7 +106,7 @@ suite =
           , "number=2"
           , "number=3"
           ]
-          |> (Decode.entryAt ["number"] (Decode.int 0))
-          |> Expect.equal 0
+          |> (QueryDecode.entryAt ["number"] QueryDecode.int)
+          |> Expect.equal Nothing
       ]
     ]
