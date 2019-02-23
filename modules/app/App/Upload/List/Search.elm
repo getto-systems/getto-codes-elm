@@ -31,6 +31,7 @@ import Getto.Http.Part as Part
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Present as Present
+import Getto.Sort as Sort
 
 import Set exposing ( Set )
 import Json.Encode as Encode
@@ -46,6 +47,7 @@ type alias Model =
   { signature : String
   , form      : View.Form
   , page      : Int
+  , sort      : Sort.Model
   , search    : HttpView.Model View.ResponseHeader View.ResponseBody
   }
 
@@ -54,6 +56,7 @@ type Msg
   | FieldCheck (Form.Prop View.Form (Set String)) String
   | FieldChange
   | PageTo String
+  | SortBy Sort.Model
   | SearchRequest
   | SearchStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
 
@@ -74,6 +77,7 @@ init signature model =
       , roles         = Field.init signature "roles"         Set.empty
       }
     , page = 0
+    , sort = "id" |> Sort.by
     , search = HttpView.empty
     }
   , [ fill
@@ -144,12 +148,20 @@ query model = QueryEncode.object
       , ( "roles",          model.form.roles         |> Field.value |> Set.toList |> QueryEncode.list QueryEncode.string )
       ] |> QueryEncode.object
     )
-  , ( "page", model.page |> QueryEncode.int )
+  , ( "p", model.page |> QueryEncode.int )
+  , ( "s"
+    , case model.sort |> Sort.expose of
+      (column,order) ->
+        [ ( "column", column |> QueryEncode.string )
+        , ( "order",  order  |> QueryEncode.string )
+        ] |> QueryEncode.object
+    )
   ]
 
 queryChanged : List String -> QueryDecode.Value -> Model -> Model
 queryChanged names value model =
   let
+    -- TODO QueryDecode のデフォルトを field や page, sort のデフォルトにしたい
     qEntryAt name = QueryDecode.entryAt (names ++ ["q",name]) (QueryDecode.string "")
     qListAt  name = QueryDecode.listAt  (names ++ ["q",name]) (QueryDecode.string "")
   in
@@ -167,7 +179,11 @@ queryChanged names value model =
       |> Form.set start_at_lteq_ ( value |> qEntryAt "start_at_lteq" )
       |> Form.set gender_        ( value |> qEntryAt "gender"        )
       |> Form.set roles_         ( value |> qListAt  "roles" |> Set.fromList )
-    , page = value |> QueryDecode.entryAt (names ++ ["page"]) (QueryDecode.int 0)
+    , page = value |> QueryDecode.entryAt (names ++ ["p"]) (QueryDecode.int 0)
+    , sort =
+      ( value |> QueryDecode.entryAt (names ++ ["s","column"]) (QueryDecode.string "id")
+      , value |> QueryDecode.entryAt (names ++ ["s","order"])  (QueryDecode.string "")
+      ) |> Sort.fromString
     }
 
 store : Model -> Encode.Value
@@ -195,6 +211,13 @@ update msg model =
 
     PageTo page ->
       ( { model | page = page |> String.toInt |> Maybe.withDefault 0 }
+      , [ Http.request model.signature search SearchStateChanged
+        , Frame.pushUrl
+        ] |> Transition.batch
+      )
+
+    SortBy sort ->
+      ( { model | sort = sort }
       , [ Http.request model.signature search SearchStateChanged
         , Frame.pushUrl
         ] |> Transition.batch
@@ -297,6 +320,10 @@ contentTable : FrameModel a -> Html Msg
 contentTable model = L.lazy
   (\m -> Html.table
     { http = m.search
+    , sort = m.sort
+    , msg =
+      { sort = SortBy
+      }
     , i18n =
       { field = I18n.field
       , table = AppI18n.table
