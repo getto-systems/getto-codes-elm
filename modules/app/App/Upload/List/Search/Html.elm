@@ -9,11 +9,13 @@ import GettoUpload.View.Html.Button as Button
 import GettoUpload.View.Html.Input as Input
 import GettoUpload.View.Html.Http as Http
 import GettoUpload.View.Html.Table as TableView
+import GettoUpload.View.Html.Sort as SortView
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
 import Getto.Field.Form as Form
+import Getto.Sort as Sort
 import Getto.Html.Table as Table
 
 import Set exposing ( Set )
@@ -181,15 +183,19 @@ paging model =
           else { page = model.page, max = header.max } |> Input.paging model.i18n.paging model.msg.page
 
 
-type alias TableModel =
+type alias TableModel msg =
   { http : HttpView.Model View.ResponseHeader View.ResponseBody
+  , sort : Sort.Model
+  , msg :
+    { sort : Sort.Model -> msg
+    }
   , i18n :
     { field : String -> String
     , table : String -> String
     }
   }
 
-table : TableModel -> Html msg
+table : TableModel msg -> Html msg
 table model =
   case model.http |> HttpView.response of
     Nothing -> "" |> H.text
@@ -209,10 +215,15 @@ table model =
             , sum = 1
             }
           ]
+
+        sort = SortView.render
+          { current = model.sort
+          , msg     = model.msg.sort
+          }
       in
         body |> Table.render (TableView.config model.i18n.table)
           [ Table.column ( Table.none, Table.double )
-            { header  = Table.th [] [ "id" |> model.i18n.field |> H.text ]
+            { header  = Table.th [] ( [ "id" |> model.i18n.field |> H.text ] |> sort "id" )
             , summary = Table.empty
             , content = \upload ->
               Table.td [ "is-center" |> A.class ] [ H.p [] [ upload.id |> String.fromInt |> H.text ] ]
