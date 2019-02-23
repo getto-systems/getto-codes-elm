@@ -2,10 +2,11 @@ module GettoUpload.App.Upload.List.Search exposing
   ( Model
   , Msg
   , init
-  , query
-  , queryChanged
   , store
   , storeChanged
+  , query
+  , queryChanged
+  , fill
   , subscriptions
   , update
   , contents
@@ -80,25 +81,9 @@ init signature model =
     , sort = "id" |> Sort.by
     , search = HttpView.empty
     }
-  , [ fill
-    , Http.request signature search SearchStateChanged
+  , [ Http.request signature search SearchStateChanged
     , Frame.pushUrl
     ] |> Transition.batch
-  )
-
-fill : FrameModel a -> Cmd msg
-fill = Frame.app >> .search >>
-  (\m -> Dom.fill
-    [ m.form.name          |> Dom.string
-    , m.form.age_gteq      |> Dom.string
-    , m.form.age_lteq      |> Dom.string
-    , m.form.email         |> Dom.string
-    , m.form.tel           |> Dom.string
-    , m.form.birthday_gteq |> Dom.string
-    , m.form.birthday_lteq |> Dom.string
-    , m.form.start_at_gteq |> Dom.string
-    , m.form.start_at_lteq |> Dom.string
-    ]
   )
 
 search : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
@@ -132,6 +117,12 @@ search = Http.tracker "search" <|
           }
         , timeout = 10 * 1000
         }
+
+store : Model -> Encode.Value
+store model = Encode.null
+
+storeChanged : Decode.Value -> Model -> Model
+storeChanged value model = model
 
 query : Model -> QueryEncode.Value
 query model = QueryEncode.object
@@ -186,11 +177,18 @@ queryChanged names value model =
       ) |> Sort.fromString |> Maybe.withDefault model.sort
     }
 
-store : Model -> Encode.Value
-store model = Encode.null
-
-storeChanged : Decode.Value -> Model -> Model
-storeChanged value model = model
+fill : Model -> List ( String, String )
+fill model =
+  [ model.form.name          |> Dom.string
+  , model.form.age_gteq      |> Dom.string
+  , model.form.age_lteq      |> Dom.string
+  , model.form.email         |> Dom.string
+  , model.form.tel           |> Dom.string
+  , model.form.birthday_gteq |> Dom.string
+  , model.form.birthday_lteq |> Dom.string
+  , model.form.start_at_gteq |> Dom.string
+  , model.form.start_at_lteq |> Dom.string
+  ]
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
