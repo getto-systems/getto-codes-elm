@@ -163,39 +163,44 @@ response =
 
 store : Model -> Encode.Value
 store model = Encode.object
-  [ ( "name",     model.form.name     |> Field.value |> Encode.string )
-  , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
-  , ( "age",      model.form.age      |> Field.value |> Encode.string )
-  , ( "email",    model.form.email    |> Field.value |> Encode.string )
-  , ( "tel",      model.form.tel      |> Field.value |> Encode.string )
-  , ( "birthday", model.form.birthday |> Field.value |> Encode.string )
-  , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
-  , ( "gender",   model.form.gender   |> Field.value |> Encode.string )
-  , ( "quality",  model.form.quality  |> Field.value |> Encode.string )
-  , ( "roles",    model.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+  [ ( model.id |> String.fromInt
+    , [ ( "name",     model.form.name     |> Field.value |> Encode.string )
+      , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
+      , ( "age",      model.form.age      |> Field.value |> Encode.string )
+      , ( "email",    model.form.email    |> Field.value |> Encode.string )
+      , ( "tel",      model.form.tel      |> Field.value |> Encode.string )
+      , ( "birthday", model.form.birthday |> Field.value |> Encode.string )
+      , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
+      , ( "gender",   model.form.gender   |> Field.value |> Encode.string )
+      , ( "quality",  model.form.quality  |> Field.value |> Encode.string )
+      , ( "roles",    model.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+      ] |> Encode.object
+    )
   ]
 
 storeChanged : Decode.Value -> Model -> Model
 storeChanged value model =
-  { model
-  | form =
-    model.form
-    |> Form.set name_     ( value |> SafeDecode.at ["name"]     (SafeDecode.string "") )
-    |> Form.set memo_     ( value |> SafeDecode.at ["memo"]     (SafeDecode.string "") )
-    |> Form.set age_      ( value |> SafeDecode.at ["age"]      (SafeDecode.string "") )
-    |> Form.set email_    ( value |> SafeDecode.at ["email"]    (SafeDecode.string "") )
-    |> Form.set tel_      ( value |> SafeDecode.at ["tel"]      (SafeDecode.string "") )
-    |> Form.set birthday_ ( value |> SafeDecode.at ["birthday"] (SafeDecode.string "") )
-    |> Form.set start_at_ ( value |> SafeDecode.at ["start_at"] (SafeDecode.string "") )
-    |> Form.set gender_   ( value |> SafeDecode.at ["gender"]   (SafeDecode.string "") )
-    |> Form.set quality_  ( value |> SafeDecode.at ["quality"]  (SafeDecode.string "") )
-    |> Form.set roles_    ( value |> SafeDecode.at ["roles"]    (SafeDecode.list (SafeDecode.string "")) |> Set.fromList )
-  }
+  let
+    obj = value |> SafeDecode.valueAt [model.id |> String.fromInt]
+    decode name decoder = Decode.decodeValue (Decode.at [name] decoder) >> Result.toMaybe
+  in
+    { model
+    | form =
+      model.form
+      |> Form.setIf name_     ( obj |> decode "name"     Decode.string )
+      |> Form.setIf memo_     ( obj |> decode "memo"     Decode.string )
+      |> Form.setIf age_      ( obj |> decode "age"      Decode.string )
+      |> Form.setIf email_    ( obj |> decode "email"    Decode.string )
+      |> Form.setIf tel_      ( obj |> decode "tel"      Decode.string )
+      |> Form.setIf birthday_ ( obj |> decode "birthday" Decode.string )
+      |> Form.setIf start_at_ ( obj |> decode "start_at" Decode.string )
+      |> Form.setIf gender_   ( obj |> decode "gender"   Decode.string )
+      |> Form.setIf quality_  ( obj |> decode "quality"  Decode.string )
+      |> Form.setIf roles_    ( obj |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
+    }
 
 query : Model -> QueryEncode.Value
-query model = QueryEncode.object
-  [ ( "id", model.id |> QueryEncode.int )
-  ]
+query model = QueryEncode.empty
 
 queryChanged : List String -> QueryDecode.Value -> Model -> Model
 queryChanged names value model =
