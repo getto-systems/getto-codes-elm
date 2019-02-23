@@ -5,7 +5,9 @@ module Getto.Url.Query.Decode exposing
   , int
   , entryAt
   , listAt
+  , filter
   , boolAt
+  , find
   , split
   )
 import Getto.Url.Query.Encode as Encode
@@ -14,28 +16,32 @@ import Url
 
 type alias Value = List String
 
-type alias Decoder a = Value -> a
-type alias ValueDecoder a = Maybe String -> a
+type alias Decoder a = Value -> Maybe a
+type alias ValueDecoder a = String -> Maybe a
 
-string : String -> ValueDecoder String
-string default = Maybe.andThen Url.percentDecode >> Maybe.withDefault default
+string : ValueDecoder String
+string = Url.percentDecode
 
-int : Int -> ValueDecoder Int
-int default = Maybe.andThen String.toInt >> Maybe.withDefault default
+int : ValueDecoder Int
+int = String.toInt
 
 entryAt : List String -> ValueDecoder a -> Decoder a
 entryAt names decoder =
   filter names ""
   >> List.head
-  >> decoder
+  >> Maybe.andThen decoder
 
 listAt : List String -> ValueDecoder a -> Decoder (List a)
-listAt names decoder =
-  filter names "[]"
-  >> List.map (Just >> decoder)
-
-boolAt : List String -> Decoder Bool
-boolAt names = List.any ((==) (names |> Encode.toName |> Url.percentEncode))
+listAt names decoder list =
+  case list |> filter names "[]" of
+    [] -> Nothing
+    values ->
+      let
+        decoded = values |> List.map decoder
+      in
+        if decoded |> List.any ((==) Nothing)
+          then Nothing
+          else decoded |> List.filterMap identity |> Just
 
 filter : List String -> String -> List String -> List String
 filter names suffix =
@@ -49,6 +55,12 @@ filter names suffix =
           then query |> String.dropLeft length |> Just
           else Nothing
       )
+
+boolAt : List String -> Decoder Bool
+boolAt names = find names >> Just
+
+find : List String -> List String -> Bool
+find names = List.any ((==) (names |> Encode.toName |> Url.percentEncode))
 
 split : String -> Value
 split = String.split "&"

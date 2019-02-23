@@ -5,6 +5,7 @@ module Getto.Field.Form exposing
   , prop
   , init
   , at
+  , setIf
   , set
   , toggle
   )
@@ -37,6 +38,12 @@ init formProp formField =
 
 at : Prop form a -> form -> Field.Model a
 at (Prop getter _) = getter
+
+setIf : Prop form a -> Maybe a -> form -> form
+setIf (Prop getter setter) value form =
+  case value of
+    Nothing  -> form
+    Just val -> form |> setter (form |> getter |> Field.set val)
 
 set : Prop form a -> a -> form -> form
 set (Prop getter setter) value form =

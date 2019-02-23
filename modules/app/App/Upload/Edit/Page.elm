@@ -5,7 +5,6 @@ import GettoUpload.Layout.Page.Page as Layout
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
-import Getto.Url.Query.Decode as QueryDecode
 import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode

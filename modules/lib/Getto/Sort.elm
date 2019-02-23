@@ -67,11 +67,22 @@ expose (Model model) =
     Down -> "down"
   )
 
-fromString : ( String, String ) -> Model
-fromString (col,orderString) = Model
-  { column = col
-  , order  =
-    case orderString |> String.toLower of
-      "up" -> Up
-      _    -> Down
-  }
+fromString : ( Maybe String, Maybe String ) -> Maybe Model
+fromString decoded =
+  case decoded of
+    ( Just col, Just orderString ) ->
+      orderString |> decodeOrder |> Maybe.map
+        (\order -> Model
+          { column = col
+          , order  = order
+          }
+        )
+
+    _ -> Nothing
+
+decodeOrder : String -> Maybe SortOrder
+decodeOrder orderString =
+  case orderString |> String.toLower of
+    "up"   -> Just Up
+    "down" -> Just Down
+    _ -> Nothing

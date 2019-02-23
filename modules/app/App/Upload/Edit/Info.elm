@@ -28,6 +28,7 @@ import GettoUpload.Extension.Href.Upload as Upload
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
+import Getto.Url.Query.SafeDecode as QuerySafeDecode
 import Getto.Http.Header.Decode as HeaderDecode
 import Getto.Http.Part as Part
 import Getto.Json.SafeDecode as SafeDecode
@@ -180,9 +181,9 @@ query model = QueryEncode.object
 queryChanged : List String -> QueryDecode.Value -> Model -> Model
 queryChanged names value model =
   let
-    entryAt name = QueryDecode.entryAt (names ++ [name])
+    entryAt name = QuerySafeDecode.entryAt (names ++ [name])
   in
-    { model | id = value |> entryAt "id" (QueryDecode.int 0) }
+    { model | id = value |> entryAt "id" (QuerySafeDecode.int 0) }
 
 store : Model -> Encode.Value
 store model = Encode.object
