@@ -1,5 +1,6 @@
 port module GettoUpload.Command.Dom exposing
-  ( fill
+  ( Init
+  , fill
   , string
   )
 
@@ -9,14 +10,15 @@ import Json.Encode as Encode
 
 port fillFieldValues : Encode.Value -> Cmd msg
 
-type alias Value = ( String, Encode.Value )
+type alias Init app = app -> List Value
+type alias Value = ( String, String )
 
-fill : List Value -> Cmd annonymous
-fill =
-  List.map
+fill : Init app -> app -> Cmd annonymous
+fill toValue model =
+  model |> toValue |> List.map
     (\(id,value) ->
-      [ ( "id", id |> Encode.string )
-      , ( "value", value )
+      [ ( "id",    id    |> Encode.string )
+      , ( "value", value |> Encode.string )
       ]
     )
   >> Encode.list Encode.object
@@ -25,5 +27,5 @@ fill =
 string : Field.Model String -> Value
 string field =
   ( field |> Field.id
-  , field |> Field.value |> Encode.string
+  , field |> Field.value
   )

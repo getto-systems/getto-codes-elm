@@ -35,15 +35,7 @@ type Msg
 
 setup : Frame.SetupApp Layout.Model Model Msg
 setup =
-  { search =
-    ( \model -> QueryEncode.object
-      [ ( "dashboard", model.dashboard |> Dashboard.query )
-      ]
-    , \value model ->
-      Model
-        ( model.dashboard |> Dashboard.queryChanged ["dashboard"] value )
-    )
-  , store =
+  { store =
     ( \model -> Encode.object
       [ ( "dashboard", model.dashboard |> Dashboard.store )
       ]
@@ -51,6 +43,17 @@ setup =
       Model
         ( model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]) )
     )
+  , search =
+    ( \model -> QueryEncode.object
+      [ ( "dashboard", model.dashboard |> Dashboard.query )
+      ]
+    , \value model ->
+      Model
+        ( model.dashboard |> Dashboard.queryChanged ["dashboard"] value )
+    )
+  , dom = \model -> List.concat
+    [ model.dashboard |> Dashboard.fill
+    ]
   , init = init
   }
 

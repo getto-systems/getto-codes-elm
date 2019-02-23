@@ -27,6 +27,7 @@ import GettoUpload.Layout.Frame.Credential as Credential
 import GettoUpload.Command.Auth   as Auth
 import GettoUpload.Command.Store  as Store
 import GettoUpload.Command.Search as Search
+import GettoUpload.Command.Dom    as Dom
 import GettoUpload.Version as Version
 
 import Getto.Command as Command
@@ -50,12 +51,13 @@ type alias Flags =
 type Model layout app = Model (Inner layout app)
 type alias Inner layout app = Base
   { layout : layout
-  , app : app
-  , search : Search.Model app
+  , app    : app
   , store  :
     { layout : Store.Model layout
     , app    : Store.Model app
     }
+  , search : Search.Model app
+  , dom    : Dom.Init app
   }
 
 type alias Base a =
@@ -84,8 +86,9 @@ type alias SetupLayout layout app layoutMsg =
   , init  : InitModel -> ( layout, Transition (Model layout app) layoutMsg )
   }
 type alias SetupApp layout app appMsg =
-  { search : Search.Init app
-  , store  : Store.Init app
+  { store  : Store.Init app
+  , search : Search.Init app
+  , dom    : Dom.Init app
   , init   : InitModel -> ( app, Transition (Model layout app) appMsg )
   }
 
@@ -105,16 +108,17 @@ init setupLayout setupApp flags url key =
       , auth   = model.auth
       , layout = newLayout
       , app    = newApp
-      , search = Search.init key setupApp.search
       , store  =
         { layout = Store.init Store.Layout setupLayout.store
         , app    = Store.init Store.App    setupApp.store
         }
+      , search = Search.init key setupApp.search
+      , dom    = setupApp.dom
       }
-    |> Command.none
-    |> Command.andThen (layoutStoreChanged flags.store.layout >> Command.none)
-    |> Command.andThen (appStoreChanged    flags.store.app    >> Command.none)
-    |> Command.andThen (searchChanged      url                >> Command.none)
+    |> layoutStoreChanged flags.store.layout
+    |> appStoreChanged    flags.store.app
+    |> searchChanged url
+    |> Transition.exec fill
     |> Command.andThen (Transition.exec layoutCmd >> Command.map Layout)
     |> Command.andThen (Transition.exec appCmd    >> Command.map App)
 
@@ -136,11 +140,7 @@ type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition (M
 update : LayoutUpdater layout app layoutMsg -> AppUpdater layout app appMsg -> Msg layoutMsg appMsg  -> Model layout app -> ( Model layout app, Cmd (Msg layoutMsg appMsg) )
 update layoutUpdater appUpdater message model =
   case message of
-    {- search を変更したときには cmd ( request や fill ) を発行したいが、
-     - onUrlChange のタイミングで常に cmd を発行するかは場合によると思う
-     - onUrlChange を無視すると困る場合に遭遇してからどうするのが良いか考える
-     -}
-    UrlChange url -> model |> Command.none
+    UrlChange url -> model |> searchChanged url |> Transition.exec fill
     UrlRequest urlRequest ->
       case urlRequest of
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
@@ -149,13 +149,7 @@ update layoutUpdater appUpdater message model =
     CredentialChanged value -> model |> credentialChanged value |> Command.none
 
     LayoutStoreChanged value -> model |> layoutStoreChanged value |> Command.none
-    AppStoreChanged    value -> model |> appStoreChanged    value |> Command.none
-
-{-
-    HttpResponse data result ->
-      ( { model | http = model.http |> Http.layoutResponse prop result }, Cmd.none )
--}
-
+    AppStoreChanged    value -> model |> appStoreChanged    value |> Transition.exec fill
 
     App msg ->
       case model of
@@ -178,10 +172,6 @@ credentialChanged : Decode.Value -> Model layout app -> Model layout app
 credentialChanged value (Model model) =
   Model { model | auth = model.auth |> Auth.changed value }
 
-searchChanged : Url -> Model layout app -> Model layout app
-searchChanged url (Model model) =
-  Model { model | app = model.app |> Search.changed model.search url }
-
 layoutStoreChanged : Decode.Value -> Model layout app -> Model layout app
 layoutStoreChanged value (Model model) =
   Model { model | layout = model.layout |> Store.changed model.store.layout value }
@@ -189,6 +179,13 @@ layoutStoreChanged value (Model model) =
 appStoreChanged : Decode.Value -> Model layout app -> Model layout app
 appStoreChanged value (Model model) =
   Model { model | app = model.app |> Store.changed model.store.app value }
+
+searchChanged : Url -> Model layout app -> Model layout app
+searchChanged url (Model model) =
+  Model { model | app = model.app |> Search.changed model.search url }
+
+fill : Model layout app -> Cmd msg
+fill (Model model) = model.app |> Dom.fill model.dom
 
 
 static : Model layout app -> Static.Model

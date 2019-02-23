@@ -36,15 +36,7 @@ type Msg
 
 setup : Frame.SetupApp Layout.Model Model Msg
 setup =
-  { search =
-    ( \model -> QueryEncode.object
-      [ ( "search", model.search |> Search.query )
-      ]
-    , \value model ->
-      Model
-        ( model.search |> Search.queryChanged ["search"] value )
-    )
-  , store =
+  { store =
     ( \model -> Encode.object
       [ ( "search", model.search |> Search.store )
       ]
@@ -52,6 +44,17 @@ setup =
       Model
         ( model.search |> Search.storeChanged (value |> SafeDecode.valueAt ["search"]) )
     )
+  , search =
+    ( \model -> QueryEncode.object
+      [ ( "search", model.search |> Search.query )
+      ]
+    , \value model ->
+      Model
+        ( model.search |> Search.queryChanged ["search"] value )
+    )
+  , dom = \model -> List.concat
+    [ model.search |> Search.fill
+    ]
   , init = init
   }
 

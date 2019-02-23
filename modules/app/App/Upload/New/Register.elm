@@ -2,10 +2,11 @@ module GettoUpload.App.Upload.New.Register exposing
   ( Model
   , Msg
   , init
-  , query
-  , queryChanged
   , store
   , storeChanged
+  , query
+  , queryChanged
+  , fill
   , subscriptions
   , update
   , contents
@@ -81,20 +82,7 @@ init signature model =
       }
     , upload = HttpView.empty
     }
-  , fill
-  )
-
-fill : FrameModel a -> Cmd msg
-fill = Frame.app >> .register >>
-  (\m -> Dom.fill
-    [ m.form.name     |> Dom.string
-    , m.form.memo     |> Dom.string
-    , m.form.age      |> Dom.string
-    , m.form.email    |> Dom.string
-    , m.form.tel      |> Dom.string
-    , m.form.birthday |> Dom.string
-    , m.form.start_at |> Dom.string
-    ]
+  , Transition.none
   )
 
 upload : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
@@ -127,12 +115,6 @@ upload = Http.tracker "upload" <|
         , timeout = 30 * 1000
         }
 
-query : Model -> QueryEncode.Value
-query model = QueryEncode.empty
-
-queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model = model
-
 store : Model -> Encode.Value
 store model = Encode.object
   [ ( "name",     model.form.name     |> Field.value |> Encode.string )
@@ -163,6 +145,23 @@ storeChanged value model =
     |> Form.set quality_  ( value |> SafeDecode.at ["quality"]  (SafeDecode.string "") )
     |> Form.set roles_    ( value |> SafeDecode.at ["roles"]    (SafeDecode.list (SafeDecode.string "")) |> Set.fromList )
   }
+
+query : Model -> QueryEncode.Value
+query model = QueryEncode.empty
+
+queryChanged : List String -> QueryDecode.Value -> Model -> Model
+queryChanged names value model = model
+
+fill : Model -> List ( String, String )
+fill model =
+  [ model.form.name     |> Dom.string
+  , model.form.memo     |> Dom.string
+  , model.form.age      |> Dom.string
+  , model.form.email    |> Dom.string
+  , model.form.tel      |> Dom.string
+  , model.form.birthday |> Dom.string
+  , model.form.start_at |> Dom.string
+  ]
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

@@ -2,10 +2,11 @@ module GettoUpload.App.Upload.Edit.Info exposing
   ( Model
   , Msg
   , init
-  , query
-  , queryChanged
   , store
   , storeChanged
+  , query
+  , queryChanged
+  , fill
   , subscriptions
   , update
   , contents
@@ -93,19 +94,6 @@ init signature model =
     ] |> Transition.batch
   )
 
-fill : FrameModel a -> Cmd msg
-fill = Frame.app >> .info >>
-  (\m -> Dom.fill
-    [ m.form.name     |> Dom.string
-    , m.form.memo     |> Dom.string
-    , m.form.age      |> Dom.string
-    , m.form.email    |> Dom.string
-    , m.form.tel      |> Dom.string
-    , m.form.birthday |> Dom.string
-    , m.form.start_at |> Dom.string
-    ]
-  )
-
 get : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
 get = Http.tracker "get" <|
   \model ->
@@ -173,18 +161,6 @@ response =
     )
   }
 
-query : Model -> QueryEncode.Value
-query model = QueryEncode.object
-  [ ( "id", model.id |> QueryEncode.int )
-  ]
-
-queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model =
-  let
-    entryAt name = QuerySafeDecode.entryAt (names ++ [name])
-  in
-    { model | id = value |> entryAt "id" (QuerySafeDecode.int 0) }
-
 store : Model -> Encode.Value
 store model = Encode.object
   [ ( "name",     model.form.name     |> Field.value |> Encode.string )
@@ -216,6 +192,29 @@ storeChanged value model =
     |> Form.set roles_    ( value |> SafeDecode.at ["roles"]    (SafeDecode.list (SafeDecode.string "")) |> Set.fromList )
   }
 
+query : Model -> QueryEncode.Value
+query model = QueryEncode.object
+  [ ( "id", model.id |> QueryEncode.int )
+  ]
+
+queryChanged : List String -> QueryDecode.Value -> Model -> Model
+queryChanged names value model =
+  let
+    entryAt name = QuerySafeDecode.entryAt (names ++ [name])
+  in
+    { model | id = value |> entryAt "id" (QuerySafeDecode.int 0) }
+
+fill : Model -> List ( String, String )
+fill model =
+  [ model.form.name     |> Dom.string
+  , model.form.memo     |> Dom.string
+  , model.form.age      |> Dom.string
+  , model.form.email    |> Dom.string
+  , model.form.tel      |> Dom.string
+  , model.form.birthday |> Dom.string
+  , model.form.start_at |> Dom.string
+  ]
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
   [ Http.track model.signature get GetStateChanged
@@ -227,7 +226,7 @@ update msg model =
   case msg of
     Edit ->
       ( { model | form = model.form |> edit model |> View.edit }
-      , fill
+      , Transition.none
       )
     Static ->
       ( { model | form = model.form |> View.static }
