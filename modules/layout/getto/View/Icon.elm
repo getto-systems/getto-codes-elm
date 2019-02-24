@@ -3,6 +3,7 @@ module GettoUpload.View.Icon exposing
   , Fa(..)
   , fas
   , far
+  , edit
   )
 
 type Icon
@@ -17,3 +18,6 @@ fas = FaSolid >> Fa
 
 far : String -> Icon
 far = FaRegular >> Fa
+
+edit : Icon
+edit = far "edit"

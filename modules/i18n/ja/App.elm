@@ -41,6 +41,9 @@ form name =
 
     "select-file" -> "ファイルを選択"
 
+    "new"    -> "新規登録"
+    "detail" -> "詳細"
+
     "edit"   -> "編集"
     "cancel" -> "閉じる"
 

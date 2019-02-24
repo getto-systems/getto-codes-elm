@@ -62,8 +62,8 @@ type Msg
   | SearchStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
 
 
-search : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
-search = Http.tracker "search" <|
+get : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
+get = Http.tracker "search" <|
   \model ->
     let
       m = model |> Frame.app |> .search
@@ -115,7 +115,7 @@ init signature model =
     , sort = "id" |> Sort.by
     , search = HttpView.empty
     }
-  , [ Http.request signature search SearchStateChanged
+  , [ Http.request signature get SearchStateChanged
     , Frame.pushUrl
     ] |> Transition.batch
   )
@@ -194,7 +194,7 @@ fill model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Http.track model.signature search SearchStateChanged
+  Http.track model.signature get SearchStateChanged
 
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
@@ -211,21 +211,21 @@ update msg model =
 
     PageTo page ->
       ( { model | page = page |> String.toInt |> Maybe.withDefault 0 }
-      , [ Http.request model.signature search SearchStateChanged
+      , [ Http.request model.signature get SearchStateChanged
         , Frame.pushUrl
         ] |> Transition.batch
       )
 
     SortBy sort ->
       ( { model | sort = sort }
-      , [ Http.request model.signature search SearchStateChanged
+      , [ Http.request model.signature get SearchStateChanged
         , Frame.pushUrl
         ] |> Transition.batch
       )
 
     SearchRequest ->
       ( { model | page = 0 }
-      , [ Http.request model.signature search SearchStateChanged
+      , [ Http.request model.signature get SearchStateChanged
         , Frame.pushUrl
         ] |> Transition.batch
       )
@@ -235,12 +235,12 @@ contents : FrameModel a -> List (Html Msg)
 contents model =
   [ H.section [ A.class "list" ]
     [ H.section [ "search" |> A.class ]
-      [ model |> contentSearch
+      [ model |> search
       ]
     , H.section [ "data" |> A.class ]
-      [ model |> contentPaging
-      , model |> contentTable
-      , model |> contentPaging
+      [ model |> paging
+      , model |> table
+      , model |> paging
       ]
     ]
   ]
@@ -257,8 +257,8 @@ start_at_lteq_ = Form.prop .start_at_lteq (\v m -> { m | start_at_lteq = v })
 gender_        = Form.prop .gender        (\v m -> { m | gender        = v })
 roles_         = Form.prop .roles         (\v m -> { m | roles         = v })
 
-contentSearch : FrameModel a -> Html Msg
-contentSearch model = L.lazy
+search : FrameModel a -> Html Msg
+search model = L.lazy
   (\m -> Html.search
     { form = m.form |> View.compose
       { name          = ( name_,          Present.string )
@@ -301,8 +301,8 @@ contentSearch model = L.lazy
   )
   (model |> Frame.app |> .search)
 
-contentPaging : FrameModel a -> Html Msg
-contentPaging model = L.lazy
+paging : FrameModel a -> Html Msg
+paging model = L.lazy
   (\m -> Html.paging
     { page = m.page
     , http = m.search
@@ -316,8 +316,8 @@ contentPaging model = L.lazy
   )
   (model |> Frame.app |> .search)
 
-contentTable : FrameModel a -> Html Msg
-contentTable model = L.lazy
+table : FrameModel a -> Html Msg
+table model = L.lazy
   (\m -> Html.table
     { http = m.search
     , sort = m.sort
@@ -327,6 +327,7 @@ contentTable model = L.lazy
     , i18n =
       { field = I18n.field
       , table = AppI18n.table
+      , form  = AppI18n.form
       }
     }
   )

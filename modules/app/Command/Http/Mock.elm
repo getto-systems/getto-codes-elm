@@ -36,52 +36,79 @@ type Request
 
 request : RequestData header body msg -> Cmd msg
 request data =
-  case mock |> Dict.get ( data.method, data.url |> String.split "?" |> List.head |> Maybe.withDefault "" ) of
-    Just (Mock delay rawHeader rawBody) ->
-      [ delay * 1 / 8
-        |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 1, size = 4 } |> HttpView.transfer)
-      , delay * 2 / 8
-        |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 2, size = 4 } |> HttpView.transfer)
-      , delay * 3 / 8
-        |> Process.sleep
-        |> Task.map (\_ -> HttpView.Sending { current = 3, size = 4 } |> HttpView.transfer)
-      , delay * 4 / 8
-        |> Process.sleep
-        |> Task.map (\_ -> HttpView.Proccessing |> HttpView.transfer)
-      , delay * 5 / 8
-        |> Process.sleep
-        |> Task.map (\_ -> HttpView.Receiving (Just { current = 1, size = 4 }) |> HttpView.transfer)
-      , delay * 6 / 8
-        |> Process.sleep
-        |> Task.map (\_ -> HttpView.Receiving (Just { current = 2, size = 4 }) |> HttpView.transfer)
-      , delay * 7 / 8
-        |> Process.sleep
-        |> Task.map (\_ -> HttpView.Receiving (Just { current = 3, size = 4 }) |> HttpView.transfer)
+  let
+    sending current = Process.sleep >> Task.map
+      (\_ -> HttpView.Sending { current = current, size = 4 } |> HttpView.transfer)
 
-      , delay
-        |> Process.sleep
-        |> Task.map
-          (\_ ->
-            case rawHeader |> HeaderDecode.decode data.response.header of
-              Err headerError ->
-                headerError |> HeaderDecode.errorToString |> HttpView.BadHeader |> HttpView.failure
+    proccessing = Process.sleep >> Task.map
+      (\_ -> HttpView.Proccessing |> HttpView.transfer)
 
-              Ok header ->
-                case rawBody |> Decode.decodeValue data.response.body of
-                  Err bodyError ->
-                    bodyError |> Decode.errorToString >> HttpView.BadBody |> HttpView.failure
+    receiving current = Process.sleep >> Task.map
+      (\_ -> HttpView.Receiving (Just { current = current, size = 4 }) |> HttpView.transfer)
 
-                  Ok body ->
-                    body |> HttpView.toResponse header |> HttpView.success
-          )
+    pathInfo =
+      data.url
+      |> String.replace Env.api.host ""
+      |> String.split "?" |> List.head |> Maybe.withDefault ""
+      |> String.split "/"
 
-      ] |> List.map (Task.perform data.msg) |> Cmd.batch
+    entry = mock |> List.filterMap
+      (\((method,mockPath),res) ->
+        if method /= data.method
+          then Nothing
+          else
+            let
+              mockInfo = mockPath |> String.split "/"
+            in
+              if (pathInfo |> List.length) /= (mockInfo |> List.length)
+                then Nothing
+                else
+                  let
+                    match = List.map2 Tuple.pair pathInfo mockInfo |> List.all
+                      (\(pathEntry,mockEntry) ->
+                        if mockEntry == ":id"
+                          then (pathEntry |> String.toInt) /= Nothing
+                          else pathEntry == mockEntry
+                      )
+                  in
+                    if match
+                      then Just res
+                      else Nothing
+      )
+      |> List.head
+  in
+    case entry of
+      Just (Mock delay rawHeader rawBody) ->
+        [ delay * 1 / 8 |> sending 1
+        , delay * 2 / 8 |> sending 2
+        , delay * 3 / 8 |> sending 3
+        , delay * 4 / 8 |> proccessing
+        , delay * 5 / 8 |> receiving 1
+        , delay * 6 / 8 |> receiving 2
+        , delay * 7 / 8 |> receiving 3
 
-    _ -> data |> Real.request
+        , delay
+          |> Process.sleep
+          |> Task.map
+            (\_ ->
+              case rawHeader |> HeaderDecode.decode data.response.header of
+                Err headerError ->
+                  headerError |> HeaderDecode.errorToString |> HttpView.BadHeader |> HttpView.failure
 
-mock : Dict ( String, String ) Request
+                Ok header ->
+                  case rawBody |> Decode.decodeValue data.response.body of
+                    Err bodyError ->
+                      bodyError |> Decode.errorToString >> HttpView.BadBody |> HttpView.failure
+
+                    Ok body ->
+                      body |> HttpView.toResponse header |> HttpView.success
+            )
+
+        ] |> List.map (Task.perform data.msg) |> Cmd.batch
+
+      _ -> data |> Real.request
+
+mock : List ( ( String, String ), Request )
 mock =
   [ ( ( "GET", "layout/menu/badge" )
     {--, Real --}
@@ -109,7 +136,7 @@ mock =
       )
     --}
     )
-  , ( ( "GET", "upload/4" )
+  , ( ( "GET", "upload/:id" )
     {--, Real --}
     {--}, Mock 1000
       ( [
@@ -136,7 +163,7 @@ mock =
       )
     --}
     )
-  , ( ( "PUT", "upload/4/info" )
+  , ( ( "PUT", "upload/:id/info" )
     {--, Real --}
     {--}, Mock 1000
       ( [
@@ -217,5 +244,3 @@ mock =
     --}
     )
   ]
-  |> List.map (\((method,path),res) -> ( ( method, Env.api.host ++ path ), res ))
-  |> Dict.fromList
