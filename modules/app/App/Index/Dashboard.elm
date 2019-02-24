@@ -2,11 +2,10 @@ module GettoUpload.App.Index.Dashboard exposing
   ( Model
   , Msg
   , init
-  , query
-  , queryChanged
-  , store
-  , storeChanged
-  , fill
+  , encodeQuery
+  , decodeQuery
+  , encodeStore
+  , decodeStore
   , subscriptions
   , update
   , contents
@@ -47,20 +46,17 @@ init signature model =
   , Transition.none
   )
 
-query : Model -> QueryEncode.Value
-query model = QueryEncode.empty
+encodeQuery : Model -> QueryEncode.Value
+encodeQuery model = QueryEncode.empty
 
-queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model = model
+decodeQuery : List String -> QueryDecode.Value -> Model -> Model
+decodeQuery names value model = model
 
-store : Model -> Encode.Value
-store model = Encode.null
+encodeStore : Model -> Encode.Value
+encodeStore model = Encode.null
 
-storeChanged : Decode.Value -> Model -> Model
-storeChanged value model = model
-
-fill : Model -> List ( String, String )
-fill model = []
+decodeStore : Decode.Value -> Model -> Model
+decodeStore value model = model
 
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none

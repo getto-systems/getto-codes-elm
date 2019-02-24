@@ -2,11 +2,10 @@ module GettoUpload.App.Upload.Edit.Info exposing
   ( Model
   , Msg
   , init
-  , query
-  , queryChanged
-  , store
-  , storeChanged
-  , fill
+  , encodeQuery
+  , decodeQuery
+  , encodeStore
+  , decodeStore
   , subscriptions
   , update
   , contents
@@ -159,24 +158,24 @@ init signature model =
     , get = HttpView.empty
     , put = HttpView.empty
     }
-  , [ Http.request signature get GetStateChanged
-    ] |> Transition.batch
+  , Http.request signature get GetStateChanged
   )
 
-query : Model -> QueryEncode.Value
-query model = QueryEncode.empty
+encodeQuery : Model -> QueryEncode.Value
+encodeQuery model = QueryEncode.empty
 
-queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model =
+decodeQuery : List String -> QueryDecode.Value -> Model -> Model
+decodeQuery names value model =
   let
     entryAt name = QuerySafeDecode.entryAt (names ++ [name])
   in
     { model | id = value |> entryAt "id" (QuerySafeDecode.int 0) }
 
-store : Model -> Encode.Value
-store model = Encode.object
+encodeStore : Model -> Encode.Value
+encodeStore model = Encode.object
   [ ( model.id |> String.fromInt
-    , [ ( "name",     model.form.name     |> Field.value |> Encode.string )
+    , [ ( "state",    model.form   |> View.stateToString |> Encode.string )
+      , ( "name",     model.form.name     |> Field.value |> Encode.string )
       , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
       , ( "age",      model.form.age      |> Field.value |> Encode.string )
       , ( "email",    model.form.email    |> Field.value |> Encode.string )
@@ -190,8 +189,8 @@ store model = Encode.object
     )
   ]
 
-storeChanged : Decode.Value -> Model -> Model
-storeChanged value model =
+decodeStore : Decode.Value -> Model -> Model
+decodeStore value model =
   let
     obj = value |> SafeDecode.valueAt [model.id |> String.fromInt]
     decode name decoder = Decode.decodeValue (Decode.at [name] decoder) >> Result.toMaybe
@@ -209,18 +208,8 @@ storeChanged value model =
       |> Form.setIf gender_   ( obj |> decode "gender"   Decode.string )
       |> Form.setIf quality_  ( obj |> decode "quality"  Decode.string )
       |> Form.setIf roles_    ( obj |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
+      |> View.fromStateString ( obj |> SafeDecode.at ["state"] (SafeDecode.string "") )
     }
-
-fill : Model -> List ( String, String )
-fill model =
-  [ model.form.name     |> Dom.string
-  , model.form.memo     |> Dom.string
-  , model.form.age      |> Dom.string
-  , model.form.email    |> Dom.string
-  , model.form.tel      |> Dom.string
-  , model.form.birthday |> Dom.string
-  , model.form.start_at |> Dom.string
-  ]
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -233,7 +222,7 @@ update msg model =
   case msg of
     Edit ->
       ( { model | form = model.form |> edit model |> View.edit }
-      , Transition.none
+      , fill
       )
     Static ->
       ( { model | form = model.form |> View.static }
@@ -292,6 +281,19 @@ edit model form =
         |> Form.set gender_   body.detail.gender
         |> Form.set quality_  body.detail.quality
         |> Form.set roles_    body.detail.roles
+
+fill : FrameTransition a
+fill = Frame.app >> .info >>
+  (\model -> Dom.fill
+    [ model.form.name     |> Dom.string
+    , model.form.memo     |> Dom.string
+    , model.form.age      |> Dom.string
+    , model.form.email    |> Dom.string
+    , model.form.tel      |> Dom.string
+    , model.form.birthday |> Dom.string
+    , model.form.start_at |> Dom.string
+    ]
+  )
 
 contents : FrameModel a -> List (Html Msg)
 contents model =

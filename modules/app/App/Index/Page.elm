@@ -37,23 +37,18 @@ setup : Frame.SetupApp Layout.Model Model Msg
 setup =
   { store =
     ( \model -> Encode.object
-      [ ( "dashboard", model.dashboard |> Dashboard.store )
+      [ ( "dashboard", model.dashboard |> Dashboard.encodeStore )
       ]
-    , \value model ->
-      Model
-        ( model.dashboard |> Dashboard.storeChanged (value |> SafeDecode.valueAt ["dashboard"]) )
+    , \value model -> Model
+      ( model.dashboard |> Dashboard.decodeStore (value |> SafeDecode.valueAt ["dashboard"]) )
     )
   , search =
     ( \model -> QueryEncode.object
-      [ ( "dashboard", model.dashboard |> Dashboard.query )
+      [ ( "dashboard", model.dashboard |> Dashboard.encodeQuery )
       ]
-    , \value model ->
-      Model
-        ( model.dashboard |> Dashboard.queryChanged ["dashboard"] value )
+    , \value model -> Model
+      ( model.dashboard |> Dashboard.decodeQuery ["dashboard"] value )
     )
-  , dom = \model -> List.concat
-    [ model.dashboard |> Dashboard.fill
-    ]
   , init = init
   }
 

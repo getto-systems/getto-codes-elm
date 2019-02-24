@@ -136,19 +136,6 @@ try {
           return toValue(getItem());
         },
 
-        /**
-         * callback: function(value){
-         *   value // obj
-         * }
-         */
-        addChangedListener: function(callback){
-          window.addEventListener("storage", function(event) {
-            if (event.storageArea === localStorage && event.key === key) {
-              callback(toValue(event.newValue));
-            }
-          }, false);
-        },
-
         // value: obj
         store: function(value){
           update(value);
@@ -220,16 +207,8 @@ try {
         LayoutStore.store(value);
       });
 
-      LayoutStore.addChangedListener(function(value){
-        ports.send("onLayoutStoreChanged",value);
-      });
-
       ports.subscribe("storeApp", function(value) {
         AppStore.store(value);
-      });
-
-      AppStore.addChangedListener(function(value){
-        ports.send("onAppStoreChanged",value);
       });
 
       /*** Dom ***/

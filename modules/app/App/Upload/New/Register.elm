@@ -2,11 +2,10 @@ module GettoUpload.App.Upload.New.Register exposing
   ( Model
   , Msg
   , init
-  , store
-  , storeChanged
-  , query
-  , queryChanged
-  , fill
+  , encodeStore
+  , decodeStore
+  , encodeQuery
+  , decodeQuery
   , subscriptions
   , update
   , contents
@@ -116,27 +115,31 @@ init signature model =
       }
     , upload = HttpView.empty
     }
-  , Frame.pushUrl
+  , [ Frame.pushUrl
+    , Frame.storeApp
+    , fill
+    ] |> Transition.batch
   )
 
-query : Model -> QueryEncode.Value
-query model =
+encodeQuery : Model -> QueryEncode.Value
+encodeQuery model =
   case model.tmpId of
     Nothing    -> QueryEncode.empty
     Just tmpId -> [ ( "tmpId", tmpId |> String.fromInt |> QueryEncode.string ) ] |> QueryEncode.object
 
-queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model =
-  { model
-  | tmpId = value |> QueryDecode.entryAt (names++["tmpId"]) QueryDecode.int
-  }
+decodeQuery : List String -> QueryDecode.Value -> Model -> Model
+decodeQuery names value model =
+  let
+    entryAt name = QueryDecode.entryAt (names ++ [name])
+  in
+    { model | tmpId = value |> entryAt "tmpId" QueryDecode.int }
 
-store : Model -> Encode.Value
-store model =
+encodeStore : Model -> Encode.Value
+encodeStore model =
   case model.tmpId of
     Nothing -> Encode.null
     Just tmpId -> Encode.object
-      [ ( "lastTmpId", tmpId |> String.fromInt |> Encode.string )
+      [ ( "lastTmpId", tmpId |> Encode.int )
       , ( tmpId |> String.fromInt
         , [ ( "name",     model.form.name     |> Field.value |> Encode.string )
           , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
@@ -152,8 +155,8 @@ store model =
         )
       ]
 
-storeChanged : Decode.Value -> Model -> Model
-storeChanged value model =
+decodeStore : Decode.Value -> Model -> Model
+decodeStore value model =
   case model.tmpId of
     Nothing ->
       let
@@ -181,16 +184,18 @@ storeChanged value model =
           |> Form.setIf roles_    ( obj |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
         }
 
-fill : Model -> List ( String, String )
-fill model =
-  [ model.form.name     |> Dom.string
-  , model.form.memo     |> Dom.string
-  , model.form.age      |> Dom.string
-  , model.form.email    |> Dom.string
-  , model.form.tel      |> Dom.string
-  , model.form.birthday |> Dom.string
-  , model.form.start_at |> Dom.string
-  ]
+fill : FrameTransition a
+fill = Frame.app >> .register >>
+  (\model -> Dom.fill
+    [ model.form.name     |> Dom.string
+    , model.form.memo     |> Dom.string
+    , model.form.age      |> Dom.string
+    , model.form.email    |> Dom.string
+    , model.form.tel      |> Dom.string
+    , model.form.birthday |> Dom.string
+    , model.form.start_at |> Dom.string
+    ]
+  )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
