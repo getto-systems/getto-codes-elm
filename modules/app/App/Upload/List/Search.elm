@@ -2,10 +2,10 @@ module GettoUpload.App.Upload.List.Search exposing
   ( Model
   , Msg
   , init
-  , store
-  , storeChanged
   , query
   , queryChanged
+  , store
+  , storeChanged
   , fill
   , subscriptions
   , update
@@ -61,30 +61,6 @@ type Msg
   | SearchRequest
   | SearchStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
 
-init : String -> Frame.InitModel -> ( Model, FrameTransition a )
-init signature model =
-  ( { signature = signature
-    , form =
-      { name          = Field.init signature "name"          ""
-      , age_gteq      = Field.init signature "age_gteq"      ""
-      , age_lteq      = Field.init signature "age_lteq"      ""
-      , email         = Field.init signature "email"         ""
-      , tel           = Field.init signature "tel"           ""
-      , birthday_gteq = Field.init signature "birthday_gteq" ""
-      , birthday_lteq = Field.init signature "birthday_lteq" ""
-      , start_at_gteq = Field.init signature "start_at_gteq" ""
-      , start_at_lteq = Field.init signature "start_at_lteq" ""
-      , gender        = Field.init signature "gender"        ""
-      , roles         = Field.init signature "roles"         Set.empty
-      }
-    , page = 0
-    , sort = "id" |> Sort.by
-    , search = HttpView.empty
-    }
-  , [ Http.request signature search SearchStateChanged
-    , Frame.pushUrl
-    ] |> Transition.batch
-  )
 
 search : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
 search = Http.tracker "search" <|
@@ -118,11 +94,31 @@ search = Http.tracker "search" <|
         , timeout = 10 * 1000
         }
 
-store : Model -> Encode.Value
-store model = Encode.null
 
-storeChanged : Decode.Value -> Model -> Model
-storeChanged value model = model
+init : String -> Frame.InitModel -> ( Model, FrameTransition a )
+init signature model =
+  ( { signature = signature
+    , form =
+      { name          = Field.init signature "name"          ""
+      , age_gteq      = Field.init signature "age_gteq"      ""
+      , age_lteq      = Field.init signature "age_lteq"      ""
+      , email         = Field.init signature "email"         ""
+      , tel           = Field.init signature "tel"           ""
+      , birthday_gteq = Field.init signature "birthday_gteq" ""
+      , birthday_lteq = Field.init signature "birthday_lteq" ""
+      , start_at_gteq = Field.init signature "start_at_gteq" ""
+      , start_at_lteq = Field.init signature "start_at_lteq" ""
+      , gender        = Field.init signature "gender"        ""
+      , roles         = Field.init signature "roles"         Set.empty
+      }
+    , page = 0
+    , sort = "id" |> Sort.by
+    , search = HttpView.empty
+    }
+  , [ Http.request signature search SearchStateChanged
+    , Frame.pushUrl
+    ] |> Transition.batch
+  )
 
 query : Model -> QueryEncode.Value
 query model = QueryEncode.object
@@ -176,6 +172,12 @@ queryChanged names value model =
       , value |> QueryDecode.entryAt (names ++ ["s","order"])  QueryDecode.string
       ) |> Sort.fromString |> Maybe.withDefault model.sort
     }
+
+store : Model -> Encode.Value
+store model = Encode.null
+
+storeChanged : Decode.Value -> Model -> Model
+storeChanged value model = model
 
 fill : Model -> List ( String, String )
 fill model =

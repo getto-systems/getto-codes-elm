@@ -2,10 +2,10 @@ module GettoUpload.App.Upload.Edit.Info exposing
   ( Model
   , Msg
   , init
-  , store
-  , storeChanged
   , query
   , queryChanged
+  , store
+  , storeChanged
   , fill
   , subscriptions
   , update
@@ -70,29 +70,6 @@ type Msg
   | PutRequest
   | PutStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
 
-init : String -> Frame.InitModel -> ( Model, FrameTransition a )
-init signature model =
-  ( { signature = signature
-    , id = 0
-    , form =
-      { state    = View.Static
-      , name     = Field.init signature "name"     ""
-      , memo     = Field.init signature "memo"     ""
-      , age      = Field.init signature "age"      ""
-      , email    = Field.init signature "email"    ""
-      , tel      = Field.init signature "tel"      ""
-      , birthday = Field.init signature "birthday" ""
-      , start_at = Field.init signature "start_at" ""
-      , gender   = Field.init signature "gender"   ""
-      , quality  = Field.init signature "quality"  ""
-      , roles    = Field.init signature "roles"    Set.empty
-      }
-    , get = HttpView.empty
-    , put = HttpView.empty
-    }
-  , [ Http.request signature get GetStateChanged
-    ] |> Transition.batch
-  )
 
 get : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
 get = Http.tracker "get" <|
@@ -161,6 +138,41 @@ response =
     )
   }
 
+
+init : String -> Frame.InitModel -> ( Model, FrameTransition a )
+init signature model =
+  ( { signature = signature
+    , id = 0
+    , form =
+      { state    = View.Static
+      , name     = Field.init signature "name"     ""
+      , memo     = Field.init signature "memo"     ""
+      , age      = Field.init signature "age"      ""
+      , email    = Field.init signature "email"    ""
+      , tel      = Field.init signature "tel"      ""
+      , birthday = Field.init signature "birthday" ""
+      , start_at = Field.init signature "start_at" ""
+      , gender   = Field.init signature "gender"   ""
+      , quality  = Field.init signature "quality"  ""
+      , roles    = Field.init signature "roles"    Set.empty
+      }
+    , get = HttpView.empty
+    , put = HttpView.empty
+    }
+  , [ Http.request signature get GetStateChanged
+    ] |> Transition.batch
+  )
+
+query : Model -> QueryEncode.Value
+query model = QueryEncode.empty
+
+queryChanged : List String -> QueryDecode.Value -> Model -> Model
+queryChanged names value model =
+  let
+    entryAt name = QuerySafeDecode.entryAt (names ++ [name])
+  in
+    { model | id = value |> entryAt "id" (QuerySafeDecode.int 0) }
+
 store : Model -> Encode.Value
 store model = Encode.object
   [ ( model.id |> String.fromInt
@@ -198,16 +210,6 @@ storeChanged value model =
       |> Form.setIf quality_  ( obj |> decode "quality"  Decode.string )
       |> Form.setIf roles_    ( obj |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
     }
-
-query : Model -> QueryEncode.Value
-query model = QueryEncode.empty
-
-queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model =
-  let
-    entryAt name = QuerySafeDecode.entryAt (names ++ [name])
-  in
-    { model | id = value |> entryAt "id" (QuerySafeDecode.int 0) }
 
 fill : Model -> List ( String, String )
 fill model =
