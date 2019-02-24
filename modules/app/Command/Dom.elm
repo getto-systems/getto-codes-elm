@@ -1,6 +1,5 @@
 port module GettoUpload.Command.Dom exposing
-  ( Init
-  , fill
+  ( fill
   , string
   )
 
@@ -10,12 +9,11 @@ import Json.Encode as Encode
 
 port fillFieldValues : Encode.Value -> Cmd msg
 
-type alias Init app = app -> List Value
 type alias Value = ( String, String )
 
-fill : Init app -> app -> Cmd annonymous
-fill toValue model =
-  model |> toValue |> List.map
+fill : List Value -> Cmd annonymous
+fill =
+  List.map
     (\(id,value) ->
       [ ( "id",    id    |> Encode.string )
       , ( "value", value |> Encode.string )

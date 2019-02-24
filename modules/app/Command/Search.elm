@@ -2,7 +2,7 @@ module GettoUpload.Command.Search exposing
   ( Model
   , Init
   , init
-  , changed
+  , decode
   , pushUrl
   )
 
@@ -26,14 +26,14 @@ type alias Decode model = QueryDecode.Value -> model -> model
 type alias Init model = ( Encode model, Decode model )
 
 init : Navigation.Key -> Init model -> Model model
-init key (encode,decode) = Model
+init key (encoder,decoder) = Model
   { key    = key
-  , encode = encode
-  , decode = decode
+  , encode = encoder
+  , decode = decoder
   }
 
-changed : Model model -> Url -> model -> model
-changed (Model model) = split >> model.decode
+decode : Model model -> Url -> model -> model
+decode (Model model) = split >> model.decode
 
 split : Url -> QueryDecode.Value
 split url =

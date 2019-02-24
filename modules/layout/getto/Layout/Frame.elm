@@ -27,7 +27,6 @@ import GettoUpload.Layout.Frame.Credential as Credential
 import GettoUpload.Command.Auth   as Auth
 import GettoUpload.Command.Store  as Store
 import GettoUpload.Command.Search as Search
-import GettoUpload.Command.Dom    as Dom
 import GettoUpload.Version as Version
 
 import Getto.Command as Command
@@ -57,7 +56,6 @@ type alias Inner layout app = Base
     , app    : Store.Model app
     }
   , search : Search.Model app
-  , dom    : Dom.Init app
   }
 
 type alias Base a =
@@ -72,8 +70,6 @@ type Msg layoutMsg appMsg
   = UrlRequest Browser.UrlRequest
   | UrlChange Url
   | CredentialChanged Decode.Value
-  | LayoutStoreChanged Decode.Value
-  | AppStoreChanged Decode.Value
   | Layout layoutMsg
   | App appMsg
 
@@ -88,7 +84,6 @@ type alias SetupLayout layout app layoutMsg =
 type alias SetupApp layout app appMsg =
   { store  : Store.Init app
   , search : Search.Init app
-  , dom    : Dom.Init app
   , init   : InitModel -> ( app, Transition (Model layout app) appMsg )
   }
 
@@ -102,33 +97,30 @@ init setupLayout setupApp flags url key =
 
     (newLayout,layoutCmd) = model |> setupLayout.init
     (newApp,   appCmd)    = model |> setupApp.init
+
+    search = Search.init key setupApp.search
+
+    store =
+      { layout = Store.init Store.Layout setupLayout.store
+      , app    = Store.init Store.App    setupApp.store
+      }
   in
     Model
       { static = model.static
       , auth   = model.auth
-      , layout = newLayout
-      , app    = newApp
-      , store  =
-        { layout = Store.init Store.Layout setupLayout.store
-        , app    = Store.init Store.App    setupApp.store
-        }
-      , search = Search.init key setupApp.search
-      , dom    = setupApp.dom
+      , layout = newLayout                          |> Store.decode store.layout flags.store.layout
+      , app    = newApp |> Search.decode search url |> Store.decode store.app    flags.store.app
+      , store  = store
+      , search = search
       }
-    |> queryChanged url                      -- first  : decode url query
-    |> layoutStoreChanged flags.store.layout -- second : decode local storage
-    |> appStoreChanged    flags.store.app
-    |> Transition.exec fill
+    |> Command.none
     |> Command.andThen (Transition.exec layoutCmd >> Command.map Layout)
     |> Command.andThen (Transition.exec appCmd    >> Command.map App)
 
 
 subscriptions : (layout -> Sub layoutMsg) -> (app -> Sub appMsg) -> Model layout app -> Sub (Msg layoutMsg appMsg)
 subscriptions layoutSubscriptions appSubscriptions (Model model) = Sub.batch
-  [ [ CredentialChanged  |> Auth.subscriptions  model.auth
-    , LayoutStoreChanged |> Store.subscriptions model.store.layout
-    , AppStoreChanged    |> Store.subscriptions model.store.app
-    ] |> Sub.batch
+  [ CredentialChanged |> Auth.subscriptions  model.auth
   , model.layout |> layoutSubscriptions |> Sub.map Layout
   , model.app    |> appSubscriptions    |> Sub.map App
   ]
@@ -140,16 +132,13 @@ type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition (M
 update : LayoutUpdater layout app layoutMsg -> AppUpdater layout app appMsg -> Msg layoutMsg appMsg  -> Model layout app -> ( Model layout app, Cmd (Msg layoutMsg appMsg) )
 update layoutUpdater appUpdater message model =
   case message of
-    UrlChange url -> model |> queryChanged url |> Transition.exec fill
+    UrlChange url -> ( model, Cmd.none )
     UrlRequest urlRequest ->
       case urlRequest of
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
         Browser.External href -> ( model, href |> Navigation.load )
 
     CredentialChanged value -> model |> credentialChanged value |> Command.none
-
-    LayoutStoreChanged value -> model |> layoutStoreChanged value |> Command.none
-    AppStoreChanged    value -> model |> appStoreChanged    value |> Transition.exec fill
 
     App msg ->
       case model of
@@ -171,21 +160,6 @@ update layoutUpdater appUpdater message model =
 credentialChanged : Decode.Value -> Model layout app -> Model layout app
 credentialChanged value (Model model) =
   Model { model | auth = model.auth |> Auth.changed value }
-
-layoutStoreChanged : Decode.Value -> Model layout app -> Model layout app
-layoutStoreChanged value (Model model) =
-  Model { model | layout = model.layout |> Store.changed model.store.layout value }
-
-appStoreChanged : Decode.Value -> Model layout app -> Model layout app
-appStoreChanged value (Model model) =
-  Model { model | app = model.app |> Store.changed model.store.app value }
-
-queryChanged : Url -> Model layout app -> Model layout app
-queryChanged url (Model model) =
-  Model { model | app = model.app |> Search.changed model.search url }
-
-fill : Model layout app -> Cmd msg
-fill (Model model) = model.app |> Dom.fill model.dom
 
 
 static : Model layout app -> Static.Model

@@ -2,11 +2,10 @@ module GettoUpload.App.Upload.List.Search exposing
   ( Model
   , Msg
   , init
-  , query
-  , queryChanged
-  , store
-  , storeChanged
-  , fill
+  , encodeQuery
+  , decodeQuery
+  , encodeStore
+  , decodeStore
   , subscriptions
   , update
   , contents
@@ -71,7 +70,7 @@ get = Http.tracker "search" <|
       Http.get
         { url     = "uploads" |> Api.url []
         , headers = model |> Api.headers
-        , params  = m |> query
+        , params  = m |> encodeQuery
         , response =
           { header = HeaderDecode.map View.ResponseHeader
             ( HeaderDecode.at "x-paging-max" HeaderDecode.int )
@@ -117,11 +116,12 @@ init signature model =
     }
   , [ Http.request signature get SearchStateChanged
     , Frame.pushUrl
+    , fill
     ] |> Transition.batch
   )
 
-query : Model -> QueryEncode.Value
-query model = QueryEncode.object
+encodeQuery : Model -> QueryEncode.Value
+encodeQuery model = QueryEncode.object
   [ ( "q"
     , [ ( "name",           model.form.name          |> Field.value |> QueryEncode.string )
       , ( "age_gteq",       model.form.age_gteq      |> Field.value |> QueryEncode.string )
@@ -146,8 +146,8 @@ query model = QueryEncode.object
     )
   ]
 
-queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model =
+decodeQuery : List String -> QueryDecode.Value -> Model -> Model
+decodeQuery names value model =
   let
     qEntryAt name = QueryDecode.entryAt (names ++ ["q",name]) QueryDecode.string
     qListAt  name = QueryDecode.listAt  (names ++ ["q",name]) QueryDecode.string
@@ -173,24 +173,11 @@ queryChanged names value model =
       ) |> Sort.fromString |> Maybe.withDefault model.sort
     }
 
-store : Model -> Encode.Value
-store model = Encode.null
+encodeStore : Model -> Encode.Value
+encodeStore model = Encode.null
 
-storeChanged : Decode.Value -> Model -> Model
-storeChanged value model = model
-
-fill : Model -> List ( String, String )
-fill model =
-  [ model.form.name          |> Dom.string
-  , model.form.age_gteq      |> Dom.string
-  , model.form.age_lteq      |> Dom.string
-  , model.form.email         |> Dom.string
-  , model.form.tel           |> Dom.string
-  , model.form.birthday_gteq |> Dom.string
-  , model.form.birthday_lteq |> Dom.string
-  , model.form.start_at_gteq |> Dom.string
-  , model.form.start_at_lteq |> Dom.string
-  ]
+decodeStore : Decode.Value -> Model -> Model
+decodeStore value model = model
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -230,6 +217,21 @@ update msg model =
         ] |> Transition.batch
       )
     SearchStateChanged mig -> ( { model | search = model.search |> HttpView.update mig }, Transition.none )
+
+fill : FrameTransition a
+fill = Frame.app >> .search >>
+  (\model -> Dom.fill
+    [ model.form.name          |> Dom.string
+    , model.form.age_gteq      |> Dom.string
+    , model.form.age_lteq      |> Dom.string
+    , model.form.email         |> Dom.string
+    , model.form.tel           |> Dom.string
+    , model.form.birthday_gteq |> Dom.string
+    , model.form.birthday_lteq |> Dom.string
+    , model.form.start_at_gteq |> Dom.string
+    , model.form.start_at_lteq |> Dom.string
+    ]
+  )
 
 contents : FrameModel a -> List (Html Msg)
 contents model =

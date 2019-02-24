@@ -9,6 +9,8 @@ module GettoUpload.App.Upload.Edit.Info.View exposing
   , ResponseDetail
   , edit
   , static
+  , fromStateString
+  , stateToString
   , done
   , compose
   , state
@@ -96,11 +98,25 @@ type State
   = Static
   | Edit
 
+static : Form -> Form
+static form = { form | state = Static }
+
 edit : Form -> Form
 edit form = { form | state = Edit }
 
-static : Form -> Form
-static form = { form | state = Static }
+fromStateString : String -> Form -> Form
+fromStateString stateString =
+  case stateString |> String.toLower of
+    "static" -> static
+    "edit"   -> edit
+    _        -> identity
+
+stateToString : Form -> String
+stateToString form =
+  case form.state of
+    Static -> "static"
+    Edit   -> "edit"
+
 
 done : HttpView.Migration ResponseHeader ResponseBody -> Form -> Form
 done mig =

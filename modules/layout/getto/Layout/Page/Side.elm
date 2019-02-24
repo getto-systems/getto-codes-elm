@@ -58,16 +58,6 @@ type Msg
   | MenuOpen  String
   | MenuClose String
 
-init : String -> Frame.InitModel -> ( Model, FrameTransition a app )
-init signature model =
-  ( { signature  = signature
-    , menu       = menu
-    , badgeNames = badgeNames
-    , badge      = HttpView.empty
-    , collapsed  = Set.empty
-    }
-  , Http.request signature badge BadgeStateChanged
-  )
 
 badge : Http.Tracker (FrameModel a app) View.ResponseHeader View.ResponseBody
 badge = Http.tracker "badge" <|
@@ -92,38 +82,17 @@ badge = Http.tracker "badge" <|
       , timeout = 10 * 1000
       }
 
-menu : Menu
-menu =
-  [ ( "main"
-    , [ Menu.item (Icon.fas "home") Home.index []
-      ]
-    )
-  , ( "upload"
-    , [ Menu.item (Icon.fas "file") Upload.list []
-      ]
-    )
-  ]
 
-allow : List String -> ( String, List Menu.Item ) -> Bool
-allow roles (group,_) =
-  (group == "home") ||
-  (group == "system") ||
-  (roles |> List.member "admin") ||
-  (roles |> List.member group)
-
-collapsed : Set String -> String -> Bool
-collapsed data name = data |> Set.member name
-
-badgeNames : Dict String String
-badgeNames = Dict.fromList
-  [ ( Home.index |> toBadgeName, "home" )
-  ]
-
-toBadgeName : Href -> String
-toBadgeName href =
-  case href |> Href.path of
-    Href.Internal path -> "INTERNAL:" ++ path
-    Href.Keycloak path -> "KEYCLOAK:" ++ path
+init : String -> Frame.InitModel -> ( Model, FrameTransition a app )
+init signature model =
+  ( { signature  = signature
+    , menu       = menu
+    , badgeNames = badgeNames
+    , badge      = HttpView.empty
+    , collapsed  = Set.empty
+    }
+  , Http.request signature badge BadgeStateChanged
+  )
 
 store : Model -> Encode.Value
 store model =
@@ -256,3 +225,40 @@ menuI18n =
   { title = I18n.title
   , menu  = I18n.menu
   }
+
+
+menu : Menu
+menu =
+  [ ( "main"
+    , [ Menu.item (Icon.fas "home") Home.index []
+      ]
+    )
+  , ( "upload"
+    , [ Menu.item (Icon.fas "file") Upload.list
+        [ Menu.item (Icon.edit) Upload.new []
+        , Menu.item (Icon.edit) Upload.edit_ []
+        ]
+      ]
+    )
+  ]
+
+allow : List String -> ( String, List Menu.Item ) -> Bool
+allow roles (group,_) =
+  (group == "home") ||
+  (group == "system") ||
+  (roles |> List.member "admin") ||
+  (roles |> List.member group)
+
+collapsed : Set String -> String -> Bool
+collapsed data name = data |> Set.member name
+
+badgeNames : Dict String String
+badgeNames = Dict.fromList
+  [ ( Home.index |> toBadgeName, "home" )
+  ]
+
+toBadgeName : Href -> String
+toBadgeName href =
+  case href |> Href.path of
+    Href.Internal path -> "INTERNAL:" ++ path
+    Href.Keycloak path -> "KEYCLOAK:" ++ path

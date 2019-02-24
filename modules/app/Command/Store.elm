@@ -3,10 +3,9 @@ port module GettoUpload.Command.Store exposing
   , Init
   , StoreType(..)
   , init
-  , subscriptions
   , store
   , clear
-  , changed
+  , decode
   )
 
 import Json.Encode as Encode
@@ -14,9 +13,6 @@ import Json.Decode as Decode
 
 port storeLayout : Encode.Value -> Cmd msg
 port storeApp    : Encode.Value -> Cmd msg
-
-port onLayoutStoreChanged : (Decode.Value -> msg) -> Sub msg
-port onAppStoreChanged    : (Decode.Value -> msg) -> Sub msg
 
 type Model model = Model (Inner model)
 type alias Inner model =
@@ -35,17 +31,11 @@ type StoreType
 type alias Init model = ( Encode model, Decode model )
 
 init : StoreType -> Init model -> Model model
-init storeType (encode,decode) = Model
-  { encode = encode
-  , decode = decode
+init storeType (encoder,decoder) = Model
+  { encode = encoder
+  , decode = decoder
   , store  = storeType
   }
-
-subscriptions : Model model -> (Decode.Value -> msg) -> Sub msg
-subscriptions (Model model) =
-  case model.store of
-    Layout -> onLayoutStoreChanged
-    App    -> onAppStoreChanged
 
 store : Model model -> model -> Cmd msg
 store (Model model) =
@@ -61,5 +51,5 @@ clear (Model model) =
       Layout -> storeLayout
       App    -> storeApp
 
-changed : Model model -> Decode model
-changed (Model model) = model.decode
+decode : Model model -> Decode model
+decode (Model model) = model.decode
