@@ -39,7 +39,6 @@ import Getto.Field.Validate as Validate
 import Browser.Navigation as Navigation
 import File exposing ( File )
 import File.Select
-import Random
 import Set exposing ( Set )
 import Json.Encode as Encode
 import Json.Decode as Decode
@@ -51,15 +50,14 @@ import Html.Lazy as L
 type alias FrameModel a = Frame.Model Layout.Model { a | register : Model }
 type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
-  { tmpId     : Maybe String
+  { tmpId     : Maybe Int
   , signature : String
   , form      : View.Form
   , upload    : HttpView.Model View.ResponseHeader View.ResponseBody
   }
 
 type Msg
-  = TmpId Int
-  | FieldInput (Form.Prop View.Form String) String
+  = FieldInput (Form.Prop View.Form String) String
   | FieldCheck (Form.Prop View.Form (Set String)) String
   | FieldChange
   | FileRequest (Form.Prop View.Form (List File))
@@ -67,27 +65,6 @@ type Msg
   | UploadRequest
   | UploadStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
 
-init : String -> Frame.InitModel -> ( Model, FrameTransition a )
-init signature model =
-  ( { tmpId     = Nothing
-    , signature = signature
-    , form =
-      { name     = Field.init signature "name"     ""
-      , text     = Field.init signature "text"     []
-      , memo     = Field.init signature "memo"     ""
-      , age      = Field.init signature "age"      ""
-      , email    = Field.init signature "email"    ""
-      , tel      = Field.init signature "tel"      ""
-      , birthday = Field.init signature "birthday" ""
-      , start_at = Field.init signature "start_at" ""
-      , gender   = Field.init signature "gender"   ""
-      , quality  = Field.init signature "quality"  ""
-      , roles    = Field.init signature "roles"    Set.empty
-      }
-    , upload = HttpView.empty
-    }
-  , always <| Random.generate TmpId (Random.int 0 1000000)
-  )
 
 upload : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
 upload = Http.tracker "upload" <|
@@ -119,12 +96,48 @@ upload = Http.tracker "upload" <|
         , timeout = 30 * 1000
         }
 
+
+init : String -> Frame.InitModel -> ( Model, FrameTransition a )
+init signature model =
+  ( { tmpId     = Nothing
+    , signature = signature
+    , form =
+      { name     = Field.init signature "name"     ""
+      , text     = Field.init signature "text"     []
+      , memo     = Field.init signature "memo"     ""
+      , age      = Field.init signature "age"      ""
+      , email    = Field.init signature "email"    ""
+      , tel      = Field.init signature "tel"      ""
+      , birthday = Field.init signature "birthday" ""
+      , start_at = Field.init signature "start_at" ""
+      , gender   = Field.init signature "gender"   ""
+      , quality  = Field.init signature "quality"  ""
+      , roles    = Field.init signature "roles"    Set.empty
+      }
+    , upload = HttpView.empty
+    }
+  , Frame.pushUrl
+  )
+
+query : Model -> QueryEncode.Value
+query model =
+  case model.tmpId of
+    Nothing    -> QueryEncode.empty
+    Just tmpId -> [ ( "tmpId", tmpId |> String.fromInt |> QueryEncode.string ) ] |> QueryEncode.object
+
+queryChanged : List String -> QueryDecode.Value -> Model -> Model
+queryChanged names value model =
+  { model
+  | tmpId = value |> QueryDecode.entryAt (names++["tmpId"]) QueryDecode.int
+  }
+
 store : Model -> Encode.Value
 store model =
   case model.tmpId of
     Nothing -> Encode.null
     Just tmpId -> Encode.object
-      [ ( tmpId
+      [ ( "lastTmpId", tmpId |> String.fromInt |> Encode.string )
+      , ( tmpId |> String.fromInt
         , [ ( "name",     model.form.name     |> Field.value |> Encode.string )
           , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
           , ( "age",      model.form.age      |> Field.value |> Encode.string )
@@ -142,10 +155,15 @@ store model =
 storeChanged : Decode.Value -> Model -> Model
 storeChanged value model =
   case model.tmpId of
-    Nothing -> model
+    Nothing ->
+      let
+        lastTmpId = value |> SafeDecode.at ["lastTmpId"] (SafeDecode.int 0)
+      in
+        { model | tmpId = lastTmpId + 1 |> Just }
+
     Just tmpId ->
       let
-        obj = value |> SafeDecode.valueAt [tmpId]
+        obj = value |> SafeDecode.valueAt [tmpId |> String.fromInt]
         decode name decoder = Decode.decodeValue (Decode.at [name] decoder) >> Result.toMaybe
       in
         { model
@@ -162,18 +180,6 @@ storeChanged value model =
           |> Form.setIf quality_  ( obj |> decode "quality"  Decode.string )
           |> Form.setIf roles_    ( obj |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
         }
-
-query : Model -> QueryEncode.Value
-query model =
-  case model.tmpId of
-    Nothing    -> QueryEncode.empty
-    Just tmpId -> [ ( "tmpId", tmpId |> QueryEncode.string ) ] |> QueryEncode.object
-
-queryChanged : List String -> QueryDecode.Value -> Model -> Model
-queryChanged names value model =
-  { model
-  | tmpId = value |> QueryDecode.entryAt (names++["tmpId"]) QueryDecode.string
-  }
 
 fill : Model -> List ( String, String )
 fill model =
@@ -193,14 +199,6 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    TmpId tmpId ->
-      case model.tmpId of
-        Just _ -> ( model, Transition.none )
-        Nothing ->
-          ( { model | tmpId = tmpId |> String.fromInt |> Just }
-          , Frame.pushUrl
-          )
-
     FieldInput prop value ->
       ( { model | form = model.form |> Form.set prop value }
       , Transition.none

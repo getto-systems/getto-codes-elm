@@ -115,9 +115,9 @@ init setupLayout setupApp flags url key =
       , search = Search.init key setupApp.search
       , dom    = setupApp.dom
       }
-    |> layoutStoreChanged flags.store.layout
+    |> queryChanged url                      -- first  : decode url query
+    |> layoutStoreChanged flags.store.layout -- second : decode local storage
     |> appStoreChanged    flags.store.app
-    |> searchChanged url
     |> Transition.exec fill
     |> Command.andThen (Transition.exec layoutCmd >> Command.map Layout)
     |> Command.andThen (Transition.exec appCmd    >> Command.map App)
@@ -140,7 +140,7 @@ type alias AppUpdater layout app appMsg = (appMsg -> app -> ( app, Transition (M
 update : LayoutUpdater layout app layoutMsg -> AppUpdater layout app appMsg -> Msg layoutMsg appMsg  -> Model layout app -> ( Model layout app, Cmd (Msg layoutMsg appMsg) )
 update layoutUpdater appUpdater message model =
   case message of
-    UrlChange url -> model |> searchChanged url |> Transition.exec fill
+    UrlChange url -> model |> queryChanged url |> Transition.exec fill
     UrlRequest urlRequest ->
       case urlRequest of
         Browser.Internal url ->  ( model, url  |> Url.toString |> Navigation.load )
@@ -180,8 +180,8 @@ appStoreChanged : Decode.Value -> Model layout app -> Model layout app
 appStoreChanged value (Model model) =
   Model { model | app = model.app |> Store.changed model.store.app value }
 
-searchChanged : Url -> Model layout app -> Model layout app
-searchChanged url (Model model) =
+queryChanged : Url -> Model layout app -> Model layout app
+queryChanged url (Model model) =
   Model { model | app = model.app |> Search.changed model.search url }
 
 fill : Model layout app -> Cmd msg
