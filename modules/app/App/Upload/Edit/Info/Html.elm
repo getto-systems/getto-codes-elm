@@ -24,6 +24,7 @@ type alias InfoModel msg =
   , form  : View.View
   , get   : HttpView.Model View.ResponseHeader View.ResponseBody
   , put   : HttpView.Model View.ResponseHeader View.ResponseBody
+  , last  : Maybe (HttpView.Response View.ResponseHeader View.ResponseBody)
   , options :
     { gender  : List ( String, String )
     , quality : List ( String, String )
@@ -48,10 +49,17 @@ type alias InfoModel msg =
 
 info : InfoModel msg -> Html msg
 info model =
-  case [ model.get, model.put ] |> List.map HttpView.response of
-    [ Just get, put ] ->
+  case model.last of
+    Nothing ->
+      case model.get |> HttpView.state of
+        HttpView.Ready (Just error) ->
+          H.section [ "loading" |> A.class ]
+            [ H.section [] [ error |> model.i18n.http |> Html.badge ["is-danger"] ] ]
+        _ ->
+          H.section [ "loading" |> A.class ]
+            [ H.section [] [ Html.spinner ] ]
+    Just res ->
       let
-        res    = put |> Maybe.withDefault get
         header = res |> HttpView.header
         body   = res |> HttpView.body
       in
@@ -271,23 +279,14 @@ info model =
                     HttpView.Ready response ->
                       [ if hasError
                         then "has-error" |> model.i18n.form |> Button.error
-                        else "save"      |> model.i18n.form |> Button.save model.msg.put
+                        else
+                          case model.get |> HttpView.state of
+                            HttpView.Connecting _ -> Html.spinner
+                            HttpView.Ready _ ->
+                              "save" |> model.i18n.form |> Button.save model.msg.put
+                      , " " |> H.text
                       , "cancel" |> model.i18n.form |> Button.cancel model.msg.static
                       , response |> Http.error model.i18n.http
                       ]
             ]
           ]
-    _ ->
-      case model.get |> HttpView.state of
-        HttpView.Ready (Just error) ->
-          H.section [ "loading" |> A.class ]
-            [ H.section []
-              [ error |> model.i18n.http |> Html.badge ["is-danger"]
-              ]
-            ]
-        _ ->
-          H.section [ "loading" |> A.class ]
-            [ H.section []
-              [ Icon.fas "spinner" |> Html.icon ["fa-pulse"]
-              ]
-            ]

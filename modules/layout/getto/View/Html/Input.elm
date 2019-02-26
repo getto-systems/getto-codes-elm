@@ -112,7 +112,7 @@ select options attr inputMsg changeMsg field =
     ( options |> List.map
       (\(value,label) ->
         H.option
-          [ value |> A.value
+          [ value |> A.attribute "value"
           , (value == (field |> Field.value)) |> A.selected
           ]
           [ label |> H.text ]

@@ -91,7 +91,7 @@ navAddress model =
     badge =
       case model.badge of
         View.NoProbrem  -> "" |> H.text
-        View.Connecting -> Icon.fas "spinner" |> Html.icon ["fa-pulse"]
+        View.Connecting -> Html.spinner
         View.Failure error -> error |> Html.badge ["is-small","is-danger"]
   in
     H.address []

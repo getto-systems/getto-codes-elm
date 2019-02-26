@@ -26,7 +26,7 @@ connecting text =
   button
     [ "is-connecting" |> A.class
     ]
-    [ Icon.fas "spinner" |> Html.icon ["fa-spin"]
+    [ Html.spinner
     , " " |> H.text
     , text |> H.text
     ]

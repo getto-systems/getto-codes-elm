@@ -53,8 +53,8 @@ type alias Model =
   { signature : String
   , id   : Int
   , form : View.Form
-  , get : HttpView.Model View.ResponseHeader View.ResponseBody
-  , put : HttpView.Model View.ResponseHeader View.ResponseBody
+  , get  : HttpView.Model View.ResponseHeader View.ResponseBody
+  , put  : HttpView.Model View.ResponseHeader View.ResponseBody
   }
 
 type Msg
@@ -158,7 +158,9 @@ init signature model =
     , get = HttpView.empty
     , put = HttpView.empty
     }
-  , Http.request signature get GetStateChanged
+  , [ Http.request signature get GetStateChanged
+    , fill
+    ] |> Transition.batch
   )
 
 encodeQuery : Model -> QueryEncode.Value
@@ -174,42 +176,96 @@ decodeQuery names value model =
 encodeStore : Model -> Encode.Value
 encodeStore model = Encode.object
   [ ( model.id |> String.fromInt
-    , [ ( "state",    model.form   |> View.stateToString |> Encode.string )
-      , ( "name",     model.form.name     |> Field.value |> Encode.string )
-      , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
-      , ( "age",      model.form.age      |> Field.value |> Encode.string )
-      , ( "email",    model.form.email    |> Field.value |> Encode.string )
-      , ( "tel",      model.form.tel      |> Field.value |> Encode.string )
-      , ( "birthday", model.form.birthday |> Field.value |> Encode.string )
-      , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
-      , ( "gender",   model.form.gender   |> Field.value |> Encode.string )
-      , ( "quality",  model.form.quality  |> Field.value |> Encode.string )
-      , ( "roles",    model.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+    , [ ( "response", model |> lastResponse |> Maybe.map encodeResponse |> Maybe.withDefault Encode.null )
+      , ( "form",     model.form |> encodeForm )
       ] |> Encode.object
     )
   ]
+
+encodeResponse : HttpView.Response View.ResponseHeader View.ResponseBody -> Encode.Value
+encodeResponse res =
+  let
+    header = res |> HttpView.header
+    body   = res |> HttpView.body
+  in
+    [ ( "header"
+      , [
+        ] |> Encode.object
+      )
+    , ( "body"
+      , [ ( "info"
+          , [ ( "name",  body.info.name  |> Encode.string )
+            , ( "memo",  body.info.memo  |> Encode.string )
+            , ( "age",   body.info.age   |> Encode.int )
+            , ( "email", body.info.email |> Encode.string )
+            , ( "tel",   body.info.tel   |> Encode.string )
+            ] |> Encode.object
+          )
+        , ( "detail"
+          , [ ( "birthday", body.detail.birthday |> Encode.string )
+            , ( "start_at", body.detail.start_at |> Encode.string )
+            , ( "gender",   body.detail.gender   |> Encode.string )
+            , ( "quality",  body.detail.quality  |> Encode.string )
+            , ( "roles",    body.detail.roles |> Set.toList |> Encode.list Encode.string )
+            ] |> Encode.object
+          )
+        ] |> Encode.object
+      )
+    ] |> Encode.object
+
+encodeForm : View.Form -> Encode.Value
+encodeForm form =
+  [ ( "state",    form   |> View.stateToString |> Encode.string )
+  , ( "name",     form.name     |> Field.value |> Encode.string )
+  , ( "memo",     form.memo     |> Field.value |> Encode.string )
+  , ( "age",      form.age      |> Field.value |> Encode.string )
+  , ( "email",    form.email    |> Field.value |> Encode.string )
+  , ( "tel",      form.tel      |> Field.value |> Encode.string )
+  , ( "birthday", form.birthday |> Field.value |> Encode.string )
+  , ( "start_at", form.start_at |> Field.value |> Encode.string )
+  , ( "gender",   form.gender   |> Field.value |> Encode.string )
+  , ( "quality",  form.quality  |> Field.value |> Encode.string )
+  , ( "roles",    form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+  ] |> Encode.object
 
 decodeStore : Decode.Value -> Model -> Model
 decodeStore value model =
   let
     obj = value |> SafeDecode.valueAt [model.id |> String.fromInt]
-    decode name decoder = Decode.decodeValue (Decode.at [name] decoder) >> Result.toMaybe
   in
     { model
-    | form =
-      model.form
-      |> Form.setIf name_     ( obj |> decode "name"     Decode.string )
-      |> Form.setIf memo_     ( obj |> decode "memo"     Decode.string )
-      |> Form.setIf age_      ( obj |> decode "age"      Decode.string )
-      |> Form.setIf email_    ( obj |> decode "email"    Decode.string )
-      |> Form.setIf tel_      ( obj |> decode "tel"      Decode.string )
-      |> Form.setIf birthday_ ( obj |> decode "birthday" Decode.string )
-      |> Form.setIf start_at_ ( obj |> decode "start_at" Decode.string )
-      |> Form.setIf gender_   ( obj |> decode "gender"   Decode.string )
-      |> Form.setIf quality_  ( obj |> decode "quality"  Decode.string )
-      |> Form.setIf roles_    ( obj |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
-      |> View.fromStateString ( obj |> SafeDecode.at ["state"] (SafeDecode.string "") )
+    | form = model.form |> decodeForm ( obj |> SafeDecode.valueAt ["form"] )
+    , get  = model.get |>
+      case obj |> Decode.decodeValue (Decode.at ["response"] decodeResponse) of
+        Ok res -> res |> HttpView.success |> HttpView.update
+        Err _  -> identity
     }
+
+decodeResponse : Decode.Decoder (HttpView.Response View.ResponseHeader View.ResponseBody)
+decodeResponse = Decode.map2 HttpView.toResponse
+  ( Decode.at ["header"] decodeResponseHeader )
+  ( Decode.at ["body"]   response.body )
+
+decodeResponseHeader : Decode.Decoder View.ResponseHeader
+decodeResponseHeader = Decode.succeed ()
+
+decodeForm : Decode.Value -> View.Form -> View.Form
+decodeForm value form =
+  let
+    decode name decoder = Decode.decodeValue (Decode.at [name] decoder) >> Result.toMaybe
+  in
+    form
+    |> Form.setIf name_     ( value |> decode "name"     Decode.string )
+    |> Form.setIf memo_     ( value |> decode "memo"     Decode.string )
+    |> Form.setIf age_      ( value |> decode "age"      Decode.string )
+    |> Form.setIf email_    ( value |> decode "email"    Decode.string )
+    |> Form.setIf tel_      ( value |> decode "tel"      Decode.string )
+    |> Form.setIf birthday_ ( value |> decode "birthday" Decode.string )
+    |> Form.setIf start_at_ ( value |> decode "start_at" Decode.string )
+    |> Form.setIf gender_   ( value |> decode "gender"   Decode.string )
+    |> Form.setIf quality_  ( value |> decode "quality"  Decode.string )
+    |> Form.setIf roles_    ( value |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
+    |> View.fromStateString ( value |> SafeDecode.at ["state"] (SafeDecode.string "") )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -246,8 +302,8 @@ update msg model =
       )
 
     GetStateChanged mig ->
-      ( { model | get = model.get |> HttpView.update mig }
-      , Transition.none
+      ( { model | get  = model.get |> HttpView.update mig }
+      , Frame.storeApp
       )
 
     PutRequest -> ( model, Http.request model.signature put PutStateChanged )
@@ -256,31 +312,25 @@ update msg model =
         | put  = model.put  |> HttpView.update mig
         , form = model.form |> View.done mig
         }
-      , Transition.none
+      , Frame.storeApp
       )
 
 edit : Model -> View.Form -> View.Form
 edit model form =
-  let
-    res =
-      [ model.put, model.get ]
-      |> List.filterMap (HttpView.response >> Maybe.map HttpView.body)
-      |> List.head
-  in
-    case res of
-      Nothing -> form
-      Just body ->
-        form
-        |> Form.set name_     body.info.name
-        |> Form.set memo_     body.info.memo
-        |> Form.set age_     (body.info.age |> String.fromInt)
-        |> Form.set email_    body.info.email
-        |> Form.set tel_      body.info.tel
-        |> Form.set birthday_ body.detail.birthday
-        |> Form.set start_at_ body.detail.start_at
-        |> Form.set gender_   body.detail.gender
-        |> Form.set quality_  body.detail.quality
-        |> Form.set roles_    body.detail.roles
+  case model |> lastResponse |> Maybe.map HttpView.body of
+    Nothing -> form
+    Just body ->
+      form
+      |> Form.set name_     body.info.name
+      |> Form.set memo_     body.info.memo
+      |> Form.set age_     (body.info.age |> String.fromInt)
+      |> Form.set email_    body.info.email
+      |> Form.set tel_      body.info.tel
+      |> Form.set birthday_ body.detail.birthday
+      |> Form.set start_at_ body.detail.start_at
+      |> Form.set gender_   body.detail.gender
+      |> Form.set quality_  body.detail.quality
+      |> Form.set roles_    body.detail.roles
 
 fill : FrameTransition a
 fill = Frame.app >> .info >>
@@ -294,6 +344,12 @@ fill = Frame.app >> .info >>
     , model.form.start_at |> Dom.string
     ]
   )
+
+lastResponse : Model -> Maybe (HttpView.Response View.ResponseHeader View.ResponseBody)
+lastResponse model =
+  [ model.put, model.get ]
+  |> List.filterMap HttpView.response
+  |> List.head
 
 contents : FrameModel a -> List (Html Msg)
 contents model =
@@ -329,8 +385,9 @@ info model = L.lazy
       , quality  = ( quality_,  [] )
       , roles    = ( roles_,    [] )
       }
-    , get = m.get
-    , put = m.put
+    , get  = m.get
+    , put  = m.put
+    , last = m |> lastResponse
     , options =
       { gender =
         [ ( "", "please-select" |> AppI18n.form )
