@@ -3,6 +3,7 @@ module GettoUpload.View.Icon exposing
   , Fa(..)
   , fas
   , far
+  , spinner
   , edit
   )
 
@@ -18,6 +19,9 @@ fas = FaSolid >> Fa
 
 far : String -> Icon
 far = FaRegular >> Fa
+
+spinner : Icon
+spinner = fas "spinner"
 
 edit : Icon
 edit = far "edit"

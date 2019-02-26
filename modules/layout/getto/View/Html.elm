@@ -1,5 +1,6 @@
 module GettoUpload.View.Html exposing
   ( icon
+  , spinner
   , badge
   )
 import GettoUpload.View.Icon as Icon exposing ( Icon )
@@ -18,6 +19,9 @@ icon append i =
             Icon.FaRegular name -> "far fa-" ++ name
       in
         H.i [ class :: append |> String.join " " |> A.class ] []
+
+spinner : Html msg
+spinner = Icon.spinner |> icon ["fa-pulse"]
 
 badge : List String -> String -> Html msg
 badge append text =
