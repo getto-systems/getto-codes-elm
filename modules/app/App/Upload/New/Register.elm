@@ -56,11 +56,11 @@ type alias Model =
   }
 
 type Msg
-  = FieldInput (Form.Prop View.Form String) String
-  | FieldCheck (Form.Prop View.Form (Set String)) String
+  = FieldInput  (View.Prop String)       String
+  | FieldCheck  (View.Prop (Set String)) String
+  | FileRequest (View.Prop (List File))
+  | FileSelect  (View.Prop (List File)) File
   | FieldChange
-  | FileRequest (Form.Prop View.Form (List File))
-  | FileSelect (Form.Prop View.Form (List File)) File
   | UploadRequest
   | UploadStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
 
@@ -101,17 +101,17 @@ init signature model =
   ( { tmpId     = Nothing
     , signature = signature
     , form =
-      { name     = Field.init signature "name"     ""
-      , text     = Field.init signature "text"     []
-      , memo     = Field.init signature "memo"     ""
-      , age      = Field.init signature "age"      ""
-      , email    = Field.init signature "email"    ""
-      , tel      = Field.init signature "tel"      ""
-      , birthday = Field.init signature "birthday" ""
-      , start_at = Field.init signature "start_at" ""
-      , gender   = Field.init signature "gender"   ""
-      , quality  = Field.init signature "quality"  ""
-      , roles    = Field.init signature "roles"    Set.empty
+      { name     = Field.init signature "name"     () ""
+      , text     = Field.init signature "text"     () []
+      , memo     = Field.init signature "memo"     () ""
+      , age      = Field.init signature "age"      () ""
+      , email    = Field.init signature "email"    () ""
+      , tel      = Field.init signature "tel"      () ""
+      , birthday = Field.init signature "birthday" () ""
+      , start_at = Field.init signature "start_at" () ""
+      , gender   = Field.init signature "gender"   () ""
+      , quality  = Field.init signature "quality"  () ""
+      , roles    = Field.init signature "roles"    () Set.empty
       }
     , upload = HttpView.empty
     }

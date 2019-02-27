@@ -6,43 +6,51 @@ module Getto.Field exposing
   , value
   , set
   , toggle
+  , attribute
+  , setAttribute
   )
 
 import Set exposing ( Set )
 
-type Model value = Model
+type Model attr value = Model attr
   { id    : String
   , name  : String
   , value : value
   }
 
-init : String -> String -> value -> Model value
-init parentId fieldName defaultValue = Model
+init : String -> String -> attr -> value -> Model attr value
+init parentId fieldName attr defaultValue = Model attr
   { id    = parentId ++ "-" ++ fieldName
   , name  = fieldName
   , value = defaultValue
   }
 
 
-id : Model value -> String
-id (Model model) = model.id
+id : Model attr value -> String
+id (Model _ model) = model.id
 
-name : Model value -> String
-name (Model model) = model.name
+name : Model attr value -> String
+name (Model _ model) = model.name
 
-value : Model value -> value
-value (Model model) = model.value
+value : Model attr value -> value
+value (Model _ model) = model.value
 
 
-set : value -> Model value -> Model value
-set val (Model model) = Model { model | value = val }
+set : value -> Model attr value -> Model attr value
+set val (Model attr model) = Model attr { model | value = val }
 
-toggle : comparable -> Model (Set comparable) -> Model (Set comparable)
-toggle val (Model model) =
-  Model
+toggle : comparable -> Model attr (Set comparable) -> Model attr (Set comparable)
+toggle val (Model attr model) =
+  Model attr
     { model
     | value =
       if model.value |> Set.member val
         then model.value |> Set.remove val
         else model.value |> Set.insert val
     }
+
+attribute : Model attr value -> attr
+attribute (Model attr _) = attr
+
+setAttribute : attr -> Model attr value -> Model attr value
+setAttribute attr (Model _ model) = Model attr model

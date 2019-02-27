@@ -21,14 +21,17 @@ module GettoUpload.View.Html.Input exposing
   , checkboxInline
   , checkboxBlock
   , files
+  , conflict
   , errors
   , onChange
   , paging
   )
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Html as Html
+import GettoUpload.View.Html.Button as Button
 
 import Getto.Field as Field
+import Getto.Field.Conflict as Conflict
 
 import File exposing ( File )
 import Set exposing ( Set )
@@ -70,7 +73,7 @@ tel   = "tel"   |> input []
 date  = "date"  |> input []
 time  = "time"  |> input []
 
-input : List String -> String -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model String -> Html msg
+input : List String -> String -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model attr String -> Html msg
 input class type_ attr inputMsg changeMsg field =
   H.input
     ( [ type_ |> A.type_
@@ -87,7 +90,7 @@ textarea       = textareaInput 8  []
 textareaLarge  = textareaInput 12 ["is-large"]
 textareaXLarge = textareaInput 16 ["is-xlarge"]
 
-textareaInput : Int -> List String -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model String -> Html msg
+textareaInput : Int -> List String -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model attr String -> Html msg
 textareaInput rows class attr inputMsg changeMsg field =
   H.textarea
     ( [ field |> Field.id |> A.id
@@ -100,7 +103,7 @@ textareaInput rows class attr inputMsg changeMsg field =
     )
     []
 
-select : List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model String -> Html msg
+select : List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model attr String -> Html msg
 select options attr inputMsg changeMsg field =
   H.select
     ( [ field |> Field.id |> A.id
@@ -122,7 +125,7 @@ select options attr inputMsg changeMsg field =
 radio       = radioList []
 radioInline = radioList ["is-inline"]
 
-radioList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model String -> Html msg
+radioList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model attr String -> Html msg
 radioList class options attr inputMsg changeMsg field =
   H.ul
     ( (class |> classAttr)
@@ -150,7 +153,7 @@ checkbox       = checkList []
 checkboxInline = checkList ["is-inline"]
 checkboxBlock  = checkList ["is-block"]
 
-checkList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model (Set String) -> Html msg
+checkList : List String -> List ( String, String ) -> List (H.Attribute msg) -> (String -> msg) -> msg -> Field.Model attr (Set String) -> Html msg
 checkList class options attr inputMsg changeMsg field =
   H.ul
     ( (class |> classAttr)
@@ -196,11 +199,25 @@ files li =
           )
         )
 
+
+conflict : (String -> String) -> (Conflict.Resolve a -> msg) -> Conflict.State a -> List (Html msg)
+conflict i18n msg state =
+  case state of
+    Conflict.NoProblem -> []
+    Conflict.Conflict last ->
+      [ H.p []
+        [ "overwrite" |> i18n |> Button.overwrite (Conflict.leave |> msg)
+        , " " |> H.text
+        , "revert" |> i18n |> Button.revert (Conflict.revert last |> msg)
+        ]
+      ]
+
 errors : (String -> String) -> List String -> List (Html msg)
 errors i18n = List.map
   (\error ->
     H.p [ "help" |> A.class ] [ error |> i18n |> H.text ]
   )
+
 
 onChange : msg -> H.Attribute msg
 onChange msg =

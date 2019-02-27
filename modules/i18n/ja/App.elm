@@ -44,8 +44,11 @@ form name =
     "new"    -> "新規登録"
     "detail" -> "詳細"
 
+    "overwrite" -> "上書"
+    "revert"    -> "キャンセル"
+
     "edit"   -> "編集"
-    "cancel" -> "閉じる"
+    "cancel" -> "キャンセル"
 
     "save"   -> "保存"
     "saving" -> "保存中"

@@ -2,6 +2,9 @@ module Getto.Field.Validate exposing
   ( Model
   , Init
   , init
+  , none
+  , form
+  , errors
   , expose
   , nothing
   , blank
@@ -17,38 +20,52 @@ type Model form = Model
   , form   : form
   }
 
-type alias Init form a = ( Form.Prop form a, List (Maybe String) )
+type alias Init form attr a =
+  ( Form.Prop form attr a
+  , List (Maybe String)
+  )
 
-init : Init form a -> form -> Model (Form.Model form a)
-init (prop,errors) model =
+type alias InitField attr a = Field.Model attr a -> ( Field.Model attr a, List String )
+
+init : InitField attr a -> Init form attr a -> form -> Model (Form.Model form attr a)
+init initField (prop,err) model =
   let
-    field = model |> Form.at prop
+    (field,initErrors) = model |> Form.at prop |> initField
   in
     Model
-      { name   = field  |> Field.name
-      , errors = errors |> List.filterMap identity
-      , form   = field  |> Form.init prop
+      { name   = field |> Field.name
+      , errors = err   |> List.filterMap identity |> List.append initErrors
+      , form   = field |> Form.init prop
       }
 
+none : InitField attr a
+none field = ( field, [] )
 
-expose : Model form -> ( String, List String, form )
+
+form : Model form -> form
+form (Model model) = model.form
+
+errors : Model form -> List String
+errors (Model model) = model.errors
+
+expose : Model form -> ( String, form, List String )
 expose (Model model) =
   ( model.name
-  , model.errors
   , model.form
+  , model.errors
   )
 
 
-nothing : String -> Field.Model (Maybe value) -> Maybe String
+nothing : String -> Field.Model attr (Maybe value) -> Maybe String
 nothing error = validate error ((==) Nothing)
 
-blank : String -> Field.Model String -> Maybe String
+blank : String -> Field.Model attr String -> Maybe String
 blank error = validate error String.isEmpty
 
-empty : String -> Field.Model (List a) -> Maybe String
+empty : String -> Field.Model attr (List a) -> Maybe String
 empty error = validate error List.isEmpty
 
-validate : String -> (a -> Bool) -> Field.Model a -> Maybe String
+validate : String -> (a -> Bool) -> Field.Model attr a -> Maybe String
 validate error f model =
   if model |> Field.value |> f
     then Just error

@@ -52,8 +52,8 @@ type alias Model =
   }
 
 type Msg
-  = FieldInput (Form.Prop View.Form String) String
-  | FieldCheck (Form.Prop View.Form (Set String)) String
+  = FieldInput (View.Prop String) String
+  | FieldCheck (View.Prop (Set String)) String
   | FieldChange
   | PageTo String
   | SortBy Sort.Model
@@ -98,17 +98,17 @@ init : String -> Frame.InitModel -> ( Model, FrameTransition a )
 init signature model =
   ( { signature = signature
     , form =
-      { name          = Field.init signature "name"          ""
-      , age_gteq      = Field.init signature "age_gteq"      ""
-      , age_lteq      = Field.init signature "age_lteq"      ""
-      , email         = Field.init signature "email"         ""
-      , tel           = Field.init signature "tel"           ""
-      , birthday_gteq = Field.init signature "birthday_gteq" ""
-      , birthday_lteq = Field.init signature "birthday_lteq" ""
-      , start_at_gteq = Field.init signature "start_at_gteq" ""
-      , start_at_lteq = Field.init signature "start_at_lteq" ""
-      , gender        = Field.init signature "gender"        ""
-      , roles         = Field.init signature "roles"         Set.empty
+      { name          = Field.init signature "name"          () ""
+      , age_gteq      = Field.init signature "age_gteq"      () ""
+      , age_lteq      = Field.init signature "age_lteq"      () ""
+      , email         = Field.init signature "email"         () ""
+      , tel           = Field.init signature "tel"           () ""
+      , birthday_gteq = Field.init signature "birthday_gteq" () ""
+      , birthday_lteq = Field.init signature "birthday_lteq" () ""
+      , start_at_gteq = Field.init signature "start_at_gteq" () ""
+      , start_at_lteq = Field.init signature "start_at_lteq" () ""
+      , gender        = Field.init signature "gender"        () ""
+      , roles         = Field.init signature "roles"         () Set.empty
       }
     , page = 0
     , sort = "id" |> Sort.by

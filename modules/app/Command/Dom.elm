@@ -22,7 +22,7 @@ fill =
   >> Encode.list Encode.object
   >> fillFieldValues
 
-string : Field.Model String -> Value
+string : Field.Model attr String -> Value
 string field =
   ( field |> Field.id
   , field |> Field.value

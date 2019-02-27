@@ -19,13 +19,13 @@ type Model form = Model
   , form    : form
   }
 
-type alias Init form a = ( Form.Prop form a, Field.Model a -> Bool )
-type alias InitBetween form a =
-  { gteq : Init form a
-  , lteq : Init form a
+type alias Init form attr a = ( Form.Prop form attr a, Field.Model attr a -> Bool )
+type alias InitBetween form attr a =
+  { gteq : Init form attr a
+  , lteq : Init form attr a
   }
 
-init : Init form a -> form -> Model (Form.Model form a)
+init : Init form attr a -> form -> Model (Form.Model form attr a)
 init (prop,f) model =
   let
     field = model |> Form.at prop
@@ -36,7 +36,7 @@ init (prop,f) model =
       , form    = field |> Form.init prop
       }
 
-between : String -> InitBetween form a -> form -> Model (Form.Between form a)
+between : String -> InitBetween form attr a -> form -> Model (Form.Between form attr a)
 between compositName spec model =
   let
     gteq = model |> init spec.gteq
@@ -59,19 +59,19 @@ form : Model form -> form
 form (Model model) = model.form
 
 
-expose : Model form -> ( String, Bool, form )
+expose : Model form -> ( String, form, Bool )
 expose (Model model) =
   ( model.name
-  , model.present
   , model.form
+  , model.present
   )
 
 
-string : Field.Model String -> Bool
+string : Field.Model attr String -> Bool
 string = present (String.isEmpty >> not)
 
-set : Field.Model (Set String) -> Bool
+set : Field.Model attr (Set String) -> Bool
 set = present (Set.isEmpty >> not)
 
-present : (a -> Bool) -> Field.Model a -> Bool
+present : (a -> Bool) -> Field.Model attr a -> Bool
 present f = Field.value >> f
