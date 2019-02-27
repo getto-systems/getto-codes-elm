@@ -10,6 +10,7 @@ module GettoUpload.View.Http exposing
   , toResponse
   , load
   , transfer
+  , notModified
   , success
   , failure
   , isSuccess
@@ -30,6 +31,7 @@ type Model header body = Model
 type Migration header body
   = Load
   | Transfer Progress
+  | NotModified
   | Success (Response header body)
   | Failure Error
 
@@ -55,7 +57,9 @@ type Error
   | Unauthorized
   | Forbidden
   | NotFound
+  | Conflict
   | UnprocessableEntity
+  | PreconditionRequired
   | BadStatus Int
   | BadHeader String
   | BadBody String
@@ -81,6 +85,9 @@ load = Load
 transfer : Progress -> Migration header body
 transfer = Transfer
 
+notModified : Migration header body
+notModified = NotModified
+
 success : Response header body -> Migration header body
 success = Success
 
@@ -98,6 +105,7 @@ update migration (Model model) =
   case migration of
     Load          -> Model { model | state = Nothing   |> Connecting }
     Transfer data -> Model { model | state = Just data |> Connecting }
+    NotModified   -> Model { model | state = Nothing  |> Ready }
     Success  res  -> Model { model | state = Nothing  |> Ready, response = Just res }
     Failure  err  -> Model { model | state = Just err |> Ready, response = Nothing }
 

@@ -79,7 +79,7 @@ get = Http.tracker "get" <|
     let
       m = model |> Frame.app |> .info
     in
-      Http.get
+      Http.getIfNoneMatch ( m |> etag )
         { url     = "upload/:id" |> Api.url ( m |> pathInfo )
         , headers = model |> Api.headers
         , params  = QueryEncode.empty
@@ -93,7 +93,7 @@ put = Http.tracker "put" <|
     let
       m = model |> Frame.app |> .info
     in
-      Http.put
+      Http.put ( m |> etag )
         { url     = "upload/:id/info" |> Api.url ( m |> pathInfo )
         , headers = model |> Api.headers
         , params  = Encode.object
@@ -112,13 +112,17 @@ put = Http.tracker "put" <|
         , timeout = 10 * 1000
         }
 
+etag : Model -> Maybe String
+etag = lastResponse >> Maybe.map (HttpView.header >> .etag)
+
 pathInfo : Model -> List ( String, String )
 pathInfo model =
   [ ( "id", model.id |> String.fromInt )
   ]
 
 response =
-  { header = HeaderDecode.succeed ()
+  { header = HeaderDecode.map View.ResponseHeader
+    ( HeaderDecode.at "etag" HeaderDecode.string )
   , body = Decode.map2 View.ResponseBody
     ( Decode.at ["info"]
       ( Decode.map5 View.ResponseInfo
@@ -192,7 +196,7 @@ encodeResponse res =
     body   = res |> HttpView.body
   in
     [ ( "header"
-      , [
+      , [ ( "etag", header.etag |> Encode.string )
         ] |> Encode.object
       )
     , ( "body"
@@ -251,7 +255,8 @@ decodeResponse = Decode.map2 HttpView.toResponse
   ( Decode.at ["body"]   response.body )
 
 decodeResponseHeader : Decode.Decoder View.ResponseHeader
-decodeResponseHeader = Decode.succeed ()
+decodeResponseHeader = Decode.map View.ResponseHeader
+  ( Decode.at ["etag"] Decode.string )
 
 decodeForm : (Maybe View.Response) -> Decode.Value -> View.Form -> View.Form
 decodeForm res value form =
@@ -280,49 +285,21 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    Edit ->
-      ( { model | form = model.form |> edit model }
-      , fill
-      )
-    Static ->
-      ( { model | form = model.form |> View.toStatic }
-      , Transition.none
-      )
+    Edit   -> ( { model | form = model.form |> edit model },    fillAndStore )
+    Static -> ( { model | form = model.form |> View.toStatic }, Transition.none )
 
-    FieldInput prop value ->
-      ( { model | form = model.form |> Form.set prop value }
-      , Transition.none
-      )
-    FieldToggle prop value ->
-      ( { model | form = model.form |> Form.toggle prop value }
-      , Transition.none
-      )
+    FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    Transition.none )
+    FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
 
-    FieldResolve prop resolve ->
-      ( { model | form = model.form |> Conflict.resolve prop resolve }
-      , [ fill
-        , Frame.storeApp
-        ] |> Transition.batch
-      )
-    FieldResolveSet prop resolve ->
-      ( { model | form = model.form |> Conflict.resolve prop resolve }
-      , [ fill
-        , Frame.storeApp
-        ] |> Transition.batch
-      )
+    FieldResolve prop mig ->    ( { model | form = model.form |> Conflict.resolve prop mig }, fillAndStore )
+    FieldResolveSet prop mig -> ( { model | form = model.form |> Conflict.resolve prop mig }, fillAndStore )
 
     FieldChange -> ( model, Frame.storeApp )
 
     FileRequest prop -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
-    FileSelect prop file ->
-      ( { model | form = model.form |> Form.set prop [file] }
-      , Transition.none
-      )
+    FileSelect  prop file -> ( { model | form = model.form |> Form.set prop [file] }, Transition.none )
 
-    GetStateChanged mig ->
-      ( { model | get = model.get |> HttpView.update mig }
-      , Frame.storeApp
-      )
+    GetStateChanged mig -> ( { model | get = model.get |> HttpView.update mig }, Frame.storeApp )
 
     PutRequest -> ( model, Http.request model.signature put PutStateChanged )
     PutStateChanged mig ->
@@ -367,11 +344,15 @@ fill = Frame.app >> .info >>
     ]
   )
 
+fillAndStore : FrameTransition a
+fillAndStore = [ fill, Frame.storeApp ] |> Transition.batch
+
 lastResponse : Model -> Maybe (HttpView.Response View.ResponseHeader View.ResponseBody)
 lastResponse model =
   [ model.put, model.get ]
   |> List.filterMap HttpView.response
   |> List.head
+
 
 contents : FrameModel a -> List (Html Msg)
 contents model =

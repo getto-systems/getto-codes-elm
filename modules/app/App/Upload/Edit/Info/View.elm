@@ -90,7 +90,9 @@ type View = View
   }
 
 type alias Response = HttpView.Response ResponseHeader ResponseBody
-type alias ResponseHeader = ()
+type alias ResponseHeader =
+  { etag : String
+  }
 type alias ResponseBody =
   { info   : ResponseInfo
   , detail : ResponseDetail

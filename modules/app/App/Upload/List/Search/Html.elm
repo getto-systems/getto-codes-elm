@@ -36,7 +36,7 @@ type alias SearchModel msg =
   , msg :
     { search : msg
     , input  : View.Prop String -> String -> msg
-    , check  : View.Prop (Set String) -> String -> msg
+    , toggle : View.Prop (Set String) -> String -> msg
     , change : msg
     }
   , i18n :
@@ -139,7 +139,7 @@ search model =
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.field |> Input.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
+                    [ form.field |> Input.checkbox model.options.roles [] (model.msg.toggle form.prop) model.msg.change
                     ]
                   ]
                 ]

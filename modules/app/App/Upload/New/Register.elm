@@ -204,21 +204,12 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    FieldInput prop value ->
-      ( { model | form = model.form |> Form.set prop value }
-      , Transition.none
-      )
-    FieldCheck prop value ->
-      ( { model | form = model.form |> Form.toggle prop value }
-      , Transition.none
-      )
+    FieldInput prop value -> ( { model | form = model.form |> Form.set prop value },    Transition.none )
+    FieldCheck prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
     FieldChange -> ( model, Frame.storeApp )
 
     FileRequest prop -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
-    FileSelect prop file ->
-      ( { model | form = model.form |> Form.set prop [file] }
-      , Transition.none
-      )
+    FileSelect prop file -> ( { model | form = model.form |> Form.set prop [file] }, Transition.none )
 
     UploadRequest -> ( model, Http.request model.signature upload UploadStateChanged )
     UploadStateChanged mig ->
