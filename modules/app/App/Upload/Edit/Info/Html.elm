@@ -64,7 +64,7 @@ info model =
         body   = res |> HttpView.body
       in
         H.section []
-          [ H.form []
+          [ H.form [ model.msg.put |> E.onSubmit ]
             [ H.h2 [] [ model.title |> model.i18n.title |> H.text ]
             , H.table []
               [ H.tbody [] <| List.concat
@@ -293,7 +293,7 @@ info model =
                           case model.get |> HttpView.state of
                             HttpView.Connecting _ -> Html.spinner
                             HttpView.Ready _ ->
-                              "save" |> model.i18n.form |> Button.save model.msg.put
+                              "save" |> model.i18n.form |> Button.save
                       , " " |> H.text
                       , "cancel" |> model.i18n.form |> Button.cancel model.msg.static
                       , response |> Http.error model.i18n.http
