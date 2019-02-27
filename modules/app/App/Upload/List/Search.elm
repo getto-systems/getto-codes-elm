@@ -52,8 +52,8 @@ type alias Model =
   }
 
 type Msg
-  = FieldInput (View.Prop String) String
-  | FieldCheck (View.Prop (Set String)) String
+  = FieldInput  (View.Prop String) String
+  | FieldToggle (View.Prop (Set String)) String
   | FieldChange
   | PageTo String
   | SortBy Sort.Model
@@ -114,8 +114,7 @@ init signature model =
     , sort = "id" |> Sort.by
     , search = HttpView.empty
     }
-  , [ Http.request signature get SearchStateChanged
-    , Frame.pushUrl
+  , [ searchAndPushUrl signature
     , fill
     ] |> Transition.batch
   )
@@ -186,37 +185,17 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    FieldInput prop value ->
-      ( { model | form = model.form |> Form.set prop value }
-      , Transition.none
-      )
-    FieldCheck prop value ->
-      ( { model | form = model.form |> Form.toggle prop value }
-      , Transition.none
-      )
+    FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    Transition.none )
+    FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
     FieldChange -> ( model, Frame.storeApp )
 
-    PageTo page ->
-      ( { model | page = page |> String.toInt |> Maybe.withDefault 0 }
-      , [ Http.request model.signature get SearchStateChanged
-        , Frame.pushUrl
-        ] |> Transition.batch
-      )
-
-    SortBy sort ->
-      ( { model | sort = sort }
-      , [ Http.request model.signature get SearchStateChanged
-        , Frame.pushUrl
-        ] |> Transition.batch
-      )
-
-    SearchRequest ->
-      ( { model | page = 0 }
-      , [ Http.request model.signature get SearchStateChanged
-        , Frame.pushUrl
-        ] |> Transition.batch
-      )
+    PageTo page   -> ( { model | page = page |> toPage }, searchAndPushUrl model.signature )
+    SortBy sort   -> ( { model | sort = sort },           searchAndPushUrl model.signature )
+    SearchRequest -> ( { model | page = 0 },              searchAndPushUrl model.signature )
     SearchStateChanged mig -> ( { model | search = model.search |> HttpView.update mig }, Transition.none )
+
+toPage : String -> Int
+toPage = String.toInt >> Maybe.withDefault 0
 
 fill : FrameTransition a
 fill = Frame.app >> .search >>
@@ -232,6 +211,12 @@ fill = Frame.app >> .search >>
     , model.form.start_at_lteq |> Dom.string
     ]
   )
+
+searchAndPushUrl : String -> FrameTransition a
+searchAndPushUrl signature =
+  [ Http.request signature get SearchStateChanged
+  , Frame.pushUrl
+  ] |> Transition.batch
 
 contents : FrameModel a -> List (Html Msg)
 contents model =
@@ -291,7 +276,7 @@ search model = L.lazy
     , msg =
       { search = SearchRequest
       , input  = FieldInput
-      , check  = FieldCheck
+      , toggle = FieldToggle
       , change = FieldChange
       }
     , i18n =

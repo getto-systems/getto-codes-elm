@@ -139,7 +139,7 @@ mock =
   , ( ( "GET", "upload/:id" )
     {--, Real --}
     {--}, Mock 1000
-      ( [
+      ( [ ( "etag", "UPLOAD-ETAG" )
         ] |> Dict.fromList
       )
       ( Encode.object
@@ -166,7 +166,7 @@ mock =
   , ( ( "PUT", "upload/:id/info" )
     {--, Real --}
     {--}, Mock 1000
-      ( [
+      ( [ ( "etag", "UPLOAD-ETAG" )
         ] |> Dict.fromList
       )
       ( Encode.object

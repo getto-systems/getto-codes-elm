@@ -48,11 +48,15 @@ expectJson msg decoder =
 
         Http.BadStatus_ metadata _ ->
           case metadata.statusCode of
-            400 -> HttpView.BadRequest          |> Err
-            401 -> HttpView.Unauthorized        |> Err
-            403 -> HttpView.Forbidden           |> Err
-            404 -> HttpView.NotFound            |> Err
-            422 -> HttpView.UnprocessableEntity |> Err
+            304 -> Nothing |> Ok
+
+            400 -> HttpView.BadRequest           |> Err
+            401 -> HttpView.Unauthorized         |> Err
+            403 -> HttpView.Forbidden            |> Err
+            404 -> HttpView.NotFound             |> Err
+            409 -> HttpView.Conflict             |> Err
+            422 -> HttpView.UnprocessableEntity  |> Err
+            428 -> HttpView.PreconditionRequired |> Err
 
             status -> HttpView.BadStatus status |> Err
 
@@ -74,10 +78,11 @@ expectJson msg decoder =
                   |> HttpView.BadBody
                   |> Err
 
-                Ok body -> body |> HttpView.toResponse header |> Ok
+                Ok body -> body |> HttpView.toResponse header |> Just |> Ok
 
-toMigration : Result HttpView.Error (HttpView.Response header body) -> HttpView.Migration header body
+toMigration : Result HttpView.Error (Maybe (HttpView.Response header body)) -> HttpView.Migration header body
 toMigration result =
   case result of
-    Ok  res -> res |> HttpView.success
-    Err err -> err |> HttpView.failure
+    Err err        -> err |> HttpView.failure
+    Ok  (Just res) -> res |> HttpView.success
+    Ok  Nothing    -> HttpView.notModified

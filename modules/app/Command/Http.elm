@@ -5,12 +5,13 @@ module GettoUpload.Command.Http exposing
   , track
   , tracker
   , get
-  , post
+  , getIfNoneMatch
   , put
   , delete
+  , post
   , upload
   )
---import GettoUpload.Command.Http.Real as Real
+import GettoUpload.Command.Http.Real as Real
 import GettoUpload.Command.Http.Mock as Mock
 import GettoUpload.View.Http as HttpView
 
@@ -25,10 +26,10 @@ import Task
 
 type Tracker model header body = Tracker String (model -> Request header body)
 type Request header body
-  = Get    (RequestInner header body QueryEncode.Value)
+  = Get    (Maybe String) (RequestInner header body QueryEncode.Value)
+  | Put    (Maybe String) (RequestInner header body Encode.Value)
+  | Delete (Maybe String) (RequestInner header body Encode.Value)
   | Post   (RequestInner header body Encode.Value)
-  | Put    (RequestInner header body Encode.Value)
-  | Delete (RequestInner header body Encode.Value)
   | Upload (RequestInner header body Part.Value)
 
 type alias RequestInner header body params =
@@ -58,9 +59,9 @@ request signature (Tracker marker req) msg model =
     [ HttpView.load |> Task.succeed |> Task.perform msg
     , Mock.request <| -- Real.request <|
       case model |> req of
-        Get data ->
+        Get etag data ->
           { method   = "GET"
-          , headers  = data |> headers
+          , headers  = data |> headers |> appendIfNoneMatch etag
           , url      = data.url ++ (data |> query)
           , body     = Http.emptyBody
           , response = data.response
@@ -68,28 +69,28 @@ request signature (Tracker marker req) msg model =
           , tracker  = trackMarker
           , msg      = msg
           }
+        Put etag data ->
+          { method   = "PUT"
+          , headers  = data |> headers |> appendIfMatch etag
+          , url      = data.url
+          , body     = data |> json
+          , response = data.response
+          , timeout  = Just data.timeout
+          , tracker  = trackMarker
+          , msg      = msg
+          }
+        Delete etag data ->
+          { method   = "DELETE"
+          , headers  = data |> headers |> appendIfMatch etag
+          , url      = data.url
+          , body     = data |> json
+          , response = data.response
+          , timeout  = Just data.timeout
+          , tracker  = trackMarker
+          , msg      = msg
+          }
         Post data ->
           { method   = "POST"
-          , headers  = data |> headers
-          , url      = data.url
-          , body     = data |> json
-          , response = data.response
-          , timeout  = Just data.timeout
-          , tracker  = trackMarker
-          , msg      = msg
-          }
-        Put data ->
-          { method   = "PUT"
-          , headers  = data |> headers
-          , url      = data.url
-          , body     = data |> json
-          , response = data.response
-          , timeout  = Just data.timeout
-          , tracker  = trackMarker
-          , msg      = msg
-          }
-        Delete data ->
-          { method   = "DELETE"
           , headers  = data |> headers
           , url      = data.url
           , body     = data |> json
@@ -109,6 +110,18 @@ request signature (Tracker marker req) msg model =
           , msg      = msg
           }
     ] |> Cmd.batch
+
+appendIfNoneMatch : Maybe String -> List Http.Header -> List Http.Header
+appendIfNoneMatch = appendEtag "If-None-Match"
+
+appendIfMatch : Maybe String -> List Http.Header -> List Http.Header
+appendIfMatch = appendEtag "If-Match"
+
+appendEtag : String -> Maybe String -> List Http.Header -> List Http.Header
+appendEtag key etag headers =
+  case etag of
+    Nothing  -> headers
+    Just tag -> headers ++ [ Http.header key tag ]
 
 track : String -> Tracker model header body -> (HttpView.Migration header body -> msg) -> Sub msg
 track signature (Tracker marker _) msg =
@@ -133,16 +146,19 @@ tracker : String -> (model -> Request header body) -> Tracker model header body
 tracker = Tracker
 
 get : RequestInner header body QueryEncode.Value -> Request header body
-get = Get
+get = Get Nothing
+
+getIfNoneMatch : Maybe String -> RequestInner header body QueryEncode.Value -> Request header body
+getIfNoneMatch = Get
+
+put : Maybe String -> RequestInner header body Encode.Value -> Request header body
+put = Put
+
+delete : Maybe String -> RequestInner header body Encode.Value -> Request header body
+delete = Delete
 
 post : RequestInner header body Encode.Value -> Request header body
 post = Post
-
-put : RequestInner header body Encode.Value -> Request header body
-put = Put
-
-delete : RequestInner header body Encode.Value -> Request header body
-delete = Delete
 
 upload : RequestInner header body Part.Value -> Request header body
 upload = Upload
