@@ -30,10 +30,10 @@ type alias RegisterModel msg =
     }
   , msg :
     { upload : msg
-    , input  : Form.Prop View.Form String -> String -> msg
-    , check  : Form.Prop View.Form (Set String) -> String -> msg
+    , input  : View.Prop String -> String -> msg
+    , check  : View.Prop (Set String) -> String -> msg
     , change : msg
-    , select : Form.Prop View.Form (List File) -> msg
+    , select : View.Prop (List File) -> msg
     }
   , i18n :
     { title : String -> String
@@ -52,7 +52,7 @@ register model =
       , H.table []
         [ H.tbody [] <| List.concat
           [ case model.form |> View.name of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -63,7 +63,7 @@ register model =
                 ]
               ]
           , case model.form |> View.text of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -75,7 +75,7 @@ register model =
                 ]
               ]
           , case model.form |> View.memo of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -86,7 +86,7 @@ register model =
                 ]
               ]
           , case model.form |> View.age of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -97,7 +97,7 @@ register model =
                 ]
               ]
           , case model.form |> View.email of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -108,7 +108,7 @@ register model =
                 ]
               ]
           , case model.form |> View.tel of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -119,7 +119,7 @@ register model =
                 ]
               ]
           , case model.form |> View.birthday of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -130,7 +130,7 @@ register model =
                 ]
               ]
           , case model.form |> View.start_at of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -141,7 +141,7 @@ register model =
                 ]
               ]
           , case model.form |> View.gender of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -152,7 +152,7 @@ register model =
                 ]
               ]
           , case model.form |> View.quality of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
@@ -163,7 +163,7 @@ register model =
                 ]
               ]
           , case model.form |> View.roles of
-            (name,errors,form) ->
+            (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat

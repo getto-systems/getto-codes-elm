@@ -2,6 +2,7 @@ module GettoUpload.App.Upload.List.Search.View exposing
   ( Form
   , Init
   , View
+  , Prop
   , ResponseHeader
   , ResponseBody
   , Upload
@@ -24,43 +25,51 @@ import Getto.Field.Present as Present
 
 import Set exposing ( Set )
 
+type alias Attribute = ()
+type alias Prop      a = Form.Prop Form Attribute a
+type alias Field     a = Field.Model Attribute a
+type alias InitForm  a = Present.Init Form Attribute a
+
+type alias ViewModel    a = Present.Model (Form.Model   Form Attribute a)
+type alias BetweenModel a = Present.Model (Form.Between Form Attribute a)
+
 type alias Form =
-  { name          : Field.Model String
-  , age_gteq      : Field.Model String
-  , age_lteq      : Field.Model String
-  , email         : Field.Model String
-  , tel           : Field.Model String
-  , birthday_gteq : Field.Model String
-  , birthday_lteq : Field.Model String
-  , start_at_gteq : Field.Model String
-  , start_at_lteq : Field.Model String
-  , gender        : Field.Model String
-  , roles         : Field.Model (Set String)
+  { name          : Field String
+  , age_gteq      : Field String
+  , age_lteq      : Field String
+  , email         : Field String
+  , tel           : Field String
+  , birthday_gteq : Field String
+  , birthday_lteq : Field String
+  , start_at_gteq : Field String
+  , start_at_lteq : Field String
+  , gender        : Field String
+  , roles         : Field (Set String)
   }
 
 type alias Init =
-  { name          : Present.Init Form String
-  , age_gteq      : Present.Init Form String
-  , age_lteq      : Present.Init Form String
-  , email         : Present.Init Form String
-  , tel           : Present.Init Form String
-  , birthday_gteq : Present.Init Form String
-  , birthday_lteq : Present.Init Form String
-  , start_at_gteq : Present.Init Form String
-  , start_at_lteq : Present.Init Form String
-  , gender        : Present.Init Form String
-  , roles         : Present.Init Form (Set String)
+  { name          : InitForm String
+  , age_gteq      : InitForm String
+  , age_lteq      : InitForm String
+  , email         : InitForm String
+  , tel           : InitForm String
+  , birthday_gteq : InitForm String
+  , birthday_lteq : InitForm String
+  , start_at_gteq : InitForm String
+  , start_at_lteq : InitForm String
+  , gender        : InitForm String
+  , roles         : InitForm (Set String)
   }
 
 type View = View
-  { name     : Present.Model (Form.Model Form String)
-  , email    : Present.Model (Form.Model Form String)
-  , tel      : Present.Model (Form.Model Form String)
-  , gender   : Present.Model (Form.Model Form String)
-  , roles    : Present.Model (Form.Model Form (Set String))
-  , age      : Present.Model (Form.Between Form String)
-  , birthday : Present.Model (Form.Between Form String)
-  , start_at : Present.Model (Form.Between Form String)
+  { name     : ViewModel String
+  , email    : ViewModel String
+  , tel      : ViewModel String
+  , gender   : ViewModel String
+  , roles    : ViewModel (Set String)
+  , age      : BetweenModel String
+  , birthday : BetweenModel String
+  , start_at : BetweenModel String
   }
 
 type alias ResponseHeader =

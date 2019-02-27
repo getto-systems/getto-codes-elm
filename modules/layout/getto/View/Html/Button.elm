@@ -2,6 +2,8 @@ module GettoUpload.View.Html.Button exposing
   ( error
   , connecting
   , select
+  , overwrite
+  , revert
   , save
   , edit
   , cancel
@@ -35,6 +37,22 @@ select : msg -> String -> Html msg
 select msg text =
   button
     [ msg |> E.onClick
+    ]
+    [ text |> H.text ]
+
+overwrite : msg -> String -> Html msg
+overwrite msg text =
+  button
+    [ "is-save" |> A.class
+    , msg |> E.onClick
+    ]
+    [ text |> H.text ]
+
+revert : msg -> String -> Html msg
+revert msg text =
+  button
+    [ "is-cancel" |> A.class
+    , msg |> E.onClick
     ]
     [ text |> H.text ]
 

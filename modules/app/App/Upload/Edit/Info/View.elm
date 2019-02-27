@@ -2,18 +2,23 @@ module GettoUpload.App.Upload.Edit.Info.View exposing
   ( Form
   , Init
   , View
+  , Prop
   , State(..)
+  , Response
   , ResponseHeader
   , ResponseBody
   , ResponseInfo
   , ResponseDetail
-  , edit
   , static
+  , toStatic
+  , toEdit
   , fromStateString
   , stateToString
   , done
   , compose
-  , state
+  , last
+  , isStatic
+  , hasError
   , name
   , memo
   , age
@@ -30,50 +35,61 @@ import GettoUpload.View.Http as HttpView
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Validate as Validate
+import Getto.Field.Conflict as Conflict
 
 import File exposing ( File )
 import Set exposing ( Set )
 
+type alias Prop      a = Conflict.Prop Form a
+type alias Field     a = Conflict.Field a
+type alias InitForm  a = Conflict.Init ResponseBody Form a
+type alias ViewModel a = Validate.Model (Conflict.Form Form a)
+
 type alias Form =
-  { state    : State
-  , name     : Field.Model String
-  , memo     : Field.Model String
-  , age      : Field.Model String
-  , email    : Field.Model String
-  , tel      : Field.Model String
-  , birthday : Field.Model String
-  , start_at : Field.Model String
-  , gender   : Field.Model String
-  , quality  : Field.Model String
-  , roles    : Field.Model (Set String)
+  { state    : EditState
+  , name     : Field String
+  , memo     : Field String
+  , age      : Field String
+  , email    : Field String
+  , tel      : Field String
+  , birthday : Field String
+  , start_at : Field String
+  , gender   : Field String
+  , quality  : Field String
+  , roles    : Field (Set String)
   }
 
 type alias Init =
-  { name     : Validate.Init Form String
-  , memo     : Validate.Init Form String
-  , age      : Validate.Init Form String
-  , email    : Validate.Init Form String
-  , tel      : Validate.Init Form String
-  , birthday : Validate.Init Form String
-  , start_at : Validate.Init Form String
-  , gender   : Validate.Init Form String
-  , quality  : Validate.Init Form String
-  , roles    : Validate.Init Form (Set String)
+  { name     : InitForm String
+  , memo     : InitForm String
+  , age      : InitForm String
+  , email    : InitForm String
+  , tel      : InitForm String
+  , birthday : InitForm String
+  , start_at : InitForm String
+  , gender   : InitForm String
+  , quality  : InitForm String
+  , roles    : InitForm (Set String)
   }
 
-type View = View State Bool
-  { name     : Validate.Model (Form.Model Form String)
-  , memo     : Validate.Model (Form.Model Form String)
-  , age      : Validate.Model (Form.Model Form String)
-  , email    : Validate.Model (Form.Model Form String)
-  , tel      : Validate.Model (Form.Model Form String)
-  , birthday : Validate.Model (Form.Model Form String)
-  , start_at : Validate.Model (Form.Model Form String)
-  , gender   : Validate.Model (Form.Model Form String)
-  , quality  : Validate.Model (Form.Model Form String)
-  , roles    : Validate.Model (Form.Model Form (Set String))
+type View = View
+  { state    : EditState
+  , last     : Maybe Response
+  , hasError : Bool
+  }
+  { name     : ViewModel String
+  , memo     : ViewModel String
+  , age      : ViewModel String
+  , email    : ViewModel String
+  , tel      : ViewModel String
+  , birthday : ViewModel String
+  , start_at : ViewModel String
+  , gender   : ViewModel String
+  , quality  : ViewModel String
+  , roles    : ViewModel (Set String)
   }
 
+type alias Response = HttpView.Response ResponseHeader ResponseBody
 type alias ResponseHeader = ()
 type alias ResponseBody =
   { info   : ResponseInfo
@@ -94,77 +110,116 @@ type alias ResponseDetail =
   , roles    : Set String
   }
 
-type State
-  = Static
-  | Edit
+type EditState
+  = StaticState
+  | EditState Response
 
-static : Form -> Form
-static form = { form | state = Static }
+type State a
+  = Static String
+  | Edit   String (Conflict.Form Form a) (Conflict.State a) (List String)
 
-edit : Form -> Form
-edit form = { form | state = Edit }
+static : EditState
+static = StaticState
 
-fromStateString : String -> Form -> Form
-fromStateString stateString =
+toStatic : Form -> Form
+toStatic form = { form | state = StaticState }
+
+toEdit : Response -> Form -> Form
+toEdit response form = { form | state = EditState response }
+
+fromStateString : Maybe Response -> String -> Form -> Form
+fromStateString response stateString =
   case stateString |> String.toLower of
-    "static" -> static
-    "edit"   -> edit
-    _        -> identity
+    "static" -> toStatic
+    "edit" ->
+      case response of
+        Just res -> toEdit res
+        Nothing  -> identity
+
+    _ -> identity
 
 stateToString : Form -> String
 stateToString form =
   case form.state of
-    Static -> "static"
-    Edit   -> "edit"
+    StaticState -> "static"
+    EditState _ -> "edit"
 
 
 done : HttpView.Migration ResponseHeader ResponseBody -> Form -> Form
 done mig =
   case mig |> HttpView.isSuccess of
-    Just _  -> static
+    Just _  -> toStatic
     Nothing -> identity
 
-compose : Init -> Form -> View
-compose model form =
-  View form.state
-    ( List.concat
-      [ model.name     |> Tuple.second
-      , model.memo     |> Tuple.second
-      , model.age      |> Tuple.second
-      , model.email    |> Tuple.second
-      , model.tel      |> Tuple.second
-      , model.birthday |> Tuple.second
-      , model.start_at |> Tuple.second
-      , model.gender   |> Tuple.second
-      , model.quality  |> Tuple.second
-      , model.roles    |> Tuple.second
+compose : Maybe Response -> Init -> Form -> View
+compose response model form =
+  let
+    res =
+      ( case form.state of
+        StaticState -> Nothing
+        EditState r -> r |> HttpView.body |> Just
+
+      , response |> Maybe.map HttpView.body
+      )
+    error = "conflict"
+    view =
+      { name     = form |> Conflict.init error res model.name
+      , memo     = form |> Conflict.init error res model.memo
+      , age      = form |> Conflict.init error res model.age
+      , email    = form |> Conflict.init error res model.email
+      , tel      = form |> Conflict.init error res model.tel
+      , birthday = form |> Conflict.init error res model.birthday
+      , start_at = form |> Conflict.init error res model.start_at
+      , gender   = form |> Conflict.init error res model.gender
+      , quality  = form |> Conflict.init error res model.quality
+      , roles    = form |> Conflict.init error res model.roles
+      }
+    errors = List.concat
+      [ view.name     |> Validate.errors
+      , view.memo     |> Validate.errors
+      , view.age      |> Validate.errors
+      , view.email    |> Validate.errors
+      , view.tel      |> Validate.errors
+      , view.birthday |> Validate.errors
+      , view.start_at |> Validate.errors
+      , view.gender   |> Validate.errors
+      , view.quality  |> Validate.errors
+      , view.roles    |> Validate.errors
       ]
-      |> List.any ((/=) Nothing)
-    )
-    { name     = form |> Validate.init model.name
-    , memo     = form |> Validate.init model.memo
-    , age      = form |> Validate.init model.age
-    , email    = form |> Validate.init model.email
-    , tel      = form |> Validate.init model.tel
-    , birthday = form |> Validate.init model.birthday
-    , start_at = form |> Validate.init model.start_at
-    , gender   = form |> Validate.init model.gender
-    , quality  = form |> Validate.init model.quality
-    , roles    = form |> Validate.init model.roles
-    }
+  in
+    View
+      { state = form.state
+      , last  = response
+      , hasError = errors |> List.isEmpty |> not
+      }
+      view
 
 
-state : View -> (State,Bool)
-state (View st error _) = ( st, error )
+last : View -> Maybe Response
+last (View info _) = info.last
+
+isStatic : View -> Bool
+isStatic (View info _) = info.state == StaticState
+
+hasError : View -> Bool
+hasError (View info _) = info.hasError
 
 
-name     (View st _ form) = ( st, form.name     |> Validate.expose )
-memo     (View st _ form) = ( st, form.memo     |> Validate.expose )
-age      (View st _ form) = ( st, form.age      |> Validate.expose )
-email    (View st _ form) = ( st, form.email    |> Validate.expose )
-tel      (View st _ form) = ( st, form.tel      |> Validate.expose )
-birthday (View st _ form) = ( st, form.birthday |> Validate.expose )
-start_at (View st _ form) = ( st, form.start_at |> Validate.expose )
-gender   (View st _ form) = ( st, form.gender   |> Validate.expose )
-quality  (View st _ form) = ( st, form.quality  |> Validate.expose )
-roles    (View st _ form) = ( st, form.roles    |> Validate.expose )
+name     (View info form) = form.name     |> expose info.state
+memo     (View info form) = form.memo     |> expose info.state
+age      (View info form) = form.age      |> expose info.state
+email    (View info form) = form.email    |> expose info.state
+tel      (View info form) = form.tel      |> expose info.state
+birthday (View info form) = form.birthday |> expose info.state
+start_at (View info form) = form.start_at |> expose info.state
+gender   (View info form) = form.gender   |> expose info.state
+quality  (View info form) = form.quality  |> expose info.state
+roles    (View info form) = form.roles    |> expose info.state
+
+expose : EditState -> Validate.Model (Conflict.Form Form a) -> State a
+expose st model =
+  case model |> Validate.expose of
+    (fieldName,form,errors) ->
+      case st of
+        StaticState -> Static fieldName
+        EditState _ -> Edit   fieldName form ( form.field |> Conflict.state ) errors

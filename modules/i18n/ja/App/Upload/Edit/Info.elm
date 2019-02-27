@@ -36,6 +36,8 @@ error name =
     "blank"   -> "入力してください"
     "no-file" -> "ファイルを選択してください"
 
+    "conflict" -> "別な画面で更新されました"
+
     _ -> name
 
 gender : String -> String

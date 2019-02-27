@@ -35,6 +35,7 @@ import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Validate as Validate
+import Getto.Field.Conflict as Conflict
 
 import Browser.Navigation as Navigation
 import File exposing ( File )
@@ -60,11 +61,13 @@ type alias Model =
 type Msg
   = Edit
   | Static
-  | FieldInput (Form.Prop View.Form String) String
-  | FieldCheck (Form.Prop View.Form (Set String)) String
+  | FieldInput      (Conflict.Prop View.Form String)       String
+  | FieldToggle     (Conflict.Prop View.Form (Set String)) String
+  | FieldResolve    (Conflict.Prop View.Form String)       (Conflict.Resolve String)
+  | FieldResolveSet (Conflict.Prop View.Form (Set String)) (Conflict.Resolve (Set String))
+  | FileRequest     (Conflict.Prop View.Form (List File))
+  | FileSelect      (Conflict.Prop View.Form (List File)) File
   | FieldChange
-  | FileRequest (Form.Prop View.Form (List File))
-  | FileSelect (Form.Prop View.Form (List File)) File
   | GetStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
   | PutRequest
   | PutStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
@@ -143,17 +146,17 @@ init signature model =
   ( { signature = signature
     , id = 0
     , form =
-      { state    = View.Static
-      , name     = Field.init signature "name"     ""
-      , memo     = Field.init signature "memo"     ""
-      , age      = Field.init signature "age"      ""
-      , email    = Field.init signature "email"    ""
-      , tel      = Field.init signature "tel"      ""
-      , birthday = Field.init signature "birthday" ""
-      , start_at = Field.init signature "start_at" ""
-      , gender   = Field.init signature "gender"   ""
-      , quality  = Field.init signature "quality"  ""
-      , roles    = Field.init signature "roles"    Set.empty
+      { state    = View.static
+      , name     = Field.init signature "name"     Conflict.none ""
+      , memo     = Field.init signature "memo"     Conflict.none ""
+      , age      = Field.init signature "age"      Conflict.none ""
+      , email    = Field.init signature "email"    Conflict.none ""
+      , tel      = Field.init signature "tel"      Conflict.none ""
+      , birthday = Field.init signature "birthday" Conflict.none ""
+      , start_at = Field.init signature "start_at" Conflict.none ""
+      , gender   = Field.init signature "gender"   Conflict.none ""
+      , quality  = Field.init signature "quality"  Conflict.none ""
+      , roles    = Field.init signature "roles"    Conflict.none Set.empty
       }
     , get = HttpView.empty
     , put = HttpView.empty
@@ -182,7 +185,7 @@ encodeStore model = Encode.object
     )
   ]
 
-encodeResponse : HttpView.Response View.ResponseHeader View.ResponseBody -> Encode.Value
+encodeResponse : View.Response -> Encode.Value
 encodeResponse res =
   let
     header = res |> HttpView.header
@@ -232,16 +235,17 @@ decodeStore : Decode.Value -> Model -> Model
 decodeStore value model =
   let
     obj = value |> SafeDecode.valueAt [model.id |> String.fromInt]
+    res = obj |> Decode.decodeValue (Decode.at ["response"] decodeResponse) |> Result.toMaybe
   in
     { model
-    | form = model.form |> decodeForm ( obj |> SafeDecode.valueAt ["form"] )
+    | form = model.form |> decodeForm res ( obj |> SafeDecode.valueAt ["form"] )
     , get  = model.get |>
-      case obj |> Decode.decodeValue (Decode.at ["response"] decodeResponse) of
-        Ok res -> res |> HttpView.success |> HttpView.update
-        Err _  -> identity
+      case res of
+        Just r -> r |> HttpView.success |> HttpView.update
+        Nothing  -> identity
     }
 
-decodeResponse : Decode.Decoder (HttpView.Response View.ResponseHeader View.ResponseBody)
+decodeResponse : Decode.Decoder View.Response
 decodeResponse = Decode.map2 HttpView.toResponse
   ( Decode.at ["header"] decodeResponseHeader )
   ( Decode.at ["body"]   response.body )
@@ -249,8 +253,8 @@ decodeResponse = Decode.map2 HttpView.toResponse
 decodeResponseHeader : Decode.Decoder View.ResponseHeader
 decodeResponseHeader = Decode.succeed ()
 
-decodeForm : Decode.Value -> View.Form -> View.Form
-decodeForm value form =
+decodeForm : (Maybe View.Response) -> Decode.Value -> View.Form -> View.Form
+decodeForm res value form =
   let
     decode name decoder = Decode.decodeValue (Decode.at [name] decoder) >> Result.toMaybe
   in
@@ -265,7 +269,7 @@ decodeForm value form =
     |> Form.setIf gender_   ( value |> decode "gender"   Decode.string )
     |> Form.setIf quality_  ( value |> decode "quality"  Decode.string )
     |> Form.setIf roles_    ( value |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
-    |> View.fromStateString ( value |> SafeDecode.at ["state"] (SafeDecode.string "") )
+    |> View.fromStateString res ( value |> SafeDecode.at ["state"] (SafeDecode.string "") )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -277,11 +281,11 @@ update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
     Edit ->
-      ( { model | form = model.form |> edit model |> View.edit }
+      ( { model | form = model.form |> edit model }
       , fill
       )
     Static ->
-      ( { model | form = model.form |> View.static }
+      ( { model | form = model.form |> View.toStatic }
       , Transition.none
       )
 
@@ -289,10 +293,24 @@ update msg model =
       ( { model | form = model.form |> Form.set prop value }
       , Transition.none
       )
-    FieldCheck prop value ->
+    FieldToggle prop value ->
       ( { model | form = model.form |> Form.toggle prop value }
       , Transition.none
       )
+
+    FieldResolve prop resolve ->
+      ( { model | form = model.form |> Conflict.resolve prop resolve }
+      , [ fill
+        , Frame.storeApp
+        ] |> Transition.batch
+      )
+    FieldResolveSet prop resolve ->
+      ( { model | form = model.form |> Conflict.resolve prop resolve }
+      , [ fill
+        , Frame.storeApp
+        ] |> Transition.batch
+      )
+
     FieldChange -> ( model, Frame.storeApp )
 
     FileRequest prop -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
@@ -302,7 +320,7 @@ update msg model =
       )
 
     GetStateChanged mig ->
-      ( { model | get  = model.get |> HttpView.update mig }
+      ( { model | get = model.get |> HttpView.update mig }
       , Frame.storeApp
       )
 
@@ -317,20 +335,24 @@ update msg model =
 
 edit : Model -> View.Form -> View.Form
 edit model form =
-  case model |> lastResponse |> Maybe.map HttpView.body of
+  case model |> lastResponse of
     Nothing -> form
-    Just body ->
-      form
-      |> Form.set name_     body.info.name
-      |> Form.set memo_     body.info.memo
-      |> Form.set age_     (body.info.age |> String.fromInt)
-      |> Form.set email_    body.info.email
-      |> Form.set tel_      body.info.tel
-      |> Form.set birthday_ body.detail.birthday
-      |> Form.set start_at_ body.detail.start_at
-      |> Form.set gender_   body.detail.gender
-      |> Form.set quality_  body.detail.quality
-      |> Form.set roles_    body.detail.roles
+    Just res ->
+      let
+        body = res |> HttpView.body
+      in
+        form
+        |> View.toEdit res
+        |> Form.set name_     body.info.name
+        |> Form.set memo_     body.info.memo
+        |> Form.set age_     (body.info.age |> String.fromInt)
+        |> Form.set email_    body.info.email
+        |> Form.set tel_      body.info.tel
+        |> Form.set birthday_ body.detail.birthday
+        |> Form.set start_at_ body.detail.start_at
+        |> Form.set gender_   body.detail.gender
+        |> Form.set quality_  body.detail.quality
+        |> Form.set roles_    body.detail.roles
 
 fill : FrameTransition a
 fill = Frame.app >> .info >>
@@ -373,21 +395,20 @@ info : FrameModel a -> Html Msg
 info model = L.lazy
   (\m -> Html.info
     { title = "info"
-    , form = m.form |> View.compose
-      { name     = ( name_,     [ m.form.name |> Validate.blank "blank" ] )
-      , memo     = ( memo_,     [] )
-      , age      = ( age_,      [] )
-      , email    = ( email_,    [] )
-      , tel      = ( tel_,      [] )
-      , birthday = ( birthday_, [] )
-      , start_at = ( start_at_, [] )
-      , gender   = ( gender_,   [] )
-      , quality  = ( quality_,  [] )
-      , roles    = ( roles_,    [] )
+    , form = m.form |> View.compose ( m |> lastResponse )
+      { name  = ( .info >> .name,  ( name_,  [ m.form.name |> Validate.blank "blank" ] ) )
+      , memo  = ( .info >> .memo,  ( memo_,  [] ) )
+      , age   = ( .info >> .age >> String.fromInt, ( age_,   [] ) )
+      , email = ( .info >> .email, ( email_, [] ) )
+      , tel   = ( .info >> .tel,   ( tel_,   [] ) )
+      , birthday = ( .detail >> .birthday, ( birthday_, [] ) )
+      , start_at = ( .detail >> .start_at, ( start_at_, [] ) )
+      , gender   = ( .detail >> .gender,   ( gender_,   [] ) )
+      , quality  = ( .detail >> .quality,  ( quality_,  [] ) )
+      , roles    = ( .detail >> .roles,    ( roles_,    [] ) )
       }
-    , get  = m.get
-    , put  = m.put
-    , last = m |> lastResponse
+    , get = m.get
+    , put = m.put
     , options =
       { gender =
         [ ( "", "please-select" |> AppI18n.form )
@@ -405,12 +426,14 @@ info model = L.lazy
         ]
       }
     , msg =
-      { put    = PutRequest
-      , input  = FieldInput
-      , check  = FieldCheck
-      , change = FieldChange
-      , edit   = Edit
-      , static = Static
+      { put        = PutRequest
+      , input      = FieldInput
+      , toggle     = FieldToggle
+      , resolve    = FieldResolve
+      , resolveSet = FieldResolveSet
+      , change     = FieldChange
+      , edit       = Edit
+      , static     = Static
       }
     , i18n =
       { title = I18n.title
