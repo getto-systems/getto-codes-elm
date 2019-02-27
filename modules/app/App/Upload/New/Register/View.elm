@@ -61,7 +61,9 @@ type alias Init =
   , roles    : InitForm (Set String)
   }
 
-type View = View Bool
+type View = View
+  { hasError : Bool
+  }
   { name     : ViewModel String
   , text     : ViewModel (List File)
   , memo     : ViewModel String
@@ -82,38 +84,42 @@ type alias ResponseBody = ()
 
 compose : Init -> Form -> View
 compose model form =
-  View
-    ( List.concat
-      [ model.name     |> Tuple.second
-      , model.text     |> Tuple.second
-      , model.memo     |> Tuple.second
-      , model.age      |> Tuple.second
-      , model.email    |> Tuple.second
-      , model.tel      |> Tuple.second
-      , model.birthday |> Tuple.second
-      , model.start_at |> Tuple.second
-      , model.gender   |> Tuple.second
-      , model.quality  |> Tuple.second
-      , model.roles    |> Tuple.second
+  let
+    view =
+      { name     = form |> Validate.init Validate.none model.name
+      , text     = form |> Validate.init Validate.none model.text
+      , memo     = form |> Validate.init Validate.none model.memo
+      , age      = form |> Validate.init Validate.none model.age
+      , email    = form |> Validate.init Validate.none model.email
+      , tel      = form |> Validate.init Validate.none model.tel
+      , birthday = form |> Validate.init Validate.none model.birthday
+      , start_at = form |> Validate.init Validate.none model.start_at
+      , gender   = form |> Validate.init Validate.none model.gender
+      , quality  = form |> Validate.init Validate.none model.quality
+      , roles    = form |> Validate.init Validate.none model.roles
+      }
+    errors = List.concat
+      [ view.name     |> Validate.errors
+      , view.text     |> Validate.errors
+      , view.memo     |> Validate.errors
+      , view.age      |> Validate.errors
+      , view.email    |> Validate.errors
+      , view.tel      |> Validate.errors
+      , view.birthday |> Validate.errors
+      , view.start_at |> Validate.errors
+      , view.gender   |> Validate.errors
+      , view.quality  |> Validate.errors
+      , view.roles    |> Validate.errors
       ]
-      |> List.any ((/=) Nothing)
-    )
-    { name     = form |> Validate.init Validate.none model.name
-    , text     = form |> Validate.init Validate.none model.text
-    , memo     = form |> Validate.init Validate.none model.memo
-    , age      = form |> Validate.init Validate.none model.age
-    , email    = form |> Validate.init Validate.none model.email
-    , tel      = form |> Validate.init Validate.none model.tel
-    , birthday = form |> Validate.init Validate.none model.birthday
-    , start_at = form |> Validate.init Validate.none model.start_at
-    , gender   = form |> Validate.init Validate.none model.gender
-    , quality  = form |> Validate.init Validate.none model.quality
-    , roles    = form |> Validate.init Validate.none model.roles
-    }
+  in
+    View
+      { hasError = errors |> List.isEmpty |> not
+      }
+      view
 
 
 hasError : View -> Bool
-hasError (View error _) = error
+hasError (View info _) = info.hasError
 
 
 name     (View _ form) = form.name     |> Validate.expose
