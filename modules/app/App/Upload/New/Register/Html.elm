@@ -47,7 +47,7 @@ type alias RegisterModel msg =
 register : RegisterModel msg -> Html msg
 register model =
   H.section []
-    [ H.form []
+    [ H.form [ model.msg.upload |> E.onSubmit ]
       [ H.h2 [] [ model.title |> model.i18n.title |> H.text ]
       , H.table []
         [ H.tbody [] <| List.concat
@@ -187,7 +187,7 @@ register model =
                 [ "has-error" |> model.i18n.form |> Button.error
                 ]
               else
-                [ "upload" |> model.i18n.form |> Button.save model.msg.upload
+                [ "upload" |> model.i18n.form |> Button.save
                 , error |> Http.error model.i18n.http
                 ]
       ]
