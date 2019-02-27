@@ -31,7 +31,7 @@ type alias RegisterModel msg =
   , msg :
     { upload : msg
     , input  : View.Prop String -> String -> msg
-    , check  : View.Prop (Set String) -> String -> msg
+    , toggle : View.Prop (Set String) -> String -> msg
     , change : msg
     , select : View.Prop (List File) -> msg
     }
@@ -167,7 +167,7 @@ register model =
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
                 , H.td [] <| List.concat
-                  [ [ form.field |> Input.checkbox model.options.roles [] (model.msg.check form.prop) model.msg.change
+                  [ [ form.field |> Input.checkbox model.options.roles [] (model.msg.toggle form.prop) model.msg.change
                     ]
                   , errors |> Input.errors model.i18n.error
                   ]

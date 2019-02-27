@@ -57,7 +57,7 @@ type alias Model =
 
 type Msg
   = FieldInput  (View.Prop String)       String
-  | FieldCheck  (View.Prop (Set String)) String
+  | FieldToggle (View.Prop (Set String)) String
   | FileRequest (View.Prop (List File))
   | FileSelect  (View.Prop (List File)) File
   | FieldChange
@@ -204,12 +204,12 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    FieldInput prop value -> ( { model | form = model.form |> Form.set prop value },    Transition.none )
-    FieldCheck prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
+    FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    Transition.none )
+    FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
     FieldChange -> ( model, Frame.storeApp )
 
-    FileRequest prop -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
-    FileSelect prop file -> ( { model | form = model.form |> Form.set prop [file] }, Transition.none )
+    FileRequest prop      -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
+    FileSelect  prop file -> ( { model | form = model.form |> Form.set prop [file] }, Transition.none )
 
     UploadRequest -> ( model, Http.request model.signature upload UploadStateChanged )
     UploadStateChanged mig ->
@@ -279,7 +279,7 @@ register model = L.lazy
     , msg =
       { upload = UploadRequest
       , input  = FieldInput
-      , check  = FieldCheck
+      , toggle = FieldToggle
       , change = FieldChange
       , select = FileRequest
       }
