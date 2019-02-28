@@ -49,10 +49,9 @@ import Html.Lazy as L
 type alias FrameModel a = Frame.Model Layout.Model { a | register : Model }
 type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
-  { tmpId     : Maybe Int
-  , signature : String
-  , form      : View.Form
-  , upload    : HttpView.Model View.Response
+  { tmpId  : Maybe Int
+  , form   : View.Form
+  , upload : HttpView.Model View.Response
   }
 
 type Msg
@@ -64,8 +63,9 @@ type Msg
   | UploadRequest
   | UploadStateChanged (HttpView.Migration View.Response)
 
+signature = "register"
 
-upload : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
+upload : Http.Tracker (FrameModel a) View.Response
 upload = Http.tracker "upload" <|
   \model ->
     let
@@ -87,7 +87,7 @@ upload = Http.tracker "upload" <|
           , ( "quality",   m.form.quality  |> Field.value |> Part.string )
           , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Part.list Part.string )
           ]
-        , response =
+        , response = HttpView.decoder
           { header = HeaderDecode.map View.ResponseHeader
             ( HeaderDecode.at "x-upload-id" HeaderDecode.int )
           , body = Decode.succeed ()
@@ -96,10 +96,9 @@ upload = Http.tracker "upload" <|
         }
 
 
-init : String -> Frame.InitModel -> ( Model, FrameTransition a )
-init signature model =
-  ( { tmpId     = Nothing
-    , signature = signature
+init : Frame.InitModel -> ( Model, FrameTransition a )
+init model =
+  ( { tmpId = Nothing
     , form =
       { name     = Field.init signature "name"     () ""
       , text     = Field.init signature "text"     () []
@@ -199,7 +198,7 @@ fill = Frame.app >> .register >>
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Http.track model.signature upload UploadStateChanged
+  Http.track signature upload UploadStateChanged
 
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
@@ -211,7 +210,7 @@ update msg model =
     FileRequest prop      -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
     FileSelect  prop file -> ( { model | form = model.form |> Form.set prop [file] }, Transition.none )
 
-    UploadRequest -> ( model, Http.request model.signature upload UploadStateChanged )
+    UploadRequest -> ( model, Http.request signature upload UploadStateChanged )
     UploadStateChanged mig ->
       ( { model | upload = model.upload |> HttpView.update mig }
       , case mig |> HttpView.isSuccess of

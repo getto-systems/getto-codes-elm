@@ -24,17 +24,16 @@ import Html.Lazy as L
 
 type alias FrameModel a app = Frame.Model { a | article : Model } app
 type alias FrameTransition a app = Transition (FrameModel a app) Msg
-type alias Model =
-  { signature : String
-  }
+type alias Model = ()
 
 type Msg
   = Noop
 
-init : String -> Frame.InitModel -> ( Model, FrameTransition a app )
-init signature model =
-  ( { signature = signature
-    }
+signature = "layout-article"
+
+init : Frame.InitModel -> ( Model, FrameTransition a app )
+init model =
+  ( ()
   , Transition.none
   )
 

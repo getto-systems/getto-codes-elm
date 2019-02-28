@@ -17,5 +17,4 @@ error err =
     HttpView.UnprocessableEntity  -> "保存できませんでした"
     HttpView.PreconditionRequired -> "情報が送信されませんでした"
     HttpView.BadStatus _          -> "サーバーエラー"
-    HttpView.BadHeader _          -> "ヘッダーエラー"
-    HttpView.BadBody _            -> "レスポンスエラー"
+    HttpView.BadResponse _        -> "レスポンスエラー"

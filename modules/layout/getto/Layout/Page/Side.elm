@@ -46,8 +46,7 @@ import Html.Lazy as L
 type alias FrameModel a app = Frame.Model { a | side : Model } app
 type alias FrameTransition a app = Transition (FrameModel a app) Msg
 type alias Model =
-  { signature  : String
-  , menu       : Menu
+  { menu       : Menu
   , badge      : HttpView.Model View.Response
   , badgeNames : Dict String String
   , collapsed  : Set String
@@ -58,15 +57,16 @@ type Msg
   | MenuOpen  String
   | MenuClose String
 
+signature = "layout-side"
 
-badge : Http.Tracker (FrameModel a app) View.ResponseHeader View.ResponseBody
+badge : Http.Tracker (FrameModel a app) View.Response
 badge = Http.tracker "badge" <|
   \model ->
     Http.get
       { url     = "layout/menu/badge" |> Api.url []
       , headers = model |> Api.headers
       , params  = QueryEncode.empty
-      , response =
+      , response = HttpView.decoder
         { header = HeaderDecode.succeed ()
         , body = Decode.map View.ResponseBody
           ( Decode.at ["badge"]
@@ -83,10 +83,9 @@ badge = Http.tracker "badge" <|
       }
 
 
-init : String -> Frame.InitModel -> ( Model, FrameTransition a app )
-init signature model =
-  ( { signature  = signature
-    , menu       = menu
+init : Frame.InitModel -> ( Model, FrameTransition a app )
+init model =
+  ( { menu       = menu
     , badgeNames = badgeNames
     , badge      = HttpView.empty
     , collapsed  = Set.empty
@@ -107,7 +106,7 @@ storeChanged value model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Http.track model.signature badge BadgeStateChanged
+  Http.track signature badge BadgeStateChanged
 
 update : Msg -> Model -> ( Model, FrameTransition a app )
 update msg model =

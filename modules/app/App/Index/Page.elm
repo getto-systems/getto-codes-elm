@@ -43,11 +43,8 @@ setup =
       ( model.dashboard |> Dashboard.decodeStore (value |> SafeDecode.valueAt ["dashboard"]) )
     )
   , search =
-    ( \model -> QueryEncode.object
-      [ ( "dashboard", model.dashboard |> Dashboard.encodeQuery )
-      ]
-    , \value model -> Model
-      ( model.dashboard |> Dashboard.decodeQuery ["dashboard"] value )
+    ( \model -> model.dashboard |> Dashboard.encodeQuery
+    , \value model -> { model | dashboard = model.dashboard |> Dashboard.decodeQuery [] value }
     )
   , init = init
   }
@@ -55,7 +52,7 @@ setup =
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
   Transition.compose Model
-    (model |> Dashboard.init "dashboard" |> Transition.map Dashboard)
+    (model |> Dashboard.init |> Transition.map Dashboard)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -77,22 +74,24 @@ document model =
 
 content : FrameModel -> Html FrameMsg
 content model =
-  H.section [ A.class "MainLayout" ] <|
-    [ model |> Layout.mobileHeader
-    , model |> Layout.mobileAddress
-    , H.article [] <|
-      [ H.header []
-        [ model |> Layout.articleHeader
-        , model |> Layout.breadcrumb
+  H.section [ A.class "MainLayout" ] <| List.concat
+    [ [ model |> Layout.mobileHeader
+      , model |> Layout.mobileAddress
+      , H.article [] <| List.concat
+        [ [ H.header []
+            [ model |> Layout.articleHeader
+            , model |> Layout.breadcrumb
+            ]
+          ]
+        , model |> Dashboard.contents |> Frame.mapApp Dashboard
+        , [ model |> Layout.articleFooter ]
         ]
-      ] ++
-      ( model |> Dashboard.contents |> Frame.mapApp Dashboard ) ++
-      [ model |> Layout.articleFooter ]
-    , H.nav []
-      [ model |> Layout.navHeader
-      , model |> Layout.navAddress
-      , model |> Layout.nav
-      , model |> Layout.navFooter
+      , H.nav []
+        [ model |> Layout.navHeader
+        , model |> Layout.navAddress
+        , model |> Layout.nav
+        , model |> Layout.navFooter
+        ]
       ]
-    ] ++
-    ( model |> Dashboard.dialogs |> Frame.mapApp Dashboard )
+    , model |> Dashboard.dialogs |> Frame.mapApp Dashboard
+    ]

@@ -1,7 +1,7 @@
-module GettoUpload.App.Upload.Edit.Info.Html exposing
-  ( info
+module GettoUpload.App.Upload.Edit.Detail.Html exposing
+  ( detail
   )
-import GettoUpload.App.Upload.Edit.Info.View as View
+import GettoUpload.App.Upload.Edit.Detail.View as View
 import GettoUpload.View.Html as Html
 import GettoUpload.View.Html.Button as Button
 import GettoUpload.View.Html.Input as Input
@@ -18,17 +18,24 @@ import Html.Attributes as A
 import Html.Events as E
 
 
-type alias InfoModel msg =
+type alias DetailModel msg =
   { title : String
   , view  : View.View
   , put   : HttpView.State
+  , options :
+    { gender  : List ( String, String )
+    , quality : List ( String, String )
+    , roles   : List ( String, String )
+    }
   , msg :
-    { put     : msg
-    , input   : View.Prop String -> String -> msg
-    , change  : msg
-    , edit    : msg
-    , static  : msg
-    , resolve : View.Prop String -> Conflict.Resolve String -> msg
+    { put        : msg
+    , input      : View.Prop String -> String -> msg
+    , toggle     : View.Prop (Set String) -> String -> msg
+    , change     : msg
+    , edit       : msg
+    , static     : msg
+    , resolve    : View.Prop String -> Conflict.Resolve String -> msg
+    , resolveSet : View.Prop (Set String) -> Conflict.Resolve (Set String) -> msg
     }
   , i18n :
     { title : String -> String
@@ -39,8 +46,8 @@ type alias InfoModel msg =
     }
   }
 
-info : InfoModel msg -> Html msg
-info model =
+detail : DetailModel msg -> Html msg
+detail model =
   case model.view.response of
     Nothing ->
       case model.view.state of
@@ -60,12 +67,12 @@ info model =
             [ H.h2 [] [ model.title |> model.i18n.title |> H.text ]
             , H.table []
               [ H.tbody [] <| List.concat
-                [ case model.view.form.name of
+                [ case model.view.form.birthday of
                   View.Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
-                        [ H.p [] [ body.info.name |> H.text ]
+                        [ H.p [] [ body.detail.birthday |> H.text ]
                         ]
                       ]
                     ]
@@ -73,19 +80,19 @@ info model =
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat
-                        [ [ form.field |> Input.text [] (model.msg.input form.prop) model.msg.change
+                        [ [ form.field |> Input.date [] (model.msg.input form.prop) model.msg.change
                           ]
                         , conflict |> Input.conflict model.i18n.form (model.msg.resolve form.prop)
                         , errors   |> Input.errors   model.i18n.error
                         ]
                       ]
                     ]
-                , case model.view.form.memo of
+                , case model.view.form.start_at of
                   View.Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
-                        [ H.p [ "text-pre-wrap" |> A.class ] [ body.info.memo |> H.text ]
+                        [ H.p [] [ body.detail.start_at |> H.text ]
                         ]
                       ]
                     ]
@@ -93,19 +100,19 @@ info model =
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat
-                        [ [ form.field |> Input.textarea [] (model.msg.input form.prop) model.msg.change
+                        [ [ form.field |> Input.time [] (model.msg.input form.prop) model.msg.change
                           ]
                         , conflict |> Input.conflict model.i18n.form (model.msg.resolve form.prop)
                         , errors   |> Input.errors   model.i18n.error
                         ]
                       ]
                     ]
-                , case model.view.form.age of
+                , case model.view.form.gender of
                   View.Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
-                        [ H.p [] [ body.info.age |> String.fromInt |> H.text ]
+                        [ H.p [] [ body.detail.gender |> H.text ]
                         ]
                       ]
                     ]
@@ -113,19 +120,19 @@ info model =
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat
-                        [ [ form.field |> Input.number [] (model.msg.input form.prop) model.msg.change
+                        [ [ form.field |> Input.select model.options.gender [] (model.msg.input form.prop) model.msg.change
                           ]
                         , conflict |> Input.conflict model.i18n.form (model.msg.resolve form.prop)
                         , errors   |> Input.errors   model.i18n.error
                         ]
                       ]
                     ]
-                , case model.view.form.email of
+                , case model.view.form.quality of
                   View.Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
-                        [ H.p [] [ body.info.email |> H.text ]
+                        [ H.p [] [ body.detail.quality |> H.text ]
                         ]
                       ]
                     ]
@@ -133,19 +140,24 @@ info model =
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat
-                        [ [ form.field |> Input.email [] (model.msg.input form.prop) model.msg.change
+                        [ [ form.field |> Input.radio model.options.quality [] (model.msg.input form.prop) model.msg.change
                           ]
                         , conflict |> Input.conflict model.i18n.form (model.msg.resolve form.prop)
                         , errors   |> Input.errors   model.i18n.error
                         ]
                       ]
                     ]
-                , case model.view.form.tel of
+                , case model.view.form.roles of
                   View.Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
-                        [ H.p [] [ body.info.tel |> H.text ]
+                        [ H.ul []
+                          ( body.detail.roles |> Set.toList |> List.map
+                            (\role ->
+                              H.li [] [ role |> H.text ]
+                            )
+                          )
                         ]
                       ]
                     ]
@@ -153,9 +165,9 @@ info model =
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat
-                        [ [ form.field |> Input.tel [] (model.msg.input form.prop) model.msg.change
+                        [ [ form.field |> Input.checkbox model.options.roles [] (model.msg.toggle form.prop) model.msg.change
                           ]
-                        , conflict |> Input.conflict model.i18n.form (model.msg.resolve form.prop)
+                        , conflict |> Input.conflict model.i18n.form (model.msg.resolveSet form.prop)
                         , errors   |> Input.errors   model.i18n.error
                         ]
                       ]

@@ -7,6 +7,7 @@ module Getto.Command.Transition exposing
   , prop
   , update
   , map
+  , mapBatch
   , compose
   , compose2
   , compose3
@@ -45,6 +46,14 @@ update (Prop get set) updateSmall model =
 
 map : (msg -> super) -> ( model, Transition m msg ) -> ( model, Transition m super )
 map super = Tuple.mapSecond (\f -> f >> Cmd.map super)
+
+mapBatch : ( (a -> super), (b -> super) ) -> ( model, ( Transition m a, Transition m b ) ) -> ( model, Transition m super )
+mapBatch (superA,superB) (model,(msgA,msgB)) =
+  ( model
+  , [ msgA |> (\f -> f >> Cmd.map superA)
+    , msgB |> (\f -> f >> Cmd.map superB)
+    ] |> batch
+  )
 
 compose : (a -> model) -> ( a, Transition m msg ) -> ( model, Transition m msg )
 compose model (a,msgA) = ( model a, msgA )

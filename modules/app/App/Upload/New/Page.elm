@@ -43,11 +43,8 @@ setup =
       ( model.register |> Register.decodeStore (value |> SafeDecode.valueAt ["register"]) )
     )
   , search =
-    ( \model -> QueryEncode.object
-      [ ( "register", model.register |> Register.encodeQuery )
-      ]
-    , \value model -> Model
-      ( model.register |> Register.decodeQuery ["register"] value )
+    ( \model -> model.register |> Register.encodeQuery
+    , \value model -> { model | register = model.register |> Register.decodeQuery [] value }
     )
   , init = init
   }
@@ -55,7 +52,7 @@ setup =
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
   Transition.compose Model
-    (model |> Register.init "register" |> Transition.map Register)
+    (model |> Register.init |> Transition.map Register)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -77,22 +74,24 @@ document model =
 
 content : FrameModel -> Html FrameMsg
 content model =
-  H.section [ A.class "MainLayout" ] <|
-    [ model |> Layout.mobileHeader
-    , model |> Layout.mobileAddress
-    , H.article [] <|
-      [ H.header []
-        [ model |> Layout.articleHeader
-        , model |> Layout.breadcrumb
+  H.section [ A.class "MainLayout" ] <| List.concat
+    [ [ model |> Layout.mobileHeader
+      , model |> Layout.mobileAddress
+      , H.article [] <| List.concat
+        [ [ H.header []
+            [ model |> Layout.articleHeader
+            , model |> Layout.breadcrumb
+            ]
+          ]
+        , model |> Register.contents |> Frame.mapApp Register
+        , [ model |> Layout.articleFooter ]
         ]
-      ] ++
-      ( model |> Register.contents |> Frame.mapApp Register ) ++
-      [ model |> Layout.articleFooter ]
-    , H.nav []
-      [ model |> Layout.navHeader
-      , model |> Layout.navAddress
-      , model |> Layout.nav
-      , model |> Layout.navFooter
+      , H.nav []
+        [ model |> Layout.navHeader
+        , model |> Layout.navAddress
+        , model |> Layout.nav
+        , model |> Layout.navFooter
+        ]
       ]
-    ] ++
-    ( model |> Register.dialogs |> Frame.mapApp Register )
+    , model |> Register.dialogs |> Frame.mapApp Register
+    ]
