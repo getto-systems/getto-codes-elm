@@ -3,11 +3,13 @@ module GettoUpload.View.Http exposing
   , Migration
   , State(..)
   , Response
+  , ResponseDecoder
+  , ResponseValue
   , Progress(..)
   , Error(..)
   , empty
   , clear
-  , toResponse
+  , decoder
   , load
   , transfer
   , notModified
@@ -22,6 +24,10 @@ module GettoUpload.View.Http exposing
   , progress
   )
 import GettoUpload.View.Http.Progress as Progress
+
+import Getto.Http.Header.Decode as HeaderDecode
+
+import Json.Decode as Decode
 
 type Model response = Model
   { state    : State
@@ -44,6 +50,16 @@ type Response header body = Response
   , body   : body
   }
 
+type alias ResponseDecoder response = ResponseValue -> Result String response
+type alias ResponseValue =
+  { header : HeaderDecode.Value
+  , body   : Decode.Value
+  }
+type alias ResponseDecoderStruct header body =
+  { header : HeaderDecode.Decoder header
+  , body   : Decode.Decoder body
+  }
+
 type Progress
   = Sending Progress.Model
   | Proccessing
@@ -61,8 +77,7 @@ type Error
   | UnprocessableEntity
   | PreconditionRequired
   | BadStatus Int
-  | BadHeader String
-  | BadBody String
+  | BadResponse String
 
 empty : Model response
 empty = Model
@@ -73,11 +88,29 @@ empty = Model
 clear : Model response -> Model response
 clear (Model model) = Model { model | response = Nothing }
 
-toResponse : header -> body -> Response header body
-toResponse headerData bodyData = Response
-  { header = headerData
-  , body   = bodyData
-  }
+decoder : ResponseDecoderStruct header body -> ResponseDecoder (Response header body)
+decoder decode value =
+  case value.header |> HeaderDecode.decode decode.header of
+    Err errorHeader ->
+      errorHeader
+      |> HeaderDecode.errorToString
+      |> Debug.log "bad-header"
+      |> Err
+
+    Ok responseHeader ->
+      case value.body |> Decode.decodeValue decode.body of
+        Err errorBody ->
+          errorBody
+          |> Decode.errorToString
+          |> Debug.log "bad-body"
+          |> Err
+
+        Ok responseBody ->
+          Response
+            { header = responseHeader
+            , body   = responseBody
+            }
+          |> Ok
 
 load : Migration response
 load = Load
@@ -88,13 +121,13 @@ transfer = Transfer
 notModified : Migration response
 notModified = NotModified
 
-success : Response header body -> Migration (Response header body)
+success : response -> Migration response
 success = Success
 
 failure : Error -> Migration response
 failure = Failure
 
-isSuccess : Migration (Response header body) -> Maybe (Response header body)
+isSuccess : Migration response -> Maybe response
 isSuccess mig =
   case mig of
     Success res -> Just res
@@ -112,7 +145,7 @@ update migration (Model model) =
 state : Model response -> State
 state (Model model) = model.state
 
-response : Model (Response header body) -> Maybe (Response header body)
+response : Model response -> Maybe response
 response (Model model) = model.response
 
 header : Response header body -> header

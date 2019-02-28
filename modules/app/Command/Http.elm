@@ -24,28 +24,25 @@ import Json.Decode as Decode
 import Http
 import Task
 
-type Tracker model header body = Tracker String (model -> Request header body)
-type Request header body
-  = Get    (Maybe String) (RequestInner header body QueryEncode.Value)
-  | Put    (Maybe String) (RequestInner header body Encode.Value)
-  | Delete (Maybe String) (RequestInner header body Encode.Value)
-  | Post   (RequestInner header body Encode.Value)
-  | Upload (RequestInner header body Part.Value)
+type Tracker model response = Tracker String (model -> Request response)
+type Request response
+  = Get    (Maybe String) (RequestInner response QueryEncode.Value)
+  | Put    (Maybe String) (RequestInner response Encode.Value)
+  | Delete (Maybe String) (RequestInner response Encode.Value)
+  | Post   (RequestInner response Encode.Value)
+  | Upload (RequestInner response Part.Value)
 
-type alias RequestInner header body params =
+type alias RequestInner response params =
   { url      : String
   , headers  : List Header
   , params   : params
-  , response :
-    { header : HeaderDecode.Decoder header
-    , body   : Decode.Decoder body
-    }
+  , response : HttpView.ResponseDecoder response
   , timeout  : Float
   }
 
 type alias Header = ( String, String )
 
-request : String -> Tracker model header body -> (HttpView.Migration (HttpView.Response header body) -> msg) -> model -> Cmd msg
+request : String -> Tracker model response -> (HttpView.Migration response -> msg) -> model -> Cmd msg
 request signature (Tracker marker req) msg model =
   let
     headers = .headers >> List.map (\(key,value) -> Http.header key value)
@@ -123,7 +120,7 @@ appendEtag key etag headers =
     Nothing  -> headers
     Just tag -> headers ++ [ Http.header key tag ]
 
-track : String -> Tracker model header body -> (HttpView.Migration (HttpView.Response header body) -> msg) -> Sub msg
+track : String -> Tracker model response -> (HttpView.Migration (HttpView.Response header body) -> msg) -> Sub msg
 track signature (Tracker marker _) msg =
   let
     toProgress progress =
@@ -142,23 +139,23 @@ track signature (Tracker marker _) msg =
 toTrackMarker : String -> String -> String
 toTrackMarker signature marker = signature ++ ":" ++ marker
 
-tracker : String -> (model -> Request header body) -> Tracker model header body
+tracker : String -> (model -> Request response) -> Tracker model response
 tracker = Tracker
 
-get : RequestInner header body QueryEncode.Value -> Request header body
+get : RequestInner response QueryEncode.Value -> Request response
 get = Get Nothing
 
-getIfNoneMatch : Maybe String -> RequestInner header body QueryEncode.Value -> Request header body
+getIfNoneMatch : Maybe String -> RequestInner response QueryEncode.Value -> Request response
 getIfNoneMatch = Get
 
-put : Maybe String -> RequestInner header body Encode.Value -> Request header body
+put : Maybe String -> RequestInner response Encode.Value -> Request response
 put = Put
 
-delete : Maybe String -> RequestInner header body Encode.Value -> Request header body
+delete : Maybe String -> RequestInner response Encode.Value -> Request response
 delete = Delete
 
-post : RequestInner header body Encode.Value -> Request header body
+post : RequestInner response Encode.Value -> Request response
 post = Post
 
-upload : RequestInner header body Part.Value -> Request header body
+upload : RequestInner response Part.Value -> Request response
 upload = Upload

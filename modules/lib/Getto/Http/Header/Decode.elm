@@ -1,5 +1,6 @@
 module Getto.Http.Header.Decode exposing
   ( Value
+  , Error
   , Decoder
   , string
   , int
@@ -20,12 +21,14 @@ import Dict exposing ( Dict )
 
 type alias Value = Dict String String
 
-type alias Decoder a = Value -> Result Error a
-type alias EntryDecoder a = Maybe String -> Result Error a
+type alias Decoder a = Value -> Result DecodeError a
+type alias EntryDecoder a = Maybe String -> Result DecodeError a
 
-type Error
+type Error = Error Value DecodeError
+
+type DecodeError
   = Failure String
-  | At String Error
+  | At String DecodeError
 
 string : EntryDecoder String
 string = Result.fromMaybe (Failure "not exists")
@@ -54,7 +57,7 @@ fail : String -> Decoder a
 fail error = always <| Err (Failure error)
 
 decode : Decoder a -> Value -> Result Error a
-decode decoder = decoder
+decode decoder value = value |> decoder |> Result.mapError (Error value)
 
 map : (a -> b) -> Decoder a -> Decoder b
 map f decoderA headers =
@@ -92,7 +95,13 @@ map5 f decoderA decoderB decoderC decoderD decoderE headers =
     (headers |> decoderE)
 
 errorToString : Error -> String
-errorToString error =
+errorToString (Error value error) = ( error |> decodeErrorToString ) ++ ": " ++ ( value |> valueToString )
+
+decodeErrorToString : DecodeError -> String
+decodeErrorToString error =
   case error of
     Failure err -> err
-    At  key err -> key ++ " " ++ (err |> errorToString)
+    At  key err -> key ++ " " ++ (err |> decodeErrorToString)
+
+valueToString : Value -> String
+valueToString = Dict.toList >> List.map (\(k,v) -> k ++ ":" ++ v) >> String.join ","

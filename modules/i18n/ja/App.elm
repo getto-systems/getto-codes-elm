@@ -3,6 +3,7 @@ module GettoUpload.I18n.App exposing
   , menu
   , role
   , form
+  , error
   , paging
   , table
   )
@@ -58,6 +59,15 @@ form name =
 
     "search"    -> "検索"
     "searching" -> "検索中"
+
+    _ -> name
+
+error : String -> String
+error name =
+  case name of
+    "blank"    -> "入力してください"
+    "no-file"  -> "ファイルを選択してください"
+    "conflict" -> "別な画面で更新されました"
 
     _ -> name
 

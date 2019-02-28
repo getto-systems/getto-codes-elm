@@ -14,27 +14,22 @@ import Http
 import Task
 import Process
 
-type alias RequestData header body msg =
+type alias RequestData response msg =
   { method   : String
   , headers  : List Http.Header
   , url      : String
   , body     : Http.Body
-  , response : Response header body
+  , response : HttpView.ResponseDecoder response
   , timeout  : Maybe Float
   , tracker  : Maybe String
-  , msg      : HttpView.Migration (HttpView.Response header body) -> msg
-  }
-
-type alias Response header body =
-  { header : HeaderDecode.Decoder header
-  , body   : Decode.Decoder body
+  , msg      : HttpView.Migration response -> msg
   }
 
 type Request
   = Real
-  | Mock Float HeaderDecode.Value Decode.Value
+  | Mock Float HttpView.ResponseValue
 
-request : RequestData header body msg -> Cmd msg
+request : RequestData response msg -> Cmd msg
 request data =
   let
     sending current = Process.sleep >> Task.map
@@ -78,7 +73,7 @@ request data =
       |> List.head
   in
     case entry of
-      Just (Mock delay rawHeader rawBody) ->
+      Just (Mock delay value) ->
         [ delay * 1 / 8 |> sending 1
         , delay * 2 / 8 |> sending 2
         , delay * 3 / 8 |> sending 3
@@ -91,17 +86,9 @@ request data =
           |> Process.sleep
           |> Task.map
             (\_ ->
-              case rawHeader |> HeaderDecode.decode data.response.header of
-                Err headerError ->
-                  headerError |> HeaderDecode.errorToString |> HttpView.BadHeader |> HttpView.failure
-
-                Ok header ->
-                  case rawBody |> Decode.decodeValue data.response.body of
-                    Err bodyError ->
-                      bodyError |> Decode.errorToString >> HttpView.BadBody |> HttpView.failure
-
-                    Ok body ->
-                      body |> HttpView.toResponse header |> HttpView.success
+              case value |> data.response of
+                Err error -> error |> HttpView.BadResponse |> HttpView.failure
+                Ok  res   -> res   |> HttpView.success
             )
 
         ] |> List.map (Task.perform data.msg) |> Cmd.batch
@@ -113,36 +100,37 @@ mock =
   [ ( ( "GET", "layout/menu/badge" )
     {--, Real --}
     {--}, Mock 1000
-      ( [
+      { header =
+        [
         ] |> Dict.fromList
-      )
-      ( [ ( "badge"
+      , body =
+        [ ( "badge"
           , [ [ ( "name", "home" |> Encode.string )
               , ( "count", 4 |> Encode.int )
               ]
             ] |> Encode.list Encode.object
           )
         ] |> Encode.object
-      )
+      }
     --}
     )
   , ( ( "POST", "upload" )
     {--}, Real --}
     {--, Mock 3000
-      ( [ ( "x-upload-id", "3" )
+      { header =
+        [ ( "x-upload-id", "3" )
         ] |> Dict.fromList
-      )
-      ( Encode.null
+      , body = Encode.null
       )
     --}
     )
   , ( ( "GET", "upload/:id" )
     {--, Real --}
     {--}, Mock 1000
-      ( [ ( "etag", "UPLOAD-ETAG" )
+      { header =
+        [ ( "etag", "UPLOAD-ETAG" )
         ] |> Dict.fromList
-      )
-      ( Encode.object
+      , body =
         [ ( "info"
           , [ ( "name",  "John Doe" |> Encode.string )
             , ( "memo",  "hello, world\nmulti line memo" |> Encode.string )
@@ -159,44 +147,49 @@ mock =
             , ( "roles",    ["upload"] |> Encode.list Encode.string )
             ] |> Encode.object
           )
-        ]
-      )
+        ] |> Encode.object
+      }
     --}
     )
   , ( ( "PUT", "upload/:id/info" )
     {--, Real --}
     {--}, Mock 1000
-      ( [ ( "etag", "UPLOAD-ETAG" )
+      { header =
+        [ ( "etag", "UPLOAD-ETAG" )
         ] |> Dict.fromList
-      )
-      ( Encode.object
-        [ ( "info"
-          , [ ( "name",  "John Doe - UPDATED!!" |> Encode.string )
-            , ( "memo",  "hello, world\nmulti line memo" |> Encode.string )
-            , ( "age",   40 |> Encode.int )
-            , ( "email", "john@example.com" |> Encode.string )
-            , ( "tel",   "090-xxxx-1234" |> Encode.string )
-            ] |> Encode.object
-          )
-        , ( "detail"
-          , [ ( "birthday", "1980-10-10" |> Encode.string )
-            , ( "start_at", "10:10" |> Encode.string )
-            , ( "gender",   "male" |> Encode.string )
-            , ( "quality",  "high" |> Encode.string )
-            , ( "roles",    ["upload"] |> Encode.list Encode.string )
-            ] |> Encode.object
-          )
-        ]
-      )
+      , body =
+        [ ( "name",  "John Doe - UPDATED!!" |> Encode.string )
+        , ( "memo",  "hello, world\nmulti line memo" |> Encode.string )
+        , ( "age",   40 |> Encode.int )
+        , ( "email", "john@example.com" |> Encode.string )
+        , ( "tel",   "090-xxxx-1234" |> Encode.string )
+        ] |> Encode.object
+      }
+    --}
+    )
+  , ( ( "PUT", "upload/:id/detail" )
+    {--, Real --}
+    {--}, Mock 1000
+      { header =
+        [ ( "etag", "UPLOAD-ETAG" )
+        ] |> Dict.fromList
+      , body =
+        [ ( "birthday", "1980-10-10" |> Encode.string )
+        , ( "start_at", "10:10" |> Encode.string )
+        , ( "gender",   "male" |> Encode.string )
+        , ( "quality",  "high" |> Encode.string )
+        , ( "roles",    ["upload"] |> Encode.list Encode.string )
+        ] |> Encode.object
+      }
     --}
     )
   , ( ( "GET", "uploads" )
     {--, Real --}
     {--}, Mock 300
-      ( [ ( "x-paging-max", "10" )
+      { header =
+        [ ( "x-paging-max", "10" )
         ] |> Dict.fromList
-      )
-      ( Encode.list Encode.object
+      , body =
         [ [ ( "id",     1        |> Encode.int )
           , ( "name",   "text-1" |> Encode.string )
           , ( "gender", "male"   |> Encode.string )
@@ -239,8 +232,8 @@ mock =
               ] |> Encode.list Encode.object
             )
           ]
-        ]
-      )
+        ] |> Encode.list Encode.object
+      }
     --}
     )
   ]

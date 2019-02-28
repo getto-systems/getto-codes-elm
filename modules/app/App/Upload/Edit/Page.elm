@@ -1,15 +1,16 @@
 module GettoUpload.App.Upload.Edit.Page exposing ( main )
-import GettoUpload.App.Upload.Edit.Info as Info
+import GettoUpload.App.Upload.Edit.Data   as Data
+import GettoUpload.App.Upload.Edit.Info   as Info
+import GettoUpload.App.Upload.Edit.Detail as Detail
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 
-import Getto.Command.Transition as Transition exposing ( Transition )
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Json.SafeDecode as SafeDecode
 
-import Json.Encode as Encode
-import Json.Decode as Decode
 import Browser
+import Json.Encode as Encode
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
@@ -25,49 +26,67 @@ main = Browser.application
 
 type alias FrameModel = Frame.Model Layout.Model Model
 type alias FrameTransition = Transition FrameModel Msg
+type alias FrameMsg = Frame.Msg Layout.Msg Msg
+
 type alias Model =
-  { info : Info.Model
+  { data   : Data.Model
+  , info   : Info.Model
+  , detail : Detail.Model
   }
 
-type alias FrameMsg = Frame.Msg Layout.Msg Msg
 type Msg
-  = Info Info.Msg
+  = Data Data.Msg
+  | Info Info.Msg
+  | Detail Detail.Msg
 
 setup : Frame.SetupApp Layout.Model Model Msg
 setup =
   { store =
     ( \model -> Encode.object
-      [ ( "info", model.info |> Info.encodeStore )
+      [ ( "data",   model.data   |> Data.encodeStore )
+      , ( "info",   model.info   |> Info.encodeStore   model.data )
+      , ( "detail", model.detail |> Detail.encodeStore model.data )
       ]
-    , \value model -> Model
-      ( model.info |> Info.decodeStore (value |> SafeDecode.valueAt ["info"]) )
+    , \value model ->
+      let
+        data = model.data |> Data.decodeStore (value |> SafeDecode.valueAt ["data"])
+      in
+        Model
+          data
+          ( model.info   |> Info.decodeStore   data (value |> SafeDecode.valueAt ["info"]) )
+          ( model.detail |> Detail.decodeStore data (value |> SafeDecode.valueAt ["detail"]) )
     )
   , search =
-    ( \model -> QueryEncode.object
-      [ ( "info", model.info |> Info.encodeQuery )
-      ]
-    , \value model -> Model
-      ( model.info |> Info.decodeQuery ["info"] value )
+    ( \model -> model.data |> Data.encodeQuery
+    , \value model -> { model | data = model.data |> Data.decodeQuery [] value }
     )
   , init = init
   }
 
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
-  Transition.compose Model
-    (model |> Info.init "info" |> Transition.map Info)
+  T.compose3 Model
+    (model |> Data.init   |> T.map Data)
+    (model |> Info.init   |> T.map Info)
+    (model |> Detail.init |> T.map Detail)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  [ model.info |> Info.subscriptions |> Sub.map Info
+  [ model.data   |> Data.subscriptions   |> Sub.map Data
+  , model.info   |> Info.subscriptions   |> Sub.map Info
+  , model.detail |> Detail.subscriptions |> Sub.map Detail
   ] |> Sub.batch
 
-info_ = Transition.prop .info (\v m -> { m | info = v })
+data_   = T.prop .data   (\v m -> { m | data   = v })
+info_   = T.prop .info   (\v m -> { m | info   = v })
+detail_ = T.prop .detail (\v m -> { m | detail = v })
 
 update : Msg -> Model -> ( Model, FrameTransition )
-update message =
+update message model =
   case message of
-    Info msg -> Transition.update info_ (Info.update msg >> Transition.map Info)
+    Data   msg -> model |> T.update data_   (Data.update msg >> T.map Data)
+    Info   msg -> model |> T.update info_   (Info.update model.data msg   >> T.mapBatch (Data,Info))
+    Detail msg -> model |> T.update detail_ (Detail.update model.data msg >> T.mapBatch (Data,Detail))
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =
@@ -77,22 +96,29 @@ document model =
 
 content : FrameModel -> Html FrameMsg
 content model =
-  H.section [ A.class "MainLayout" ] <|
-    [ model |> Layout.mobileHeader
-    , model |> Layout.mobileAddress
-    , H.article [] <|
-      [ H.header []
-        [ model |> Layout.articleHeader
-        , model |> Layout.breadcrumb
+  H.section [ A.class "MainLayout" ] <| List.concat
+    [ [ model |> Layout.mobileHeader
+      , model |> Layout.mobileAddress
+      , H.article [] <| List.concat
+        [ [ H.header []
+            [ model |> Layout.articleHeader
+            , model |> Layout.breadcrumb
+            ]
+          ]
+        , [ H.section [ "edit" |> A.class ] <| List.concat
+            [ model |> Info.contents   |> Frame.mapApp Info
+            , model |> Detail.contents |> Frame.mapApp Detail
+            ]
+          ]
+        , [ model |> Layout.articleFooter ]
         ]
-      ] ++
-      ( model |> Info.contents |> Frame.mapApp Info ) ++
-      [ model |> Layout.articleFooter ]
-    , H.nav []
-      [ model |> Layout.navHeader
-      , model |> Layout.navAddress
-      , model |> Layout.nav
-      , model |> Layout.navFooter
+      , H.nav []
+        [ model |> Layout.navHeader
+        , model |> Layout.navAddress
+        , model |> Layout.nav
+        , model |> Layout.navFooter
+        ]
       ]
-    ] ++
-    ( model |> Info.dialogs |> Frame.mapApp Info )
+    , model |> Info.dialogs   |> Frame.mapApp Info
+    , model |> Detail.dialogs |> Frame.mapApp Detail
+    ]

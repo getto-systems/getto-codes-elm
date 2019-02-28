@@ -1,4 +1,4 @@
-module GettoUpload.App.Upload.Edit.Info exposing
+module GettoUpload.App.Upload.Edit.Detail exposing
   ( Model
   , Msg
   , init
@@ -10,8 +10,8 @@ module GettoUpload.App.Upload.Edit.Info exposing
   , dialogs
   )
 import GettoUpload.App.Upload.Edit.Data as Data
-import GettoUpload.App.Upload.Edit.Info.View as View
-import GettoUpload.App.Upload.Edit.Info.Html as Html
+import GettoUpload.App.Upload.Edit.Detail.View as View
+import GettoUpload.App.Upload.Edit.Detail.Html as Html
 import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
@@ -42,7 +42,7 @@ import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | data : Data.Model, info : Model }
+type alias FrameModel a = Frame.Model Layout.Model { a | data : Data.Model, detail : Model }
 type alias DataTransition a = Transition (FrameModel a) Data.Msg
 type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
@@ -53,30 +53,32 @@ type alias Model =
 type Msg
   = Edit
   | Static
-  | Input   (View.Prop String) String
-  | Resolve (View.Prop String) (Conflict.Resolve String)
+  | Input      (View.Prop String)       String
+  | Toggle     (View.Prop (Set String)) String
+  | Resolve    (View.Prop String)       (Conflict.Resolve String)
+  | ResolveSet (View.Prop (Set String)) (Conflict.Resolve (Set String))
   | Change
   | PutRequest
   | PutStateChanged (HttpView.Migration View.Response)
 
-signature = "info"
+signature = "detail"
 
 put : Http.Tracker (FrameModel a) View.Response
 put = Http.tracker "put" <|
   \model ->
     let
       data = model |> Frame.app |> .data
-      m = model |> Frame.app |> .info
+      m = model |> Frame.app |> .detail
     in
       Http.put ( data |> Data.etag )
-        { url     = "upload/:id/info" |> Api.url ( data |> Data.pathInfo )
+        { url     = "upload/:id/detail" |> Api.url ( data |> Data.pathInfo )
         , headers = model |> Api.headers
         , params  = Encode.object
-          [ ( "name",  m.form.name  |> Field.value |> Encode.string )
-          , ( "memo",  m.form.memo  |> Field.value |> Encode.string )
-          , ( "age",   m.form.age   |> Field.value |> Encode.string )
-          , ( "email", m.form.email |> Field.value |> Encode.string )
-          , ( "tel",   m.form.tel   |> Field.value |> Encode.string )
+          [ ( "birthday",  m.form.birthday |> Field.value |> Encode.string )
+          , ( "start_at",  m.form.start_at |> Field.value |> Encode.string )
+          , ( "gender",    m.form.gender   |> Field.value |> Encode.string )
+          , ( "quality",   m.form.quality  |> Field.value |> Encode.string )
+          , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
           ]
         , response = response
         , timeout  = 10 * 1000
@@ -124,8 +126,11 @@ update data msg model =
     Edit   -> ( { model | form = model.form |> edit data },     ( T.none, fillAndStore ) )
     Static -> ( { model | form = model.form |> View.toStatic }, ( T.none, T.none ) )
 
-    Input   prop value -> ( { model | form = model.form |> Form.set prop value },       ( T.none, T.none ) )
-    Resolve prop mig   -> ( { model | form = model.form |> Conflict.resolve prop mig }, ( T.none, fillAndStore ) )
+    Input  prop value -> ( { model | form = model.form |> Form.set prop value },    ( T.none, T.none ) )
+    Toggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, ( T.none, T.none ) )
+
+    Resolve prop mig ->    ( { model | form = model.form |> Conflict.resolve prop mig }, ( T.none, fillAndStore ) )
+    ResolveSet prop mig -> ( { model | form = model.form |> Conflict.resolve prop mig }, ( T.none, fillAndStore ) )
 
     Change -> ( { model | form = model.form |> View.changed }, ( T.none, Frame.storeApp ) )
 
@@ -151,13 +156,10 @@ edit data form =
     Just res -> form |> View.toEdit res
 
 fill : FrameTransition a
-fill = Frame.app >> .info >>
+fill = Frame.app >> .detail >>
   (\model -> Dom.fill
-    [ model.form.name     |> Dom.string
-    , model.form.memo     |> Dom.string
-    , model.form.age      |> Dom.string
-    , model.form.email    |> Dom.string
-    , model.form.tel      |> Dom.string
+    [ model.form.birthday |> Dom.string
+    , model.form.start_at |> Dom.string
     ]
   )
 
@@ -167,22 +169,40 @@ fillAndStore = [ fill, Frame.storeApp ] |> T.batch
 
 contents : FrameModel a -> List (Html Msg)
 contents model =
-  [ model |> info
+  [ model |> detail
   ]
 
-info : FrameModel a -> Html Msg
-info model = L.lazy2
-  (\data m -> Html.info
+detail : FrameModel a -> Html Msg
+detail model = L.lazy2
+  (\data m -> Html.detail
     { title = signature
     , view = m.form |> View.view data.get
     , put  = m.put  |> HttpView.state
+    , options =
+      { gender =
+        [ ( "", "please-select" |> AppI18n.form )
+        , ( "male",   "male"   |> I18n.gender )
+        , ( "female", "female" |> I18n.gender )
+        , ( "other",  "other"  |> I18n.gender )
+        ]
+      , quality =
+        [ ( "high", "high" |> I18n.quality )
+        , ( "low",  "low"  |> I18n.quality )
+        ]
+      , roles =
+        [ ( "admin",  "admin"  |> AppI18n.role )
+        , ( "upload", "upload" |> AppI18n.role )
+        ]
+      }
     , msg =
-      { put     = PutRequest
-      , input   = Input
-      , resolve = Resolve
-      , change  = Change
-      , edit    = Edit
-      , static  = Static
+      { put        = PutRequest
+      , input      = Input
+      , toggle     = Toggle
+      , resolve    = Resolve
+      , resolveSet = ResolveSet
+      , change     = Change
+      , edit       = Edit
+      , static     = Static
       }
     , i18n =
       { title = I18n.title
@@ -194,7 +214,7 @@ info model = L.lazy2
     }
   )
   (model |> Frame.app |> .data)
-  (model |> Frame.app |> .info)
+  (model |> Frame.app |> .detail)
 
 dialogs : FrameModel a -> List (Html Msg)
 dialogs model = []

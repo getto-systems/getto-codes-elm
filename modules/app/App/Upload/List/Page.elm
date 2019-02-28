@@ -44,11 +44,8 @@ setup =
       ( model.search |> Search.decodeStore (value |> SafeDecode.valueAt ["search"]) )
     )
   , search =
-    ( \model -> QueryEncode.object
-      [ ( "search", model.search |> Search.encodeQuery )
-      ]
-    , \value model -> Model
-      ( model.search |> Search.decodeQuery ["search"] value )
+    ( \model -> model.search |> Search.encodeQuery
+    , \value model -> { model | search = model.search |> Search.decodeQuery [] value }
     )
   , init = init
   }
@@ -56,7 +53,7 @@ setup =
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
   Transition.compose Model
-    (model |> Search.init "search" |> Transition.map Search)
+    (model |> Search.init |> Transition.map Search)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -78,22 +75,24 @@ document model =
 
 content : FrameModel -> Html FrameMsg
 content model =
-  H.section [ A.class "MainLayout" ] <|
-    [ model |> Layout.mobileHeader
-    , model |> Layout.mobileAddress
-    , H.article [] <|
-      [ H.header []
-        [ model |> Layout.articleHeader
-        , model |> Layout.breadcrumb
+  H.section [ A.class "MainLayout" ] <| List.concat
+    [ [ model |> Layout.mobileHeader
+      , model |> Layout.mobileAddress
+      , H.article [] <| List.concat
+        [ [ H.header []
+            [ model |> Layout.articleHeader
+            , model |> Layout.breadcrumb
+            ]
+          ]
+        , model |> Search.contents |> Frame.mapApp Search
+        , [ model |> Layout.articleFooter ]
         ]
-      ] ++
-      ( model |> Search.contents |> Frame.mapApp Search ) ++
-      [ model |> Layout.articleFooter ]
-    , H.nav []
-      [ model |> Layout.navHeader
-      , model |> Layout.navAddress
-      , model |> Layout.nav
-      , model |> Layout.navFooter
+      , H.nav []
+        [ model |> Layout.navHeader
+        , model |> Layout.navAddress
+        , model |> Layout.nav
+        , model |> Layout.navFooter
+        ]
       ]
-    ] ++
-    ( model |> Search.dialogs |> Frame.mapApp Search )
+    , model |> Search.dialogs |> Frame.mapApp Search
+    ]

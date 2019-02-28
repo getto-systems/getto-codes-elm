@@ -20,7 +20,7 @@ import GettoUpload.Command.Http as Http
 import GettoUpload.Command.Dom as Dom
 import GettoUpload.View.Http as HttpView
 import GettoUpload.I18n.App as AppI18n
-import GettoUpload.I18n.App.Upload.List.Search as I18n
+import GettoUpload.I18n.App.Upload as I18n
 import GettoUpload.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as Transition exposing ( Transition )
@@ -44,11 +44,10 @@ import Html.Lazy as L
 type alias FrameModel a = Frame.Model Layout.Model { a | search : Model }
 type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
-  { signature : String
-  , form      : View.Form
-  , page      : Int
-  , sort      : Sort.Model
-  , search    : HttpView.Model View.Response
+  { form   : View.Form
+  , page   : Int
+  , sort   : Sort.Model
+  , search : HttpView.Model View.Response
   }
 
 type Msg
@@ -60,9 +59,10 @@ type Msg
   | SearchRequest
   | SearchStateChanged (HttpView.Migration View.Response)
 
+signature = "search"
 
-get : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
-get = Http.tracker "search" <|
+get : Http.Tracker (FrameModel a) View.Response
+get = Http.tracker "get" <|
   \model ->
     let
       m = model |> Frame.app |> .search
@@ -71,7 +71,7 @@ get = Http.tracker "search" <|
         { url     = "uploads" |> Api.url []
         , headers = model |> Api.headers
         , params  = m |> encodeQuery
-        , response =
+        , response = HttpView.decoder
           { header = HeaderDecode.map View.ResponseHeader
             ( HeaderDecode.at "x-paging-max" HeaderDecode.int )
           , body = Decode.list
@@ -94,10 +94,9 @@ get = Http.tracker "search" <|
         }
 
 
-init : String -> Frame.InitModel -> ( Model, FrameTransition a )
-init signature model =
-  ( { signature = signature
-    , form =
+init : Frame.InitModel -> ( Model, FrameTransition a )
+init model =
+  ( { form =
       { name          = Field.init signature "name"          () ""
       , age_gteq      = Field.init signature "age_gteq"      () ""
       , age_lteq      = Field.init signature "age_lteq"      () ""
@@ -114,7 +113,7 @@ init signature model =
     , sort = "id" |> Sort.by
     , search = HttpView.empty
     }
-  , [ searchAndPushUrl signature
+  , [ searchAndPushUrl
     , fill
     ] |> Transition.batch
   )
@@ -180,7 +179,7 @@ decodeStore value model = model
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Http.track model.signature get SearchStateChanged
+  Http.track signature get SearchStateChanged
 
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
@@ -189,9 +188,9 @@ update msg model =
     FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
     FieldChange -> ( model, Frame.storeApp )
 
-    PageTo page   -> ( { model | page = page |> toPage }, searchAndPushUrl model.signature )
-    SortBy sort   -> ( { model | sort = sort },           searchAndPushUrl model.signature )
-    SearchRequest -> ( { model | page = 0 },              searchAndPushUrl model.signature )
+    PageTo page   -> ( { model | page = page |> toPage }, searchAndPushUrl )
+    SortBy sort   -> ( { model | sort = sort },           searchAndPushUrl )
+    SearchRequest -> ( { model | page = 0 },              searchAndPushUrl )
     SearchStateChanged mig -> ( { model | search = model.search |> HttpView.update mig }, Transition.none )
 
 toPage : String -> Int
@@ -212,8 +211,8 @@ fill = Frame.app >> .search >>
     ]
   )
 
-searchAndPushUrl : String -> FrameTransition a
-searchAndPushUrl signature =
+searchAndPushUrl : FrameTransition a
+searchAndPushUrl =
   [ Http.request signature get SearchStateChanged
   , Frame.pushUrl
   ] |> Transition.batch

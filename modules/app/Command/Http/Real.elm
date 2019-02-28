@@ -8,23 +8,18 @@ import Getto.Http.Header.Decode as HeaderDecode
 import Json.Decode as Decode
 import Http
 
-type alias RequestData header body msg =
+type alias RequestData response msg =
   { method   : String
   , headers  : List Http.Header
   , url      : String
   , body     : Http.Body
-  , response : Response header body
+  , response : HttpView.ResponseDecoder response
   , timeout  : Maybe Float
   , tracker  : Maybe String
-  , msg      : HttpView.Migration (HttpView.Response header body) -> msg
+  , msg      : HttpView.Migration response -> msg
   }
 
-type alias Response header body =
-  { header : HeaderDecode.Decoder header
-  , body   : Decode.Decoder body
-  }
-
-request : RequestData header body msg -> Cmd msg
+request : RequestData response msg -> Cmd msg
 request data =
   Http.request
     { method  = data.method
@@ -37,7 +32,7 @@ request data =
     }
 
 
-expectJson : (HttpView.Migration (HttpView.Response header body) -> msg) -> Response header body -> Http.Expect msg
+expectJson : (HttpView.Migration response -> msg) -> HttpView.ResponseDecoder response -> Http.Expect msg
 expectJson msg decoder =
   Http.expectStringResponse (toMigration >> msg) <|
     \response ->
@@ -60,27 +55,21 @@ expectJson msg decoder =
 
             status -> HttpView.BadStatus status |> Err
 
-        Http.GoodStatus_ metadata res ->
-          case metadata.headers |> HeaderDecode.decode decoder.header of
-            Err headerError ->
-              headerError
-              |> HeaderDecode.errorToString
-              |> Debug.log ("bad-header: " ++ (metadata.headers |> Debug.toString))
-              |> HttpView.BadHeader
+        Http.GoodStatus_ metadata raw ->
+          case raw |> Decode.decodeString Decode.value of
+            Err jsonError ->
+              jsonError
+              |> Decode.errorToString
+              |> Debug.log "json"
+              |> HttpView.BadResponse
               |> Err
 
-            Ok header ->
-              case res |> Decode.decodeString decoder.body of
-                Err bodyError ->
-                  bodyError
-                  |> Decode.errorToString
-                  |> Debug.log "bad-body"
-                  |> HttpView.BadBody
-                  |> Err
+            Ok body ->
+              case { header = metadata.headers, body = body } |> decoder of
+                Err error -> error |> HttpView.BadResponse |> Err
+                Ok  res   -> res   |> Just |> Ok
 
-                Ok body -> body |> HttpView.toResponse header |> Just |> Ok
-
-toMigration : Result HttpView.Error (Maybe (HttpView.Response header body)) -> HttpView.Migration (HttpView.Response header body)
+toMigration : Result HttpView.Error (Maybe response) -> HttpView.Migration response
 toMigration result =
   case result of
     Err err        -> err |> HttpView.failure

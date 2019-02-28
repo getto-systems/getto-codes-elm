@@ -1,4 +1,4 @@
-module GettoUpload.App.Upload.Edit.Info.View exposing
+module GettoUpload.App.Upload.Edit.Detail.View exposing
   ( Form
   , View
   , Prop
@@ -31,12 +31,12 @@ type alias Field     a = Conflict.Field a
 type alias ViewModel a = Validate.Model (Conflict.Form Form a)
 
 type alias Form =
-  { state : EditState
-  , name  : Field String
-  , memo  : Field String
-  , age   : Field String
-  , email : Field String
-  , tel   : Field String
+  { state    : EditState
+  , birthday : Field String
+  , start_at : Field String
+  , gender   : Field String
+  , quality  : Field String
+  , roles    : Field (Set String)
   }
 
 type alias View =
@@ -45,11 +45,11 @@ type alias View =
   , state    : HttpView.State
   , response : Maybe DataView.Response
   , form :
-    { name  : State String
-    , memo  : State String
-    , age   : State String
-    , email : State String
-    , tel   : State String
+    { birthday : State String
+    , start_at : State String
+    , gender   : State String
+    , quality  : State String
+    , roles    : State (Set String)
     }
   }
 
@@ -63,20 +63,20 @@ type State a
   = Static String
   | Edit   String (Conflict.Form Form a) (Conflict.State a) (List String)
 
-name_     = Form.prop .name     (\v m -> { m | name     = v })
-memo_     = Form.prop .memo     (\v m -> { m | memo     = v })
-age_      = Form.prop .age      (\v m -> { m | age      = v })
-email_    = Form.prop .email    (\v m -> { m | email    = v })
-tel_      = Form.prop .tel      (\v m -> { m | tel      = v })
+birthday_ = Form.prop .birthday (\v m -> { m | birthday = v })
+start_at_ = Form.prop .start_at (\v m -> { m | start_at = v })
+gender_   = Form.prop .gender   (\v m -> { m | gender   = v })
+quality_  = Form.prop .quality  (\v m -> { m | quality  = v })
+roles_    = Form.prop .roles    (\v m -> { m | roles    = v })
 
 init : String -> Form
 init signature =
   { state    = StaticState
-  , name     = Field.init signature "name"     Conflict.none ""
-  , memo     = Field.init signature "memo"     Conflict.none ""
-  , age      = Field.init signature "age"      Conflict.none ""
-  , email    = Field.init signature "email"    Conflict.none ""
-  , tel      = Field.init signature "tel"      Conflict.none ""
+  , birthday = Field.init signature "birthday" Conflict.none ""
+  , start_at = Field.init signature "start_at" Conflict.none ""
+  , gender   = Field.init signature "gender"   Conflict.none ""
+  , quality  = Field.init signature "quality"  Conflict.none ""
+  , roles    = Field.init signature "roles"    Conflict.none Set.empty
   }
 
 encode : (DataView.Response -> Encode.Value) -> Form -> Encode.Value
@@ -91,11 +91,11 @@ encode encodeResponse form =
 
 encodeForm : Form -> Encode.Value
 encodeForm form =
-  [ ( "name",     form.name     |> Field.value |> Encode.string )
-  , ( "memo",     form.memo     |> Field.value |> Encode.string )
-  , ( "age",      form.age      |> Field.value |> Encode.string )
-  , ( "email",    form.email    |> Field.value |> Encode.string )
-  , ( "tel",      form.tel      |> Field.value |> Encode.string )
+  [ ( "birthday", form.birthday |> Field.value |> Encode.string )
+  , ( "start_at", form.start_at |> Field.value |> Encode.string )
+  , ( "gender",   form.gender   |> Field.value |> Encode.string )
+  , ( "quality",  form.quality  |> Field.value |> Encode.string )
+  , ( "roles",    form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
   ] |> Encode.object
 
 decode : (Decode.Decoder DataView.Response) -> Decode.Value -> Form -> Form
@@ -118,11 +118,11 @@ decodeForm value form =
     decodeValue key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMaybe
   in
     form
-    |> Form.setIf name_  ( value |> decodeValue "name"  Decode.string )
-    |> Form.setIf memo_  ( value |> decodeValue "memo"  Decode.string )
-    |> Form.setIf age_   ( value |> decodeValue "age"   Decode.string )
-    |> Form.setIf email_ ( value |> decodeValue "email" Decode.string )
-    |> Form.setIf tel_   ( value |> decodeValue "tel"   Decode.string )
+    |> Form.setIf birthday_ ( value |> decodeValue "birthday" Decode.string )
+    |> Form.setIf start_at_ ( value |> decodeValue "start_at" Decode.string )
+    |> Form.setIf gender_   ( value |> decodeValue "gender"   Decode.string )
+    |> Form.setIf quality_  ( value |> decodeValue "quality"  Decode.string )
+    |> Form.setIf roles_    ( value |> decodeValue "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
 
 toStatic : Form -> Form
 toStatic form = { form | state = StaticState }
@@ -133,11 +133,11 @@ toEdit res form =
     body = res |> HttpView.body
   in
     { form | state = EditState False res }
-    |> Form.set name_   body.info.name
-    |> Form.set memo_   body.info.memo
-    |> Form.set age_   (body.info.age |> String.fromInt)
-    |> Form.set email_  body.info.email
-    |> Form.set tel_    body.info.tel
+    |> Form.set birthday_ body.detail.birthday
+    |> Form.set start_at_ body.detail.start_at
+    |> Form.set gender_   body.detail.gender
+    |> Form.set quality_  body.detail.quality
+    |> Form.set roles_    body.detail.roles
 
 toCommit : Form -> Form
 toCommit form =
@@ -167,25 +167,25 @@ view http form =
       , res |> Maybe.map HttpView.body
       )
     model =
-      { name  = ( .info >> .name,                  ( name_,  [ form.name |> Validate.blank "blank" ] ) )
-      , memo  = ( .info >> .memo,                  ( memo_,  [] ) )
-      , age   = ( .info >> .age >> String.fromInt, ( age_,   [] ) )
-      , email = ( .info >> .email,                 ( email_, [] ) )
-      , tel   = ( .info >> .tel,                   ( tel_,   [] ) )
+      { birthday = ( .detail >> .birthday, ( birthday_, [] ) )
+      , start_at = ( .detail >> .start_at, ( start_at_, [] ) )
+      , gender   = ( .detail >> .gender,   ( gender_,   [] ) )
+      , quality  = ( .detail >> .quality,  ( quality_,  [] ) )
+      , roles    = ( .detail >> .roles,    ( roles_,    [] ) )
       }
     result =
-      { name     = form |> Conflict.init error data model.name
-      , memo     = form |> Conflict.init error data model.memo
-      , age      = form |> Conflict.init error data model.age
-      , email    = form |> Conflict.init error data model.email
-      , tel      = form |> Conflict.init error data model.tel
+      { birthday = form |> Conflict.init error data model.birthday
+      , start_at = form |> Conflict.init error data model.start_at
+      , gender   = form |> Conflict.init error data model.gender
+      , quality  = form |> Conflict.init error data model.quality
+      , roles    = form |> Conflict.init error data model.roles
       }
     errors = List.concat
-      [ result.name     |> Validate.errors
-      , result.memo     |> Validate.errors
-      , result.age      |> Validate.errors
-      , result.email    |> Validate.errors
-      , result.tel      |> Validate.errors
+      [ result.birthday |> Validate.errors
+      , result.start_at |> Validate.errors
+      , result.gender   |> Validate.errors
+      , result.quality  |> Validate.errors
+      , result.roles    |> Validate.errors
       ]
   in
     { isStatic = (form.state == StaticState)
@@ -193,11 +193,11 @@ view http form =
     , state    = http |> HttpView.state
     , response = res
     , form     =
-      { name     = result.name     |> expose form.state res
-      , memo     = result.memo     |> expose form.state res
-      , age      = result.age      |> expose form.state res
-      , email    = result.email    |> expose form.state res
-      , tel      = result.tel      |> expose form.state res
+      { birthday = result.birthday |> expose form.state res
+      , start_at = result.start_at |> expose form.state res
+      , gender   = result.gender   |> expose form.state res
+      , quality  = result.quality  |> expose form.state res
+      , roles    = result.roles    |> expose form.state res
       }
     }
 

@@ -57,8 +57,8 @@ setup =
 init : Frame.InitModel -> ( Model, FrameTransition app )
 init model =
   Transition.compose2 Model
-    (model |> Article.init "layout-article" |> Transition.map Article)
-    (model |> Side.init    "layout-side"    |> Transition.map Side)
+    (model |> Article.init |> Transition.map Article)
+    (model |> Side.init    |> Transition.map Side)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -72,13 +72,8 @@ side_    = Transition.prop .side    (\v m -> { m | side = v })
 update : Msg -> Model -> ( Model, FrameTransition app )
 update message =
   case message of
-    Article msg ->
-      Transition.update article_
-        (Article.update msg >> Transition.map Article)
-
-    Side msg ->
-      Transition.update side_
-        (Side.update msg >> Transition.map Side)
+    Article msg -> Transition.update article_ (Article.update msg >> Transition.map Article)
+    Side    msg -> Transition.update side_    (Side.update msg    >> Transition.map Side)
 
 
 documentTitle : FrameModel app -> String

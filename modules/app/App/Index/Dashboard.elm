@@ -32,17 +32,16 @@ import Html.Lazy as L
 
 type alias FrameModel a = Frame.Model Layout.Model { a | dashboard : Model }
 type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model =
-  { signature : String
-  }
+type alias Model = ()
 
 type Msg
   = HelloWorld
 
-init : String -> Frame.InitModel -> ( Model, FrameTransition a )
-init signature model =
-  ( { signature = signature
-    }
+signature = "dashboard"
+
+init : Frame.InitModel -> ( Model, FrameTransition a )
+init model =
+  ( ()
   , Transition.none
   )
 
