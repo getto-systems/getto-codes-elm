@@ -16,7 +16,7 @@ type alias RequestData header body msg =
   , response : Response header body
   , timeout  : Maybe Float
   , tracker  : Maybe String
-  , msg      : HttpView.Migration header body -> msg
+  , msg      : HttpView.Migration (HttpView.Response header body) -> msg
   }
 
 type alias Response header body =
@@ -37,7 +37,7 @@ request data =
     }
 
 
-expectJson : (HttpView.Migration header body -> msg) -> Response header body -> Http.Expect msg
+expectJson : (HttpView.Migration (HttpView.Response header body) -> msg) -> Response header body -> Http.Expect msg
 expectJson msg decoder =
   Http.expectStringResponse (toMigration >> msg) <|
     \response ->
@@ -80,7 +80,7 @@ expectJson msg decoder =
 
                 Ok body -> body |> HttpView.toResponse header |> Just |> Ok
 
-toMigration : Result HttpView.Error (Maybe (HttpView.Response header body)) -> HttpView.Migration header body
+toMigration : Result HttpView.Error (Maybe (HttpView.Response header body)) -> HttpView.Migration (HttpView.Response header body)
 toMigration result =
   case result of
     Err err        -> err |> HttpView.failure

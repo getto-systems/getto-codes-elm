@@ -67,9 +67,7 @@ register_ = Transition.prop .register (\v m -> { m | register = v })
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
-    Register msg ->
-      Transition.update register_
-        (Register.update msg >> Transition.map Register)
+    Register msg -> Transition.update register_ (Register.update msg >> Transition.map Register)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =

@@ -1,5 +1,6 @@
 module GettoUpload.Layout.Page.Side.View exposing
-  ( ResponseHeader
+  ( Response
+  , ResponseHeader
   , ResponseBody
   , Breadcrumb
   , Menu
@@ -16,8 +17,8 @@ import GettoUpload.Extension.Href as Href exposing ( Href )
 
 import Dict exposing ( Dict )
 
+type alias Response = HttpView.Response ResponseHeader ResponseBody
 type alias ResponseHeader = ()
-
 type alias ResponseBody =
   { badge : Dict String Int
   }
@@ -57,12 +58,12 @@ type alias MenuI18n =
   }
 
 
-type alias BadgeStateModel header body =
-  { http : HttpView.Model header body
+type alias BadgeStateModel response =
+  { http : HttpView.Model response
   , i18n : HttpView.Error -> String
   }
 
-badgeState : BadgeStateModel header body -> BadgeState
+badgeState : BadgeStateModel response -> BadgeState
 badgeState model =
   case model.http |> HttpView.state of
     HttpView.Connecting _  -> Connecting

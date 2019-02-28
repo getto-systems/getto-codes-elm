@@ -45,7 +45,7 @@ type alias RequestInner header body params =
 
 type alias Header = ( String, String )
 
-request : String -> Tracker model header body -> (HttpView.Migration header body -> msg) -> model -> Cmd msg
+request : String -> Tracker model header body -> (HttpView.Migration (HttpView.Response header body) -> msg) -> model -> Cmd msg
 request signature (Tracker marker req) msg model =
   let
     headers = .headers >> List.map (\(key,value) -> Http.header key value)
@@ -123,7 +123,7 @@ appendEtag key etag headers =
     Nothing  -> headers
     Just tag -> headers ++ [ Http.header key tag ]
 
-track : String -> Tracker model header body -> (HttpView.Migration header body -> msg) -> Sub msg
+track : String -> Tracker model header body -> (HttpView.Migration (HttpView.Response header body) -> msg) -> Sub msg
 track signature (Tracker marker _) msg =
   let
     toProgress progress =

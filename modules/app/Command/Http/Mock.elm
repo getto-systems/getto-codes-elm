@@ -22,7 +22,7 @@ type alias RequestData header body msg =
   , response : Response header body
   , timeout  : Maybe Float
   , tracker  : Maybe String
-  , msg      : HttpView.Migration header body -> msg
+  , msg      : HttpView.Migration (HttpView.Response header body) -> msg
   }
 
 type alias Response header body =

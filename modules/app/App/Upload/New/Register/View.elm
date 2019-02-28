@@ -3,6 +3,7 @@ module GettoUpload.App.Upload.New.Register.View exposing
   , Init
   , View
   , Prop
+  , Response
   , ResponseHeader
   , ResponseBody
   , compose
@@ -19,6 +20,7 @@ module GettoUpload.App.Upload.New.Register.View exposing
   , quality
   , roles
   )
+import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
 import Getto.Field.Form as Form
@@ -77,6 +79,7 @@ type View = View
   , roles    : ViewModel (Set String)
   }
 
+type alias Response = HttpView.Response ResponseHeader ResponseBody
 type alias ResponseHeader =
   { id : Int
   }

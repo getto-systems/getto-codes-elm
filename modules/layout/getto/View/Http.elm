@@ -23,16 +23,16 @@ module GettoUpload.View.Http exposing
   )
 import GettoUpload.View.Http.Progress as Progress
 
-type Model header body = Model
+type Model response = Model
   { state    : State
-  , response : Maybe (Response header body)
+  , response : Maybe response
   }
 
-type Migration header body
+type Migration response
   = Load
   | Transfer Progress
   | NotModified
-  | Success (Response header body)
+  | Success response
   | Failure Error
 
 type State
@@ -64,13 +64,13 @@ type Error
   | BadHeader String
   | BadBody String
 
-empty : Model header body
+empty : Model response
 empty = Model
   { state    = Ready Nothing
   , response = Nothing
   }
 
-clear : Model header body -> Model header body
+clear : Model response -> Model response
 clear (Model model) = Model { model | response = Nothing }
 
 toResponse : header -> body -> Response header body
@@ -79,28 +79,28 @@ toResponse headerData bodyData = Response
   , body   = bodyData
   }
 
-load : Migration header body
+load : Migration response
 load = Load
 
-transfer : Progress -> Migration header body
+transfer : Progress -> Migration response
 transfer = Transfer
 
-notModified : Migration header body
+notModified : Migration response
 notModified = NotModified
 
-success : Response header body -> Migration header body
+success : Response header body -> Migration (Response header body)
 success = Success
 
-failure : Error -> Migration header body
+failure : Error -> Migration response
 failure = Failure
 
-isSuccess : Migration header body -> Maybe (Response header body)
+isSuccess : Migration (Response header body) -> Maybe (Response header body)
 isSuccess mig =
   case mig of
     Success res -> Just res
     _ -> Nothing
 
-update : Migration header body -> Model header body -> Model header body
+update : Migration response -> Model response -> Model response
 update migration (Model model) =
   case migration of
     Load          -> Model { model | state = Nothing   |> Connecting }
@@ -109,10 +109,10 @@ update migration (Model model) =
     Success  res  -> Model { model | state = Nothing  |> Ready, response = Just res }
     Failure  err  -> Model { model | state = Just err |> Ready, response = Nothing }
 
-state : Model header body -> State
+state : Model response -> State
 state (Model model) = model.state
 
-response : Model header body -> Maybe (Response header body)
+response : Model (Response header body) -> Maybe (Response header body)
 response (Model model) = model.response
 
 header : Response header body -> header

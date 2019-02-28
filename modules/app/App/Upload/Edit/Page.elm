@@ -67,9 +67,7 @@ info_ = Transition.prop .info (\v m -> { m | info = v })
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
-    Info msg ->
-      Transition.update info_
-        (Info.update msg >> Transition.map Info)
+    Info msg -> Transition.update info_ (Info.update msg >> Transition.map Info)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =

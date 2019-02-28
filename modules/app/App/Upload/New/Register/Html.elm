@@ -22,7 +22,7 @@ import Html.Events as E
 type alias RegisterModel msg =
   { title : String
   , form  : View.View
-  , http  : HttpView.Model View.ResponseHeader View.ResponseBody
+  , http  : HttpView.Model View.Response
   , options :
     { gender  : List ( String, String )
     , quality : List ( String, String )

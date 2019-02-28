@@ -48,7 +48,7 @@ type alias Model =
   , form      : View.Form
   , page      : Int
   , sort      : Sort.Model
-  , search    : HttpView.Model View.ResponseHeader View.ResponseBody
+  , search    : HttpView.Model View.Response
   }
 
 type Msg
@@ -58,7 +58,7 @@ type Msg
   | PageTo String
   | SortBy Sort.Model
   | SearchRequest
-  | SearchStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
+  | SearchStateChanged (HttpView.Migration View.Response)
 
 
 get : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody

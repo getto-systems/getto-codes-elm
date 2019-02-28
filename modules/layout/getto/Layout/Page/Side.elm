@@ -48,13 +48,13 @@ type alias FrameTransition a app = Transition (FrameModel a app) Msg
 type alias Model =
   { signature  : String
   , menu       : Menu
-  , badge      : HttpView.Model View.ResponseHeader View.ResponseBody
+  , badge      : HttpView.Model View.Response
   , badgeNames : Dict String String
   , collapsed  : Set String
   }
 
 type Msg
-  = BadgeStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
+  = BadgeStateChanged (HttpView.Migration View.Response)
   | MenuOpen  String
   | MenuClose String
 
