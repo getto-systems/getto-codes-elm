@@ -20,7 +20,7 @@ import GettoUpload.Command.Http as Http
 import GettoUpload.Command.Dom as Dom
 import GettoUpload.View.Http as HttpView
 import GettoUpload.I18n.App as AppI18n
-import GettoUpload.I18n.App.Upload.List.Search as I18n
+import GettoUpload.I18n.App.Upload as I18n
 import GettoUpload.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as Transition exposing ( Transition )

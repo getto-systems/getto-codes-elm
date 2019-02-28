@@ -1,15 +1,18 @@
-module GettoUpload.I18n.App.Upload.Edit.Detail exposing
+module GettoUpload.I18n.App.Upload exposing
   ( title
   , field
   , error
   , gender
   , quality
   )
+import GettoUpload.I18n.App as AppI18n
 
 title : String -> String
 title name =
   case name of
-    "detail" -> "詳細情報"
+    "register" -> "登録"
+    "info"     -> "基本情報"
+    "detail"   -> "詳細情報"
 
     _ -> name
 
@@ -33,12 +36,7 @@ field name =
 error : String -> String
 error name =
   case name of
-    "blank"   -> "入力してください"
-    "no-file" -> "ファイルを選択してください"
-
-    "conflict" -> "別な画面で更新されました"
-
-    _ -> name
+    _ -> name |> AppI18n.error
 
 gender : String -> String
 gender name =

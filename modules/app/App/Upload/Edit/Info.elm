@@ -19,7 +19,7 @@ import GettoUpload.Command.Http as Http
 import GettoUpload.Command.Dom as Dom
 import GettoUpload.View.Http as HttpView
 import GettoUpload.I18n.App as AppI18n
-import GettoUpload.I18n.App.Upload.Edit.Info as I18n
+import GettoUpload.I18n.App.Upload as I18n
 import GettoUpload.I18n.Http as HttpI18n
 import GettoUpload.Extension.Href as Href
 import GettoUpload.Extension.Href.Upload as Upload
