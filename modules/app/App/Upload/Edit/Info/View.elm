@@ -147,7 +147,7 @@ stateToString form =
     EditState _ -> "edit"
 
 
-done : HttpView.Migration ResponseHeader ResponseBody -> Form -> Form
+done : HttpView.Migration Response -> Form -> Form
 done mig =
   case mig |> HttpView.isSuccess of
     Just _  -> toStatic

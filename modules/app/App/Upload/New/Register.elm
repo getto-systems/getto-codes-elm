@@ -52,7 +52,7 @@ type alias Model =
   { tmpId     : Maybe Int
   , signature : String
   , form      : View.Form
-  , upload    : HttpView.Model View.ResponseHeader View.ResponseBody
+  , upload    : HttpView.Model View.Response
   }
 
 type Msg
@@ -62,7 +62,7 @@ type Msg
   | FileSelect  (View.Prop (List File)) File
   | FieldChange
   | UploadRequest
-  | UploadStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
+  | UploadStateChanged (HttpView.Migration View.Response)
 
 
 upload : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody

@@ -21,8 +21,8 @@ import Html.Events as E
 type alias InfoModel msg =
   { title : String
   , form  : View.View
-  , get   : HttpView.Model View.ResponseHeader View.ResponseBody
-  , put   : HttpView.Model View.ResponseHeader View.ResponseBody
+  , get   : HttpView.Model View.Response
+  , put   : HttpView.Model View.Response
   , options :
     { gender  : List ( String, String )
     , quality : List ( String, String )

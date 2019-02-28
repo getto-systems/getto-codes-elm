@@ -3,6 +3,7 @@ module GettoUpload.App.Upload.List.Search.View exposing
   , Init
   , View
   , Prop
+  , Response
   , ResponseHeader
   , ResponseBody
   , Upload
@@ -18,6 +19,7 @@ module GettoUpload.App.Upload.List.Search.View exposing
   , gender
   , roles
   )
+import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
 import Getto.Field.Form as Form
@@ -72,6 +74,7 @@ type View = View
   , start_at : BetweenModel String
   }
 
+type alias Response = HttpView.Response ResponseHeader ResponseBody
 type alias ResponseHeader =
   { max : Int
   }

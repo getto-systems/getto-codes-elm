@@ -68,9 +68,7 @@ search_ = Transition.prop .search (\v m -> { m | search = v })
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
-    Search msg ->
-      Transition.update search_
-        (Search.update msg >> Transition.map Search)
+    Search msg -> Transition.update search_ (Search.update msg >> Transition.map Search)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =

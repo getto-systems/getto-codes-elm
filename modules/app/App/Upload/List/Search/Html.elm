@@ -28,7 +28,7 @@ import Html.Events as E
 
 type alias SearchModel msg =
   { form  : View.View
-  , http  : HttpView.Model View.ResponseHeader View.ResponseBody
+  , http  : HttpView.Model View.Response
   , options :
     { gender : List ( String, String )
     , roles  : List ( String, String )
@@ -170,7 +170,7 @@ search model =
 
 type alias PagingModel msg =
   { page : Int
-  , http : HttpView.Model View.ResponseHeader View.ResponseBody
+  , http : HttpView.Model View.Response
   , msg :
     { page : String -> msg
     }
@@ -194,7 +194,7 @@ paging model =
 
 
 type alias TableModel msg =
-  { http : HttpView.Model View.ResponseHeader View.ResponseBody
+  { http : HttpView.Model View.Response
   , sort : Sort.Model
   , msg :
     { sort : Sort.Model -> msg

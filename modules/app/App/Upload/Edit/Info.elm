@@ -54,23 +54,21 @@ type alias Model =
   { signature : String
   , id   : Int
   , form : View.Form
-  , get  : HttpView.Model View.ResponseHeader View.ResponseBody
-  , put  : HttpView.Model View.ResponseHeader View.ResponseBody
+  , get  : HttpView.Model View.Response
+  , put  : HttpView.Model View.Response
   }
 
 type Msg
   = Edit
   | Static
-  | FieldInput      (Conflict.Prop View.Form String)       String
-  | FieldToggle     (Conflict.Prop View.Form (Set String)) String
-  | FieldResolve    (Conflict.Prop View.Form String)       (Conflict.Resolve String)
-  | FieldResolveSet (Conflict.Prop View.Form (Set String)) (Conflict.Resolve (Set String))
-  | FileRequest     (Conflict.Prop View.Form (List File))
-  | FileSelect      (Conflict.Prop View.Form (List File)) File
-  | FieldChange
-  | GetStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
+  | Input      (View.Prop String)       String
+  | Toggle     (View.Prop (Set String)) String
+  | Resolve    (View.Prop String)       (Conflict.Resolve String)
+  | ResolveSet (View.Prop (Set String)) (Conflict.Resolve (Set String))
+  | Change
+  | GetStateChanged (HttpView.Migration View.Response)
   | PutRequest
-  | PutStateChanged (HttpView.Migration View.ResponseHeader View.ResponseBody)
+  | PutStateChanged (HttpView.Migration View.Response)
 
 
 get : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
@@ -80,11 +78,11 @@ get = Http.tracker "get" <|
       m = model |> Frame.app |> .info
     in
       Http.getIfNoneMatch ( m |> etag )
-        { url     = "upload/:id" |> Api.url ( m |> pathInfo )
-        , headers = model |> Api.headers
-        , params  = QueryEncode.empty
+        { url      = "upload/:id" |> Api.url ( m |> pathInfo )
+        , headers  = model |> Api.headers
+        , params   = QueryEncode.empty
         , response = response
-        , timeout = 10 * 1000
+        , timeout  = 10 * 1000
         }
 
 put : Http.Tracker (FrameModel a) View.ResponseHeader View.ResponseBody
@@ -109,7 +107,7 @@ put = Http.tracker "put" <|
           , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
           ]
         , response = response
-        , timeout = 10 * 1000
+        , timeout  = 10 * 1000
         }
 
 etag : Model -> Maybe String
@@ -245,8 +243,8 @@ decodeStore value model =
     | form = model.form |> decodeForm res ( obj |> SafeDecode.valueAt ["form"] )
     , get  = model.get |>
       case res of
-        Just r -> r |> HttpView.success |> HttpView.update
-        Nothing  -> identity
+        Just r  -> r |> HttpView.success |> HttpView.update
+        Nothing -> identity
     }
 
 decodeResponse : Decode.Decoder View.Response
@@ -288,16 +286,13 @@ update msg model =
     Edit   -> ( { model | form = model.form |> edit model },    fillAndStore )
     Static -> ( { model | form = model.form |> View.toStatic }, Transition.none )
 
-    FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    Transition.none )
-    FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
+    Input  prop value -> ( { model | form = model.form |> Form.set prop value },    Transition.none )
+    Toggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
 
-    FieldResolve prop mig ->    ( { model | form = model.form |> Conflict.resolve prop mig }, fillAndStore )
-    FieldResolveSet prop mig -> ( { model | form = model.form |> Conflict.resolve prop mig }, fillAndStore )
+    Resolve prop mig ->    ( { model | form = model.form |> Conflict.resolve prop mig }, fillAndStore )
+    ResolveSet prop mig -> ( { model | form = model.form |> Conflict.resolve prop mig }, fillAndStore )
 
-    FieldChange -> ( model, Frame.storeApp )
-
-    FileRequest prop -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
-    FileSelect  prop file -> ( { model | form = model.form |> Form.set prop [file] }, Transition.none )
+    Change -> ( model, Frame.storeApp )
 
     GetStateChanged mig -> ( { model | get = model.get |> HttpView.update mig }, Frame.storeApp )
 
@@ -347,7 +342,7 @@ fill = Frame.app >> .info >>
 fillAndStore : FrameTransition a
 fillAndStore = [ fill, Frame.storeApp ] |> Transition.batch
 
-lastResponse : Model -> Maybe (HttpView.Response View.ResponseHeader View.ResponseBody)
+lastResponse : Model -> Maybe View.Response
 lastResponse model =
   [ model.put, model.get ]
   |> List.filterMap HttpView.response
@@ -408,11 +403,11 @@ info model = L.lazy
       }
     , msg =
       { put        = PutRequest
-      , input      = FieldInput
-      , toggle     = FieldToggle
-      , resolve    = FieldResolve
-      , resolveSet = FieldResolveSet
-      , change     = FieldChange
+      , input      = Input
+      , toggle     = Toggle
+      , resolve    = Resolve
+      , resolveSet = ResolveSet
+      , change     = Change
       , edit       = Edit
       , static     = Static
       }
