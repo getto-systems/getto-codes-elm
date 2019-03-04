@@ -21,7 +21,7 @@ import Html.Events as E
 
 type alias RegisterModel msg =
   { title : String
-  , form  : View.View
+  , view  : View.View
   , http  : HttpView.Model View.Response
   , options :
     { gender  : List ( String, String )
@@ -51,7 +51,7 @@ register model =
       [ H.h2 [] [ model.title |> model.i18n.title |> H.text ]
       , H.table []
         [ H.tbody [] <| List.concat
-          [ case model.form |> View.name of
+          [ case model.view.form.name of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -62,7 +62,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.text of
+          , case model.view.form.text of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -74,7 +74,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.memo of
+          , case model.view.form.memo of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -85,7 +85,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.age of
+          , case model.view.form.age of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -96,7 +96,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.email of
+          , case model.view.form.email of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -107,7 +107,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.tel of
+          , case model.view.form.tel of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -118,7 +118,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.birthday of
+          , case model.view.form.birthday of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -129,7 +129,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.start_at of
+          , case model.view.form.start_at of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -140,7 +140,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.gender of
+          , case model.view.form.gender of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -151,7 +151,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.quality of
+          , case model.view.form.quality of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -162,7 +162,7 @@ register model =
                   ]
                 ]
               ]
-          , case model.form |> View.roles of
+          , case model.view.form.roles of
             (name,form,errors) ->
               [ H.tr ( errors |> Input.isError )
                 [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -182,7 +182,7 @@ register model =
             , progress |> Http.progress
             ]
           HttpView.Ready error ->
-            if model.form |> View.hasError
+            if model.view.hasError
               then
                 [ "has-error" |> model.i18n.form |> Button.error
                 ]

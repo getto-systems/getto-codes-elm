@@ -4,6 +4,7 @@ module GettoUpload.App.Upload.Edit.Detail.View exposing
   , Prop
   , State(..)
   , Response
+  , response
   , init
   , encodeForm
   , decodeForm
@@ -11,7 +12,6 @@ module GettoUpload.App.Upload.Edit.Detail.View exposing
   , toEdit
   , toCommit
   , changed
-  , response
   , view
   )
 import GettoUpload.App.Upload.Edit.Data.View as Data
@@ -65,6 +65,14 @@ type EditState
 type State a
   = Static String
   | Edit   String (Conflict.Form Form a) (Conflict.State a) (List String)
+
+
+response : HttpView.ResponseDecoder Response
+response = HttpView.decoder
+  { header = HeaderDecode.succeed ()
+  , body   = Decode.succeed ()
+  }
+
 
 birthday_ = Form.prop .birthday (\v m -> { m | birthday = v })
 start_at_ = Form.prop .start_at (\v m -> { m | start_at = v })
@@ -152,13 +160,6 @@ changed form =
     _ -> form
 
 
-response : HttpView.ResponseDecoder Response
-response = HttpView.decoder
-  { header = HeaderDecode.succeed ()
-  , body   = Decode.succeed ()
-  }
-
-
 view : HttpView.Model Data.Response -> Form -> View
 view http form =
   let
@@ -174,25 +175,18 @@ view http form =
       , res |> Maybe.map HttpView.body
       )
     model =
-      { birthday = ( .detail >> .birthday, ( birthday_, [] ) )
-      , start_at = ( .detail >> .start_at, ( start_at_, [] ) )
-      , gender   = ( .detail >> .gender,   ( gender_,   [] ) )
-      , quality  = ( .detail >> .quality,  ( quality_,  [] ) )
-      , roles    = ( .detail >> .roles,    ( roles_,    [] ) )
-      }
-    result =
-      { birthday = form |> Conflict.init error data model.birthday
-      , start_at = form |> Conflict.init error data model.start_at
-      , gender   = form |> Conflict.init error data model.gender
-      , quality  = form |> Conflict.init error data model.quality
-      , roles    = form |> Conflict.init error data model.roles
+      { birthday = form |> Conflict.init error data ( .detail >> .birthday, ( birthday_, [] ) )
+      , start_at = form |> Conflict.init error data ( .detail >> .start_at, ( start_at_, [] ) )
+      , gender   = form |> Conflict.init error data ( .detail >> .gender,   ( gender_,   [] ) )
+      , quality  = form |> Conflict.init error data ( .detail >> .quality,  ( quality_,  [] ) )
+      , roles    = form |> Conflict.init error data ( .detail >> .roles,    ( roles_,    [] ) )
       }
     errors = List.concat
-      [ result.birthday |> Validate.errors
-      , result.start_at |> Validate.errors
-      , result.gender   |> Validate.errors
-      , result.quality  |> Validate.errors
-      , result.roles    |> Validate.errors
+      [ model.birthday |> Validate.errors
+      , model.start_at |> Validate.errors
+      , model.gender   |> Validate.errors
+      , model.quality  |> Validate.errors
+      , model.roles    |> Validate.errors
       ]
   in
     { isStatic = (form.state == StaticState)
@@ -200,11 +194,11 @@ view http form =
     , state    = http |> HttpView.state
     , response = res
     , form     =
-      { birthday = result.birthday |> expose form.state res
-      , start_at = result.start_at |> expose form.state res
-      , gender   = result.gender   |> expose form.state res
-      , quality  = result.quality  |> expose form.state res
-      , roles    = result.roles    |> expose form.state res
+      { birthday = model.birthday |> expose form.state res
+      , start_at = model.start_at |> expose form.state res
+      , gender   = model.gender   |> expose form.state res
+      , quality  = model.quality  |> expose form.state res
+      , roles    = model.roles    |> expose form.state res
       }
     }
 
