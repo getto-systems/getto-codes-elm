@@ -28,19 +28,19 @@ import GettoUpload.Extension.Href.Upload as Upload
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
-import Getto.Http.Header.Decode as HeaderDecode
 import Getto.Http.Part as Part
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Validate as Validate
 
-import Browser.Navigation as Navigation
 import File exposing ( File )
 import File.Select
-import Set exposing ( Set )
 import Json.Encode as Encode
 import Json.Decode as Decode
+
+import Browser.Navigation as Navigation
+import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
@@ -87,11 +87,7 @@ upload = Http.tracker "upload" <|
           , ( "quality",   m.form.quality  |> Field.value |> Part.string )
           , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Part.list Part.string )
           ]
-        , response = HttpView.decoder
-          { header = HeaderDecode.map View.ResponseHeader
-            ( HeaderDecode.at "x-upload-id" HeaderDecode.int )
-          , body = Decode.succeed ()
-          }
+        , response = View.response
         , timeout = 30 * 1000
         }
 

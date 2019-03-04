@@ -6,6 +6,7 @@ module GettoUpload.App.Upload.New.Register.View exposing
   , Response
   , ResponseHeader
   , ResponseBody
+  , response
   , compose
   , hasError
   , name
@@ -25,8 +26,12 @@ import GettoUpload.View.Http as HttpView
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Validate as Validate
+import Getto.Http.Header.Decode as HeaderDecode
 
+import Json.Encode as Encode
+import Json.Decode as Decode
 import File exposing ( File )
+
 import Set exposing ( Set )
 
 type alias Attribute = ()
@@ -84,6 +89,13 @@ type alias ResponseHeader =
   { id : Int
   }
 type alias ResponseBody = ()
+
+response : HttpView.ResponseDecoder Response
+response = HttpView.decoder
+  { header = HeaderDecode.map ResponseHeader
+    ( HeaderDecode.at "x-upload-id" HeaderDecode.int )
+  , body = Decode.succeed ()
+  }
 
 compose : Init -> Form -> View
 compose model form =

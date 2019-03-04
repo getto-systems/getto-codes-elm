@@ -23,12 +23,12 @@ import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Url.Query.SafeDecode as QuerySafeDecode
-import Getto.Http.Header.Decode as HeaderDecode
 import Getto.Json.SafeDecode as SafeDecode
 
-import Set exposing ( Set )
 import Json.Encode as Encode
 import Json.Decode as Decode
+
+import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L

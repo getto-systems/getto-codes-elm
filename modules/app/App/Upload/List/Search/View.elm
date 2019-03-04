@@ -4,11 +4,7 @@ module GettoUpload.App.Upload.List.Search.View exposing
   , View
   , Prop
   , Response
-  , ResponseHeader
-  , ResponseBody
-  , Upload
-  , Comment
-  , Like
+  , response
   , compose
   , name
   , age
@@ -24,6 +20,10 @@ import GettoUpload.View.Http as HttpView
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Present as Present
+import Getto.Http.Header.Decode as HeaderDecode
+
+import Json.Encode as Encode
+import Json.Decode as Decode
 
 import Set exposing ( Set )
 
@@ -94,6 +94,28 @@ type alias Comment =
 type alias Like =
   { user : String
   , text : String
+  }
+
+
+response : HttpView.ResponseDecoder Response
+response = HttpView.decoder
+  { header = HeaderDecode.map ResponseHeader
+    ( HeaderDecode.at "x-paging-max" HeaderDecode.int )
+  , body = Decode.list
+    ( Decode.map5 Upload
+      ( Decode.at ["id"]        Decode.int )
+      ( Decode.at ["name"]      Decode.string )
+      ( Decode.at ["gender"]    Decode.string )
+      ( Decode.at ["roles"]    (Decode.list Decode.string) )
+      ( Decode.at ["comments"] (Decode.list (Decode.map3 Comment
+        ( Decode.at ["user"]   Decode.string )
+        ( Decode.at ["text"]   Decode.string )
+        ( Decode.at ["likes"] (Decode.list (Decode.map2 Like
+          ( Decode.at ["user"]   Decode.string )
+          ( Decode.at ["text"]   Decode.string )
+        )) )
+      )) )
+    )
   }
 
 

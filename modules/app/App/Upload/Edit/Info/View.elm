@@ -11,6 +11,7 @@ module GettoUpload.App.Upload.Edit.Info.View exposing
   , toEdit
   , toCommit
   , changed
+  , response
   , view
   )
 import GettoUpload.App.Upload.Edit.Data.View as Data
@@ -20,6 +21,7 @@ import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Validate as Validate
 import Getto.Field.Conflict as Conflict
+import Getto.Http.Header.Decode as HeaderDecode
 
 import File exposing ( File )
 import Set exposing ( Set )
@@ -147,6 +149,13 @@ changed form =
   case form.state of
     EditState _ res -> { form | state = EditState False res }
     _ -> form
+
+
+response : HttpView.ResponseDecoder Response
+response = HttpView.decoder
+  { header = HeaderDecode.succeed ()
+  , body   = Decode.succeed ()
+  }
 
 
 view : HttpView.Model Data.Response -> Form -> View

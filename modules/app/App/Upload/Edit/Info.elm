@@ -28,7 +28,6 @@ import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Url.Query.SafeDecode as QuerySafeDecode
-import Getto.Http.Header.Decode as HeaderDecode
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
 import Getto.Field.Form as Form
@@ -78,15 +77,9 @@ put = Http.tracker "put" <|
           , ( "email", m.form.email |> Field.value |> Encode.string )
           , ( "tel",   m.form.tel   |> Field.value |> Encode.string )
           ]
-        , response = response
+        , response = View.response
         , timeout  = 10 * 1000
         }
-
-response : HttpView.ResponseDecoder View.Response
-response = HttpView.decoder
-  { header = HeaderDecode.succeed ()
-  , body   = Decode.succeed ()
-  }
 
 
 init : Frame.InitModel -> ( Model, FrameTransition a )
