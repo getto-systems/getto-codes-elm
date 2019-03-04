@@ -107,8 +107,7 @@ try {
     };
   })();
 
-  var Store = (function(config){
-    var current_path = config.path;
+  var Store = (function(){
     return function(key){
       var getItem = function(){
         return localStorage.getItem(key);
@@ -131,6 +130,8 @@ try {
       };
 
       return {
+        key: key,
+
         // returns: obj
         load: function(){
           return toValue(getItem());
@@ -142,10 +143,51 @@ try {
         },
       };
     };
-  })(config);
+  })();
 
+  var StoreGC = (function(){
+    return function(store,limit){
+      var load = function(){
+        var list = store.load();
+        if (list === null) {
+          return [];
+        }
+        return list;
+      };
+
+      var unshiftCurrentPath = function(list,current_path){
+        if (list[0] !== current_path) {
+          list = list.filter(function(path){ return path !== current_path; });
+          list.unshift(current_path);
+        }
+        return list;
+      };
+
+      var removeOlds = function(list){
+        list.slice(limit).forEach(function(path){
+          localStorage.removeItem(path);
+        });
+      };
+
+      var update = function(list){
+        store.store(list.slice(0,limit));
+      };
+
+      return {
+        removeOlds: function(current_path){
+          var list = unshiftCurrentPath(load(),current_path);
+          removeOlds(list);
+          update(list);
+        },
+      };
+    };
+  })();
+
+  var GCStore     = Store("_gc_list");
   var LayoutStore = Store("_layout");
-  var AppStore = Store(config.path);
+  var AppStore    = Store(config.path);
+
+  StoreGC(GCStore,10).removeOlds(AppStore.key);
 
   var Dom = (function(){
     return {
