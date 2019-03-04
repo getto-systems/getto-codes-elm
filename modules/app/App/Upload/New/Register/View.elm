@@ -23,8 +23,9 @@ import File exposing ( File )
 import Set exposing ( Set )
 
 type alias Attribute = ()
-type alias Prop      a = Form.Prop Form Attribute a
-type alias Field     a = Field.Model Attribute a
+type alias Prop  a = Form.Prop Form Attribute a
+type alias Field a = Field.Model Attribute a
+
 type alias ViewModel a = ( String, Form.Model Form Attribute a, List String )
 
 type alias Form =

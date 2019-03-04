@@ -4,6 +4,7 @@ module Getto.Url.Query.Encode exposing
   , int
   , bool
   , list
+  , set
   , object
   , empty
   , encode
@@ -11,6 +12,7 @@ module Getto.Url.Query.Encode exposing
   )
 
 import Url
+import Set exposing ( Set )
 
 type Value
   = ValueEntry String
@@ -28,6 +30,9 @@ bool = ValueBool
 
 list : (a -> Value) -> List a -> Value
 list encoder = List.map (\value -> ("", value |> encoder)) >> ValueGroup
+
+set : (a -> Value) -> Set a -> Value
+set encoder = Set.toList >> list encoder
 
 object : List ( String, Value ) -> Value
 object = List.map (\(name, value) -> ( name, value ) ) >> ValueGroup
