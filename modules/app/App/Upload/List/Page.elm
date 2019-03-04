@@ -3,13 +3,11 @@ import GettoUpload.App.Upload.List.Search as Search
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 
-import Getto.Command.Transition as Transition exposing ( Transition )
-import Getto.Url.Query.Encode as QueryEncode
-import Getto.Url.Query.Decode as QueryDecode
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
-import Json.Decode as Decode
+
 import Browser
 import Html as H exposing ( Html )
 import Html.Attributes as A
@@ -52,20 +50,20 @@ setup =
 
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
-  Transition.compose Model
-    (model |> Search.init |> Transition.map Search)
+  T.compose Model
+    (model |> Search.init |> T.map Search)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
   [ model.search |> Search.subscriptions |> Sub.map Search
   ] |> Sub.batch
 
-search_ = Transition.prop .search (\v m -> { m | search = v })
+search_ = T.prop .search (\v m -> { m | search = v })
 
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
-    Search msg -> Transition.update search_ (Search.update msg >> Transition.map Search)
+    Search msg -> T.update search_ (Search.update msg >> T.map Search)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =

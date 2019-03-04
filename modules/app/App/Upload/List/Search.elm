@@ -23,7 +23,7 @@ import GettoUpload.I18n.App as AppI18n
 import GettoUpload.I18n.App.Upload as I18n
 import GettoUpload.I18n.Http as HttpI18n
 
-import Getto.Command.Transition as Transition exposing ( Transition )
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Http.Header.Decode as HeaderDecode
@@ -33,9 +33,10 @@ import Getto.Field.Form as Form
 import Getto.Field.Present as Present
 import Getto.Sort as Sort
 
-import Set exposing ( Set )
 import Json.Encode as Encode
 import Json.Decode as Decode
+
+import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
@@ -108,7 +109,7 @@ init model =
     }
   , [ searchAndPushUrl
     , fill
-    ] |> Transition.batch
+    ] |> T.batch
   )
 
 encodeQuery : Model -> QueryEncode.Value
@@ -148,14 +149,14 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    Transition.none )
-    FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
+    FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    T.none )
+    FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, T.none )
     FieldChange -> ( model, Frame.storeApp )
 
     PageTo page   -> ( { model | page = page |> toPage }, searchAndPushUrl )
     SortBy sort   -> ( { model | sort = sort },           searchAndPushUrl )
     SearchRequest -> ( { model | page = 0 },              searchAndPushUrl )
-    SearchStateChanged mig -> ( { model | search = model.search |> HttpView.update mig }, Transition.none )
+    SearchStateChanged mig -> ( { model | search = model.search |> HttpView.update mig }, T.none )
 
 toPage : String -> Int
 toPage = String.toInt >> Maybe.withDefault 0
@@ -179,7 +180,7 @@ searchAndPushUrl : FrameTransition a
 searchAndPushUrl =
   [ Http.request signature get SearchStateChanged
   , Frame.pushUrl
-  ] |> Transition.batch
+  ] |> T.batch
 
 contents : FrameModel a -> List (Html Msg)
 contents model =

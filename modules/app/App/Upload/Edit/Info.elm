@@ -36,6 +36,7 @@ import Getto.Field.Conflict as Conflict
 
 import Json.Encode as Encode
 import Json.Decode as Decode
+
 import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A

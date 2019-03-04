@@ -19,7 +19,7 @@ import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
 import GettoUpload.View.Http as HttpView
 
-import Getto.Command.Transition as Transition exposing ( Transition )
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Url.Query.SafeDecode as QuerySafeDecode
@@ -77,7 +77,7 @@ init model =
     , get = HttpView.empty
     }
   , [ request
-    ] |> Transition.batch
+    ] |> T.batch
   )
 
 encodeQuery : Model -> QueryEncode.Value
@@ -123,5 +123,5 @@ update msg model =
       ( { model | get = model.get |> HttpView.update mig }
       , case mig |> HttpView.isSuccess of
         Just _  -> Frame.storeApp
-        Nothing -> Transition.none
+        Nothing -> T.none
       )

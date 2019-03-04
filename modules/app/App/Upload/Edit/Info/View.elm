@@ -24,6 +24,7 @@ import Getto.Field.Conflict as Conflict
 import Getto.Http.Header.Decode as HeaderDecode
 
 import File exposing ( File )
+
 import Set exposing ( Set )
 import Json.Encode as Encode
 import Json.Decode as Decode

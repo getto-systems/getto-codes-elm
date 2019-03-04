@@ -3,12 +3,11 @@ import GettoUpload.App.Upload.New.Register as Register
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 
-import Getto.Command.Transition as Transition exposing ( Transition )
-import Getto.Url.Query.Encode as QueryEncode
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
-import Json.Decode as Decode
+
 import Browser
 import Html as H exposing ( Html )
 import Html.Attributes as A
@@ -51,20 +50,20 @@ setup =
 
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
-  Transition.compose Model
-    (model |> Register.init |> Transition.map Register)
+  T.compose Model
+    (model |> Register.init |> T.map Register)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
   [ model.register |> Register.subscriptions |> Sub.map Register
   ] |> Sub.batch
 
-register_ = Transition.prop .register (\v m -> { m | register = v })
+register_ = T.prop .register (\v m -> { m | register = v })
 
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
-    Register msg -> Transition.update register_ (Register.update msg >> Transition.map Register)
+    Register msg -> T.update register_ (Register.update msg >> T.map Register)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =

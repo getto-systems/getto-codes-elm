@@ -25,7 +25,7 @@ import GettoUpload.I18n.Http as HttpI18n
 import GettoUpload.Extension.Href as Href
 import GettoUpload.Extension.Href.Upload as Upload
 
-import Getto.Command.Transition as Transition exposing ( Transition )
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Http.Part as Part
@@ -101,7 +101,7 @@ init model =
   , [ Frame.pushUrl
     , Frame.storeApp
     , fill
-    ] |> Transition.batch
+    ] |> T.batch
   )
 
 encodeQuery : Model -> QueryEncode.Value
@@ -163,12 +163,12 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    Transition.none )
-    FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, Transition.none )
+    FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    T.none )
+    FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, T.none )
     FieldChange -> ( model, Frame.storeApp )
 
     FileRequest prop      -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
-    FileSelect  prop file -> ( { model | form = model.form |> Form.set prop [file] }, Transition.none )
+    FileSelect  prop file -> ( { model | form = model.form |> Form.set prop [file] }, T.none )
 
     UploadRequest -> ( model, Http.request signature upload UploadStateChanged )
     UploadStateChanged mig ->
@@ -178,8 +178,8 @@ update msg model =
           [ Frame.clearApp
           , always ( res |> HttpView.header |> .id |> Upload.edit |> Href.toString |> Navigation.load )
           ]
-          |> Transition.batch
-        Nothing -> Transition.none
+          |> T.batch
+        Nothing -> T.none
       )
 
 contents : FrameModel a -> List (Html Msg)
