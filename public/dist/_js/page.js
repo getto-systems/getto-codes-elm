@@ -174,7 +174,7 @@ try {
       };
 
       return {
-        clear: function(current_path){
+        removeOlds: function(current_path){
           var list = unshiftCurrentPath(load(),current_path);
           removeOlds(list);
           update(list);
@@ -187,7 +187,7 @@ try {
   var LayoutStore = Store("_layout");
   var AppStore    = Store(config.path);
 
-  StoreGC(GCStore,10).clear(AppStore.key);
+  StoreGC(GCStore,10).removeOlds(AppStore.key);
 
   var Dom = (function(){
     return {
