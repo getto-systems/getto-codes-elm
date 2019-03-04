@@ -8,9 +8,7 @@ module GettoUpload.App.Upload.Edit.Data exposing
   , encodeQuery
   , decodeQuery
   , encodeStore
-  , encodeResponse
   , decodeStore
-  , decodeResponse
   , subscriptions
   , update
   )
@@ -57,34 +55,9 @@ get = Http.tracker "get" <|
         { url      = "upload/:id" |> Api.url ( m |> pathInfo )
         , headers  = model |> Api.headers
         , params   = QueryEncode.empty
-        , response = response
+        , response = View.response
         , timeout = 10 * 1000
         }
-
-response : HttpView.ResponseDecoder View.Response
-response =  HttpView.decoder
-  { header = HeaderDecode.map View.ResponseHeader
-    ( HeaderDecode.at "etag" HeaderDecode.string )
-  , body = Decode.map2 View.ResponseBody
-    ( Decode.at ["info"]
-      ( Decode.map5 View.ResponseInfo
-        (Decode.at ["name"]  Decode.string)
-        (Decode.at ["memo"]  Decode.string)
-        (Decode.at ["age"]   Decode.int)
-        (Decode.at ["email"] Decode.string)
-        (Decode.at ["tel"]   Decode.string)
-      )
-    )
-    ( Decode.at ["detail"]
-      ( Decode.map5 View.ResponseDetail
-        (Decode.at ["birthday"] Decode.string)
-        (Decode.at ["start_at"] Decode.string)
-        (Decode.at ["gender"]   Decode.string)
-        (Decode.at ["quality"]  Decode.string)
-        (Decode.at ["roles"]   (Decode.string |> Decode.list |> Decode.map Set.fromList))
-      )
-    )
-  }
 
 etag : Model -> Maybe String
 etag model = model.get |> HttpView.response |> Maybe.map (HttpView.header >> .etag)
@@ -120,41 +93,12 @@ decodeQuery names value model =
 encodeStore : Model -> Encode.Value
 encodeStore model = Encode.object
   [ ( model.id |> String.fromInt
-    , [ ( "response", model.get |> HttpView.response |> Maybe.map encodeResponse |> Maybe.withDefault Encode.null )
+    , [ ( "response"
+        , model.get |> HttpView.response |> Maybe.map View.encodeResponse |> Maybe.withDefault Encode.null
+        )
       ] |> Encode.object
     )
   ]
-
-encodeResponse : View.Response -> Encode.Value
-encodeResponse res =
-  let
-    header = res |> HttpView.header
-    body   = res |> HttpView.body
-  in
-    [ ( "header"
-      , [ ( "etag", header.etag |> Encode.string )
-        ] |> Encode.object
-      )
-    , ( "body"
-      , [ ( "info"
-          , [ ( "name",  body.info.name  |> Encode.string )
-            , ( "memo",  body.info.memo  |> Encode.string )
-            , ( "age",   body.info.age   |> Encode.int )
-            , ( "email", body.info.email |> Encode.string )
-            , ( "tel",   body.info.tel   |> Encode.string )
-            ] |> Encode.object
-          )
-        , ( "detail"
-          , [ ( "birthday", body.detail.birthday |> Encode.string )
-            , ( "start_at", body.detail.start_at |> Encode.string )
-            , ( "gender",   body.detail.gender   |> Encode.string )
-            , ( "quality",  body.detail.quality  |> Encode.string )
-            , ( "roles",    body.detail.roles |> Set.toList |> Encode.list Encode.string )
-            ] |> Encode.object
-          )
-        ] |> Encode.object
-      )
-    ] |> Encode.object
 
 decodeStore : Decode.Value -> Model -> Model
 decodeStore value model =
@@ -163,23 +107,10 @@ decodeStore value model =
   in
     { model
     | get = model.get |>
-      case obj |> Decode.decodeValue (Decode.at ["response"] decodeResponse) of
+      case obj |> Decode.decodeValue (Decode.at ["response"] View.decodeResponse) of
         Ok res -> res |> HttpView.success |> HttpView.update
         Err _  -> identity
     }
-
-decodeResponse : Decode.Decoder View.Response
-decodeResponse =
-  ( Decode.map2 HttpView.ResponseValue
-    ( Decode.at ["header"] (Decode.dict Decode.string) )
-    ( Decode.at ["body"]   Decode.value )
-  )
-  |> Decode.andThen
-    (\value ->
-      case value |> response of
-        Ok  res -> res |> Decode.succeed
-        Err err -> err |> Decode.fail
-    )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

@@ -100,19 +100,16 @@ init model =
 encodeStore : Data.Model -> Model -> Encode.Value
 encodeStore data model = Encode.object
   [ ( data.id |> String.fromInt
-    , [ ( "form", model.form |> View.encode Data.encodeResponse )
-      ] |> Encode.object
+    , model.form |> View.encodeForm
     )
   ]
 
 decodeStore : Data.Model -> Decode.Value -> Model -> Model
 decodeStore data value model =
-  let
-    obj = value |> SafeDecode.valueAt [data.id |> String.fromInt]
-  in
-    { model
-    | form = model.form |> View.decode Data.decodeResponse obj
-    }
+  { model
+  | form = model.form |> View.decodeForm
+    (value |> SafeDecode.valueAt [data.id |> String.fromInt])
+  }
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

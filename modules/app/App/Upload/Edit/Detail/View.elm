@@ -5,15 +5,15 @@ module GettoUpload.App.Upload.Edit.Detail.View exposing
   , State(..)
   , Response
   , init
-  , encode
-  , decode
+  , encodeForm
+  , decodeForm
   , toStatic
   , toEdit
   , toCommit
   , changed
   , view
   )
-import GettoUpload.App.Upload.Edit.Data.View as DataView
+import GettoUpload.App.Upload.Edit.Data.View as Data
 import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
@@ -43,7 +43,7 @@ type alias View =
   { isStatic : Bool
   , hasError : Bool
   , state    : HttpView.State
-  , response : Maybe DataView.Response
+  , response : Maybe Data.Response
   , form :
     { birthday : State String
     , start_at : State String
@@ -57,7 +57,7 @@ type alias Response = HttpView.Response () ()
 
 type EditState
   = StaticState
-  | EditState Bool DataView.Response
+  | EditState Bool Data.Response
 
 type State a
   = Static String
@@ -79,18 +79,18 @@ init signature =
   , roles    = Field.init signature "roles"    Conflict.none Set.empty
   }
 
-encode : (DataView.Response -> Encode.Value) -> Form -> Encode.Value
-encode encodeResponse form =
+encodeForm : Form -> Encode.Value
+encodeForm form =
   case form.state of
     StaticState -> [ ( "state", "static" |> Encode.string ) ] |> Encode.object
     EditState _ res ->
       [ ( "state", "edit" |> Encode.string )
-      , ( "response", res  |> encodeResponse )
-      , ( "form",     form |> encodeForm )
+      , ( "response", res  |> Data.encodeResponse )
+      , ( "form",     form |> encodeFields )
       ] |> Encode.object
 
-encodeForm : Form -> Encode.Value
-encodeForm form =
+encodeFields : Form -> Encode.Value
+encodeFields form =
   [ ( "birthday", form.birthday |> Field.value |> Encode.string )
   , ( "start_at", form.start_at |> Field.value |> Encode.string )
   , ( "gender",   form.gender   |> Field.value |> Encode.string )
@@ -98,36 +98,33 @@ encodeForm form =
   , ( "roles",    form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
   ] |> Encode.object
 
-decode : (Decode.Decoder DataView.Response) -> Decode.Value -> Form -> Form
-decode decodeResponse value =
-  let
-    decodeValue key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMaybe
-  in
-    case
-      ( value |> decodeValue "state"    Decode.string
-      , value |> decodeValue "response" decodeResponse
-      , value |> decodeValue "form"     Decode.value
-      )
-    of
-      ( Just "edit", Just res, Just form ) -> toEdit res >> decodeForm form
-      _ -> identity
-
 decodeForm : Decode.Value -> Form -> Form
-decodeForm value form =
-  let
-    decodeValue key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMaybe
-  in
-    form
-    |> Form.setIf birthday_ ( value |> decodeValue "birthday" Decode.string )
-    |> Form.setIf start_at_ ( value |> decodeValue "start_at" Decode.string )
-    |> Form.setIf gender_   ( value |> decodeValue "gender"   Decode.string )
-    |> Form.setIf quality_  ( value |> decodeValue "quality"  Decode.string )
-    |> Form.setIf roles_    ( value |> decodeValue "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
+decodeForm value =
+  case
+    ( value |> decode "state"    Decode.string
+    , value |> decode "response" Data.decodeResponse
+    , value |> decode "form"     Decode.value
+    )
+  of
+    ( Just "edit", Just res, Just form ) -> toEdit res >> decodeFields form
+    _ -> identity
+
+decodeFields : Decode.Value -> Form -> Form
+decodeFields value form =
+  form
+  |> Form.setIf birthday_ ( value |> decode "birthday" Decode.string )
+  |> Form.setIf start_at_ ( value |> decode "start_at" Decode.string )
+  |> Form.setIf gender_   ( value |> decode "gender"   Decode.string )
+  |> Form.setIf quality_  ( value |> decode "quality"  Decode.string )
+  |> Form.setIf roles_    ( value |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
+
+decode : String -> Decode.Decoder a -> Decode.Value -> Maybe a
+decode key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMaybe
 
 toStatic : Form -> Form
 toStatic form = { form | state = StaticState }
 
-toEdit : DataView.Response -> Form -> Form
+toEdit : Data.Response -> Form -> Form
 toEdit res form =
   let
     body = res |> HttpView.body
@@ -152,7 +149,7 @@ changed form =
     _ -> form
 
 
-view : HttpView.Model DataView.Response -> Form -> View
+view : HttpView.Model Data.Response -> Form -> View
 view http form =
   let
     error = "conflict"
@@ -201,7 +198,7 @@ view http form =
       }
     }
 
-expose : EditState -> Maybe DataView.Response -> Validate.Model (Conflict.Form Form a) -> State a
+expose : EditState -> Maybe Data.Response -> Validate.Model (Conflict.Form Form a) -> State a
 expose st res model =
   case model |> Validate.expose of
     (fieldName,form,errors) ->
@@ -212,8 +209,8 @@ expose st res model =
             then Static fieldName
             else Edit   fieldName form ( form.field |> Conflict.state ) errors
 
-isDifferentResponse : Maybe DataView.Response -> DataView.Response -> Bool
+isDifferentResponse : Maybe Data.Response -> Data.Response -> Bool
 isDifferentResponse data last =
   case data of
     Nothing  -> False
-    Just res -> ( res |> DataView.etag ) /= ( last |> DataView.etag )
+    Just res -> ( res |> Data.etag ) /= ( last |> Data.etag )
