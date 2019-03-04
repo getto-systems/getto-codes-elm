@@ -1,6 +1,8 @@
 module Getto.Url.Query.EncodeTest exposing (..)
 import Getto.Url.Query.Encode as Encode
 
+import Set
+
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
@@ -20,7 +22,7 @@ suite =
                   , ( "roles"
                     , [ "admin"
                       , "system"
-                      ] |> Encode.list Encode.string
+                      ] |> Set.fromList |> Encode.set Encode.string
                     )
                   ] |> Encode.object
                 )

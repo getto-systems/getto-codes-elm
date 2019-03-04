@@ -1,19 +1,13 @@
 module GettoUpload.App.Upload.List.Search.View exposing
   ( Form
-  , Init
   , View
   , Prop
   , Response
   , response
-  , compose
-  , name
-  , age
-  , email
-  , tel
-  , birthday
-  , start_at
-  , gender
-  , roles
+  , init
+  , encodeForm
+  , decodeForm
+  , view
   )
 import GettoUpload.View.Http as HttpView
 
@@ -21,6 +15,8 @@ import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Present as Present
 import Getto.Http.Header.Decode as HeaderDecode
+import Getto.Url.Query.Encode as QueryEncode
+import Getto.Url.Query.Decode as QueryDecode
 
 import Json.Encode as Encode
 import Json.Decode as Decode
@@ -28,12 +24,11 @@ import Json.Decode as Decode
 import Set exposing ( Set )
 
 type alias Attribute = ()
-type alias Prop      a = Form.Prop Form Attribute a
-type alias Field     a = Field.Model Attribute a
-type alias InitForm  a = Present.Init Form Attribute a
+type alias Prop  a = Form.Prop Form Attribute a
+type alias Field a = Field.Model Attribute a
 
-type alias ViewModel    a = Present.Model (Form.Model   Form Attribute a)
-type alias BetweenModel a = Present.Model (Form.Between Form Attribute a)
+type alias ViewModel    a = ( String, Form.Model   Form Attribute a, Bool )
+type alias BetweenModel a = ( String, Form.Between Form Attribute a, Bool )
 
 type alias Form =
   { name          : Field String
@@ -49,21 +44,7 @@ type alias Form =
   , roles         : Field (Set String)
   }
 
-type alias Init =
-  { name          : InitForm String
-  , age_gteq      : InitForm String
-  , age_lteq      : InitForm String
-  , email         : InitForm String
-  , tel           : InitForm String
-  , birthday_gteq : InitForm String
-  , birthday_lteq : InitForm String
-  , start_at_gteq : InitForm String
-  , start_at_lteq : InitForm String
-  , gender        : InitForm String
-  , roles         : InitForm (Set String)
-  }
-
-type View = View
+type alias View =
   { name     : ViewModel String
   , email    : ViewModel String
   , tel      : ViewModel String
@@ -119,24 +100,93 @@ response = HttpView.decoder
   }
 
 
-compose : Init -> Form -> View
-compose model form = View
-  { name     = form |> Present.init model.name
-  , email    = form |> Present.init model.email
-  , tel      = form |> Present.init model.tel
-  , gender   = form |> Present.init model.gender
-  , roles    = form |> Present.init model.roles
-  , age      = form |> Present.between "age"      { gteq = model.age_gteq,      lteq = model.age_lteq }
-  , birthday = form |> Present.between "birthday" { gteq = model.birthday_gteq, lteq = model.birthday_lteq }
-  , start_at = form |> Present.between "start_at" { gteq = model.start_at_gteq, lteq = model.start_at_lteq }
+name_          = Form.prop .name          (\v m -> { m | name          = v })
+age_gteq_      = Form.prop .age_gteq      (\v m -> { m | age_gteq      = v })
+age_lteq_      = Form.prop .age_lteq      (\v m -> { m | age_lteq      = v })
+email_         = Form.prop .email         (\v m -> { m | email         = v })
+tel_           = Form.prop .tel           (\v m -> { m | tel           = v })
+birthday_gteq_ = Form.prop .birthday_gteq (\v m -> { m | birthday_gteq = v })
+birthday_lteq_ = Form.prop .birthday_lteq (\v m -> { m | birthday_lteq = v })
+start_at_gteq_ = Form.prop .start_at_gteq (\v m -> { m | start_at_gteq = v })
+start_at_lteq_ = Form.prop .start_at_lteq (\v m -> { m | start_at_lteq = v })
+gender_        = Form.prop .gender        (\v m -> { m | gender        = v })
+roles_         = Form.prop .roles         (\v m -> { m | roles         = v })
+
+init : String -> Form
+init signature =
+  { name          = Field.init signature "name"          () ""
+  , age_gteq      = Field.init signature "age_gteq"      () ""
+  , age_lteq      = Field.init signature "age_lteq"      () ""
+  , email         = Field.init signature "email"         () ""
+  , tel           = Field.init signature "tel"           () ""
+  , birthday_gteq = Field.init signature "birthday_gteq" () ""
+  , birthday_lteq = Field.init signature "birthday_lteq" () ""
+  , start_at_gteq = Field.init signature "start_at_gteq" () ""
+  , start_at_lteq = Field.init signature "start_at_lteq" () ""
+  , gender        = Field.init signature "gender"        () ""
+  , roles         = Field.init signature "roles"         () Set.empty
   }
 
+encodeForm : Form -> QueryEncode.Value
+encodeForm form = QueryEncode.object
+  [ ( "name",           form.name          |> Field.value |> QueryEncode.string )
+  , ( "age_gteq",       form.age_gteq      |> Field.value |> QueryEncode.string )
+  , ( "age_lteq",       form.age_lteq      |> Field.value |> QueryEncode.string )
+  , ( "email",          form.email         |> Field.value |> QueryEncode.string )
+  , ( "tel",            form.tel           |> Field.value |> QueryEncode.string )
+  , ( "birthday_gteq",  form.birthday_gteq |> Field.value |> QueryEncode.string )
+  , ( "birthday_lteq",  form.birthday_lteq |> Field.value |> QueryEncode.string )
+  , ( "start_at_gteq",  form.start_at_gteq |> Field.value |> QueryEncode.string )
+  , ( "start_at_lteq",  form.start_at_lteq |> Field.value |> QueryEncode.string )
+  , ( "gender",         form.gender        |> Field.value |> QueryEncode.string )
+  , ( "roles",          form.roles         |> Field.value |> QueryEncode.set QueryEncode.string )
+  ]
 
-name     (View form) = form.name     |> Present.expose
-age      (View form) = form.age      |> Present.expose
-email    (View form) = form.email    |> Present.expose
-tel      (View form) = form.tel      |> Present.expose
-birthday (View form) = form.birthday |> Present.expose
-start_at (View form) = form.start_at |> Present.expose
-gender   (View form) = form.gender   |> Present.expose
-roles    (View form) = form.roles    |> Present.expose
+decodeForm : List String -> QueryDecode.Value -> Form -> Form
+decodeForm names value form =
+  let
+    qEntryAt name = QueryDecode.entryAt (names ++ [name]) QueryDecode.string
+    qListAt  name = QueryDecode.listAt  (names ++ [name]) QueryDecode.string
+  in
+    form
+    |> Form.setIf name_          ( value |> qEntryAt "name"          )
+    |> Form.setIf age_gteq_      ( value |> qEntryAt "age_gteq"      )
+    |> Form.setIf age_lteq_      ( value |> qEntryAt "age_lteq"      )
+    |> Form.setIf email_         ( value |> qEntryAt "email"         )
+    |> Form.setIf tel_           ( value |> qEntryAt "tel"           )
+    |> Form.setIf birthday_gteq_ ( value |> qEntryAt "birthday_gteq" )
+    |> Form.setIf birthday_lteq_ ( value |> qEntryAt "birthday_lteq" )
+    |> Form.setIf start_at_gteq_ ( value |> qEntryAt "start_at_gteq" )
+    |> Form.setIf start_at_lteq_ ( value |> qEntryAt "start_at_lteq" )
+    |> Form.setIf gender_        ( value |> qEntryAt "gender"        )
+    |> Form.setIf roles_         ( value |> qListAt  "roles" |> Maybe.map Set.fromList )
+
+view : Form -> View
+view form =
+  let
+    model =
+      { name          = ( name_,          Present.string )
+      , age_gteq      = ( age_gteq_,      Present.string )
+      , age_lteq      = ( age_lteq_,      Present.string )
+      , email         = ( email_,         Present.string )
+      , tel           = ( tel_,           Present.string )
+      , birthday_gteq = ( birthday_gteq_, Present.string )
+      , birthday_lteq = ( birthday_lteq_, Present.string )
+      , start_at_gteq = ( start_at_gteq_, Present.string )
+      , start_at_lteq = ( start_at_lteq_, Present.string )
+      , gender        = ( gender_,        Present.string )
+      , roles         = ( roles_,         Present.set )
+      }
+  in
+    { name     = form |> Present.init model.name   |> Present.expose
+    , email    = form |> Present.init model.email  |> Present.expose
+    , tel      = form |> Present.init model.tel    |> Present.expose
+    , gender   = form |> Present.init model.gender |> Present.expose
+    , roles    = form |> Present.init model.roles  |> Present.expose
+    , age      = form |> Present.between "age"      { gteq = model.age_gteq,      lteq = model.age_lteq }
+                 |> Present.expose
+    , birthday = form |> Present.between "birthday" { gteq = model.birthday_gteq, lteq = model.birthday_lteq }
+                 |> Present.expose
+    , start_at = form |> Present.between "start_at" { gteq = model.start_at_gteq, lteq = model.start_at_lteq }
+                 |> Present.expose
+    }

@@ -27,7 +27,7 @@ import Html.Events as E
 
 
 type alias SearchModel msg =
-  { form  : View.View
+  { view  : View.View
   , http  : HttpView.Model View.Response
   , options :
     { gender : List ( String, String )
@@ -53,7 +53,7 @@ search model =
       [ H.div []
         [ H.table []
           [ H.tbody [] <| List.concat
-            [ case model.form |> View.name of
+            [ case model.view.name of
               (name,form,present) ->
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -62,7 +62,7 @@ search model =
                     ]
                   ]
                 ]
-            , case model.form |> View.email of
+            , case model.view.email of
               (name,form,present) ->
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -71,7 +71,7 @@ search model =
                     ]
                   ]
                 ]
-            , case model.form |> View.tel of
+            , case model.view.tel of
               (name,form,present) ->
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -86,7 +86,7 @@ search model =
       , H.div []
         [ H.table []
           [ H.tbody [] <| List.concat
-            [ case model.form |> View.age of
+            [ case model.view.age of
               (name,form,present) ->
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -97,7 +97,7 @@ search model =
                     ]
                   ]
                 ]
-            , case model.form |> View.birthday of
+            , case model.view.birthday of
               (name,form,present) ->
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -108,7 +108,7 @@ search model =
                     ]
                   ]
                 ]
-            , case model.form |> View.start_at of
+            , case model.view.start_at of
               (name,form,present) ->
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -125,7 +125,7 @@ search model =
       , H.div []
         [ H.table []
           [ H.tbody [] <| List.concat
-            [ case model.form |> View.gender of
+            [ case model.view.gender of
               (name,form,present) ->
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
@@ -134,7 +134,7 @@ search model =
                     ]
                   ]
                 ]
-            , case model.form |> View.roles of
+            , case model.view.roles of
               (name,form,present) ->
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]

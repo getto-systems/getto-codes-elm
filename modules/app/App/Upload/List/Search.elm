@@ -70,7 +70,30 @@ get = Http.tracker "get" <|
       Http.get
         { url     = "uploads" |> Api.url []
         , headers = model |> Api.headers
-        , params  = m |> encodeQuery
+        , params  = QueryEncode.object
+          [ ( "q"
+            , [ ( "name",           m.form.name          |> Field.value |> QueryEncode.string )
+              , ( "age_gteq",       m.form.age_gteq      |> Field.value |> QueryEncode.string )
+              , ( "age_lteq",       m.form.age_lteq      |> Field.value |> QueryEncode.string )
+              , ( "email",          m.form.email         |> Field.value |> QueryEncode.string )
+              , ( "tel",            m.form.tel           |> Field.value |> QueryEncode.string )
+              , ( "birthday_gteq",  m.form.birthday_gteq |> Field.value |> QueryEncode.string )
+              , ( "birthday_lteq",  m.form.birthday_lteq |> Field.value |> QueryEncode.string )
+              , ( "start_at_gteq",  m.form.start_at_gteq |> Field.value |> QueryEncode.string )
+              , ( "start_at_lteq",  m.form.start_at_lteq |> Field.value |> QueryEncode.string )
+              , ( "gender",         m.form.gender        |> Field.value |> QueryEncode.string )
+              , ( "roles",          m.form.roles         |> Field.value |> QueryEncode.set QueryEncode.string )
+              ] |> QueryEncode.object
+            )
+          , ( "page", m.page |> QueryEncode.int )
+          , ( "sort"
+            , case m.sort |> Sort.expose of
+              (column,order) ->
+                [ ( "column", column |> QueryEncode.string )
+                , ( "order",  order  |> QueryEncode.string )
+                ] |> QueryEncode.object
+            )
+          ]
         , response = View.response
         , timeout = 10 * 1000
         }
@@ -78,19 +101,7 @@ get = Http.tracker "get" <|
 
 init : Frame.InitModel -> ( Model, FrameTransition a )
 init model =
-  ( { form =
-      { name          = Field.init signature "name"          () ""
-      , age_gteq      = Field.init signature "age_gteq"      () ""
-      , age_lteq      = Field.init signature "age_lteq"      () ""
-      , email         = Field.init signature "email"         () ""
-      , tel           = Field.init signature "tel"           () ""
-      , birthday_gteq = Field.init signature "birthday_gteq" () ""
-      , birthday_lteq = Field.init signature "birthday_lteq" () ""
-      , start_at_gteq = Field.init signature "start_at_gteq" () ""
-      , start_at_lteq = Field.init signature "start_at_lteq" () ""
-      , gender        = Field.init signature "gender"        () ""
-      , roles         = Field.init signature "roles"         () Set.empty
-      }
+  ( { form = View.init signature
     , page = 0
     , sort = "id" |> Sort.by
     , search = HttpView.empty
@@ -102,22 +113,9 @@ init model =
 
 encodeQuery : Model -> QueryEncode.Value
 encodeQuery model = QueryEncode.object
-  [ ( "q"
-    , [ ( "name",           model.form.name          |> Field.value |> QueryEncode.string )
-      , ( "age_gteq",       model.form.age_gteq      |> Field.value |> QueryEncode.string )
-      , ( "age_lteq",       model.form.age_lteq      |> Field.value |> QueryEncode.string )
-      , ( "email",          model.form.email         |> Field.value |> QueryEncode.string )
-      , ( "tel",            model.form.tel           |> Field.value |> QueryEncode.string )
-      , ( "birthday_gteq",  model.form.birthday_gteq |> Field.value |> QueryEncode.string )
-      , ( "birthday_lteq",  model.form.birthday_lteq |> Field.value |> QueryEncode.string )
-      , ( "start_at_gteq",  model.form.start_at_gteq |> Field.value |> QueryEncode.string )
-      , ( "start_at_lteq",  model.form.start_at_lteq |> Field.value |> QueryEncode.string )
-      , ( "gender",         model.form.gender        |> Field.value |> QueryEncode.string )
-      , ( "roles",          model.form.roles         |> Field.value |> Set.toList |> QueryEncode.list QueryEncode.string )
-      ] |> QueryEncode.object
-    )
-  , ( "p", model.page |> QueryEncode.int )
-  , ( "s"
+  [ ( "q",    model.form |> View.encodeForm )
+  , ( "page", model.page |> QueryEncode.int )
+  , ( "sort"
     , case model.sort |> Sort.expose of
       (column,order) ->
         [ ( "column", column |> QueryEncode.string )
@@ -128,30 +126,14 @@ encodeQuery model = QueryEncode.object
 
 decodeQuery : List String -> QueryDecode.Value -> Model -> Model
 decodeQuery names value model =
-  let
-    qEntryAt name = QueryDecode.entryAt (names ++ ["q",name]) QueryDecode.string
-    qListAt  name = QueryDecode.listAt  (names ++ ["q",name]) QueryDecode.string
-  in
-    { model
-    | form =
-      model.form
-      |> Form.setIf name_          ( value |> qEntryAt "name"          )
-      |> Form.setIf age_gteq_      ( value |> qEntryAt "age_gteq"      )
-      |> Form.setIf age_lteq_      ( value |> qEntryAt "age_lteq"      )
-      |> Form.setIf email_         ( value |> qEntryAt "email"         )
-      |> Form.setIf tel_           ( value |> qEntryAt "tel"           )
-      |> Form.setIf birthday_gteq_ ( value |> qEntryAt "birthday_gteq" )
-      |> Form.setIf birthday_lteq_ ( value |> qEntryAt "birthday_lteq" )
-      |> Form.setIf start_at_gteq_ ( value |> qEntryAt "start_at_gteq" )
-      |> Form.setIf start_at_lteq_ ( value |> qEntryAt "start_at_lteq" )
-      |> Form.setIf gender_        ( value |> qEntryAt "gender"        )
-      |> Form.setIf roles_         ( value |> qListAt  "roles" |> Maybe.map Set.fromList )
-    , page = value |> QueryDecode.entryAt (names ++ ["p"]) QueryDecode.int |> Maybe.withDefault model.page
-    , sort =
-      ( value |> QueryDecode.entryAt (names ++ ["s","column"]) QueryDecode.string
-      , value |> QueryDecode.entryAt (names ++ ["s","order"])  QueryDecode.string
-      ) |> Sort.fromString |> Maybe.withDefault model.sort
-    }
+  { model
+  | form = model.form |> View.decodeForm (names ++ ["q"]) value
+  , page = value |> QueryDecode.entryAt (names ++ ["page"]) QueryDecode.int |> Maybe.withDefault model.page
+  , sort =
+    ( value |> QueryDecode.entryAt (names ++ ["sort","column"]) QueryDecode.string
+    , value |> QueryDecode.entryAt (names ++ ["sort","order"])  QueryDecode.string
+    ) |> Sort.fromString |> Maybe.withDefault model.sort
+  }
 
 encodeStore : Model -> Encode.Value
 encodeStore model = Encode.null
@@ -213,34 +195,10 @@ contents model =
     ]
   ]
 
-name_          = Form.prop .name          (\v m -> { m | name          = v })
-age_gteq_      = Form.prop .age_gteq      (\v m -> { m | age_gteq      = v })
-age_lteq_      = Form.prop .age_lteq      (\v m -> { m | age_lteq      = v })
-email_         = Form.prop .email         (\v m -> { m | email         = v })
-tel_           = Form.prop .tel           (\v m -> { m | tel           = v })
-birthday_gteq_ = Form.prop .birthday_gteq (\v m -> { m | birthday_gteq = v })
-birthday_lteq_ = Form.prop .birthday_lteq (\v m -> { m | birthday_lteq = v })
-start_at_gteq_ = Form.prop .start_at_gteq (\v m -> { m | start_at_gteq = v })
-start_at_lteq_ = Form.prop .start_at_lteq (\v m -> { m | start_at_lteq = v })
-gender_        = Form.prop .gender        (\v m -> { m | gender        = v })
-roles_         = Form.prop .roles         (\v m -> { m | roles         = v })
-
 search : FrameModel a -> Html Msg
 search model = L.lazy
   (\m -> Html.search
-    { form = m.form |> View.compose
-      { name          = ( name_,          Present.string )
-      , age_gteq      = ( age_gteq_,      Present.string )
-      , age_lteq      = ( age_lteq_,      Present.string )
-      , email         = ( email_,         Present.string )
-      , tel           = ( tel_,           Present.string )
-      , birthday_gteq = ( birthday_gteq_, Present.string )
-      , birthday_lteq = ( birthday_lteq_, Present.string )
-      , start_at_gteq = ( start_at_gteq_, Present.string )
-      , start_at_lteq = ( start_at_lteq_, Present.string )
-      , gender        = ( gender_,        Present.string )
-      , roles         = ( roles_,         Present.set )
-      }
+    { view = m.form |> View.view
     , http = m.search
     , options =
       { gender =
