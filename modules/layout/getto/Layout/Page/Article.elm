@@ -13,12 +13,13 @@ module GettoUpload.Layout.Page.Article exposing
 import GettoUpload.Layout.Page.Article.Html as Html
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Static as Static
-import GettoUpload.I18n.App as I18n
+import GettoUpload.I18n.App as AppI18n
 
-import Getto.Command.Transition as Transition exposing ( Transition )
+import Getto.Command.Transition as T exposing ( Transition )
 
 import Json.Encode as Encode
 import Json.Decode as Decode
+
 import Html as H exposing ( Html )
 import Html.Lazy as L
 
@@ -34,7 +35,7 @@ signature = "layout-article"
 init : Frame.InitModel -> ( Model, FrameTransition a app )
 init model =
   ( ()
-  , Transition.none
+  , T.none
   )
 
 store : Model -> Encode.Value
@@ -49,7 +50,7 @@ subscriptions model = Sub.none
 update : Msg -> Model -> ( Model, FrameTransition a app )
 update msg model =
   case msg of
-    Noop -> ( model, Transition.none )
+    Noop -> ( model, T.none )
 
 
 documentTitle : FrameModel a app -> String
@@ -62,14 +63,14 @@ documentTitle model =
       { path    = static |> Static.page |> .path
       , company = project.company
       , title   = project.title
-      , i18n    = I18n.title
+      , i18n    = AppI18n.title
       }
 
 header : FrameModel a app -> Html Msg
 header model = L.lazy
   (\static -> Html.header
     { path = static |> Static.page |> .path
-    , i18n = I18n.title
+    , i18n = AppI18n.title
     }
   )
   (model |> Frame.static)

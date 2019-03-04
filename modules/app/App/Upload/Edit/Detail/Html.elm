@@ -12,6 +12,7 @@ import GettoUpload.View.Http as HttpView
 import Getto.Field.Conflict as Conflict
 
 import File exposing ( File )
+
 import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A

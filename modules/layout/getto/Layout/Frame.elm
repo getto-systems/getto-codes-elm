@@ -30,12 +30,13 @@ import GettoUpload.Command.Search as Search
 import GettoUpload.Version as Version
 
 import Getto.Command as Command
-import Getto.Command.Transition as Transition exposing ( Transition )
+import Getto.Command.Transition as T exposing ( Transition )
+
+import Json.Decode as Decode
 
 import Browser
 import Browser.Navigation as Navigation
 import Url exposing ( Url )
-import Json.Decode as Decode
 import Html as H exposing ( Html )
 
 type alias Flags =
@@ -114,8 +115,8 @@ init setupLayout setupApp flags url key =
       , search = search
       }
     |> Command.none
-    |> Command.andThen (Transition.exec layoutCmd >> Command.map Layout)
-    |> Command.andThen (Transition.exec appCmd    >> Command.map App)
+    |> Command.andThen (T.exec layoutCmd >> Command.map Layout)
+    |> Command.andThen (T.exec appCmd    >> Command.map App)
 
 
 subscriptions : (layout -> Sub layoutMsg) -> (app -> Sub appMsg) -> Model layout app -> Sub (Msg layoutMsg appMsg)
@@ -146,7 +147,7 @@ update layoutUpdater appUpdater message model =
           let
             (newApp,f) = m.app |> appUpdater msg
           in
-            Model { m | app = newApp } |> Transition.exec f |> Command.map App
+            Model { m | app = newApp } |> T.exec f |> Command.map App
 
     Layout msg ->
       case model of
@@ -154,7 +155,7 @@ update layoutUpdater appUpdater message model =
           let
             (newLayout,f) = m.layout |> layoutUpdater msg
           in
-            Model { m | layout = newLayout } |> Transition.exec f |> Command.map Layout
+            Model { m | layout = newLayout } |> T.exec f |> Command.map Layout
 
 
 credentialChanged : Decode.Value -> Model layout app -> Model layout app

@@ -15,16 +15,17 @@ import GettoUpload.App.Index.Dashboard.Html as Html
 import GettoUpload.App.Index.Dashboard.View as View
 import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
-import GettoUpload.I18n.App.Index.Dashboard as DashboardI18n
-import GettoUpload.I18n.App as I18n
+import GettoUpload.I18n.App.Index.Dashboard as I18n
+import GettoUpload.I18n.App as AppI18n
 import GettoUpload.Extension.Href.Home as Home
 
-import Getto.Command.Transition as Transition exposing ( Transition )
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 
 import Json.Encode as Encode
 import Json.Decode as Decode
+
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
@@ -42,7 +43,7 @@ signature = "dashboard"
 init : Frame.InitModel -> ( Model, FrameTransition a )
 init model =
   ( ()
-  , Transition.none
+  , T.none
   )
 
 encodeQuery : Model -> QueryEncode.Value
@@ -63,7 +64,7 @@ subscriptions model = Sub.none
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    HelloWorld -> ( model, Transition.none )
+    HelloWorld -> ( model, T.none )
 
 contents : FrameModel a -> List (Html Msg)
 contents model =
@@ -90,8 +91,8 @@ example model = L.lazy
       }
     , page = Home.index
     , i18n =
-      { title = I18n.title
-      , name  = DashboardI18n.title
+      { title = AppI18n.title
+      , name  = I18n.title
       }
     }
   )

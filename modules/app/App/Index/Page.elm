@@ -3,12 +3,11 @@ import GettoUpload.App.Index.Dashboard as Dashboard
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 
-import Getto.Command.Transition as Transition exposing ( Transition )
-import Getto.Url.Query.Encode as QueryEncode
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
-import Json.Decode as Decode
+
 import Browser
 import Html as H exposing ( Html )
 import Html.Attributes as A
@@ -51,20 +50,20 @@ setup =
 
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
-  Transition.compose Model
-    (model |> Dashboard.init |> Transition.map Dashboard)
+  T.compose Model
+    (model |> Dashboard.init |> T.map Dashboard)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
   [ model.dashboard |> Dashboard.subscriptions |> Sub.map Dashboard
   ] |> Sub.batch
 
-dashboard_ = Transition.prop .dashboard (\v m -> { m | dashboard = v })
+dashboard_ = T.prop .dashboard (\v m -> { m | dashboard = v })
 
 update : Msg -> Model -> ( Model, FrameTransition )
 update message =
   case message of
-    Dashboard msg -> Transition.update dashboard_ (Dashboard.update msg >> Transition.map Dashboard)
+    Dashboard msg -> T.update dashboard_ (Dashboard.update msg >> T.map Dashboard)
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =
