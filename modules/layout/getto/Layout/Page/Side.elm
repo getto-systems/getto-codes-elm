@@ -31,15 +31,16 @@ import GettoUpload.Extension.Href as Href exposing ( Href )
 import GettoUpload.Extension.Href.Home   as Home
 import GettoUpload.Extension.Href.Upload as Upload
 
-import Getto.Command.Transition as Transition exposing ( Transition )
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Http.Header.Decode as HeaderDecode
 
-import Set exposing ( Set )
-import Dict exposing ( Dict )
 import Json.Encode as Encode
 import Json.Decode as Decode
+
+import Set exposing ( Set )
+import Dict exposing ( Dict )
 import Html as H exposing ( Html )
 import Html.Lazy as L
 
@@ -111,7 +112,7 @@ subscriptions model =
 update : Msg -> Model -> ( Model, FrameTransition a app )
 update msg model =
   case msg of
-    BadgeStateChanged mig -> ( { model | badge = model.badge |> HttpView.update mig }, Transition.none )
+    BadgeStateChanged mig -> ( { model | badge = model.badge |> HttpView.update mig }, T.none )
 
     MenuOpen  name -> ( { model | collapsed = model.collapsed |> Set.remove name }, Frame.storeLayout )
     MenuClose name -> ( { model | collapsed = model.collapsed |> Set.insert name }, Frame.storeLayout )

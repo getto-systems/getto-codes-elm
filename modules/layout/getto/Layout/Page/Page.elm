@@ -19,11 +19,11 @@ import GettoUpload.Layout.Page.Side    as Side
 import GettoUpload.Layout.Page.Article as Article
 import GettoUpload.Layout.Frame as Frame
 
-import Getto.Command.Transition as Transition exposing ( Transition )
+import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
-import Json.Decode as Decode
+
 import Html as H exposing ( Html )
 import Html.Lazy as L
 
@@ -56,9 +56,9 @@ setup =
 
 init : Frame.InitModel -> ( Model, FrameTransition app )
 init model =
-  Transition.compose2 Model
-    (model |> Article.init |> Transition.map Article)
-    (model |> Side.init    |> Transition.map Side)
+  T.compose2 Model
+    (model |> Article.init |> T.map Article)
+    (model |> Side.init    |> T.map Side)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -66,14 +66,14 @@ subscriptions model =
   , model.side    |> Side.subscriptions    |> Sub.map Side
   ] |> Sub.batch
 
-article_ = Transition.prop .article (\v m -> { m | article = v })
-side_    = Transition.prop .side    (\v m -> { m | side = v })
+article_ = T.prop .article (\v m -> { m | article = v })
+side_    = T.prop .side    (\v m -> { m | side = v })
 
 update : Msg -> Model -> ( Model, FrameTransition app )
 update message =
   case message of
-    Article msg -> Transition.update article_ (Article.update msg >> Transition.map Article)
-    Side    msg -> Transition.update side_    (Side.update msg    >> Transition.map Side)
+    Article msg -> T.update article_ (Article.update msg >> T.map Article)
+    Side    msg -> T.update side_    (Side.update msg    >> T.map Side)
 
 
 documentTitle : FrameModel app -> String
