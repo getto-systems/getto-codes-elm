@@ -94,20 +94,8 @@ upload = Http.tracker "upload" <|
 
 init : Frame.InitModel -> ( Model, FrameTransition a )
 init model =
-  ( { tmpId = Nothing
-    , form =
-      { name     = Field.init signature "name"     () ""
-      , text     = Field.init signature "text"     () []
-      , memo     = Field.init signature "memo"     () ""
-      , age      = Field.init signature "age"      () ""
-      , email    = Field.init signature "email"    () ""
-      , tel      = Field.init signature "tel"      () ""
-      , birthday = Field.init signature "birthday" () ""
-      , start_at = Field.init signature "start_at" () ""
-      , gender   = Field.init signature "gender"   () ""
-      , quality  = Field.init signature "quality"  () ""
-      , roles    = Field.init signature "roles"    () Set.empty
-      }
+  ( { tmpId  = Nothing
+    , form   = View.init signature
     , upload = HttpView.empty
     }
   , [ Frame.pushUrl
@@ -136,17 +124,7 @@ encodeStore model =
     Just tmpId -> Encode.object
       [ ( "lastTmpId", tmpId |> Encode.int )
       , ( tmpId |> String.fromInt
-        , [ ( "name",     model.form.name     |> Field.value |> Encode.string )
-          , ( "memo",     model.form.memo     |> Field.value |> Encode.string )
-          , ( "age",      model.form.age      |> Field.value |> Encode.string )
-          , ( "email",    model.form.email    |> Field.value |> Encode.string )
-          , ( "tel",      model.form.tel      |> Field.value |> Encode.string )
-          , ( "birthday", model.form.birthday |> Field.value |> Encode.string )
-          , ( "start_at", model.form.start_at |> Field.value |> Encode.string )
-          , ( "gender",   model.form.gender   |> Field.value |> Encode.string )
-          , ( "quality",  model.form.quality  |> Field.value |> Encode.string )
-          , ( "roles",    model.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
-          ] |> Encode.object
+        , model.form |> View.encodeForm
         )
       ]
 
@@ -160,24 +138,10 @@ decodeStore value model =
         { model | tmpId = lastTmpId + 1 |> Just }
 
     Just tmpId ->
-      let
-        obj = value |> SafeDecode.valueAt [tmpId |> String.fromInt]
-        decode name decoder = Decode.decodeValue (Decode.at [name] decoder) >> Result.toMaybe
-      in
-        { model
-        | form =
-          model.form
-          |> Form.setIf name_     ( obj |> decode "name"     Decode.string )
-          |> Form.setIf memo_     ( obj |> decode "memo"     Decode.string )
-          |> Form.setIf age_      ( obj |> decode "age"      Decode.string )
-          |> Form.setIf email_    ( obj |> decode "email"    Decode.string )
-          |> Form.setIf tel_      ( obj |> decode "tel"      Decode.string )
-          |> Form.setIf birthday_ ( obj |> decode "birthday" Decode.string )
-          |> Form.setIf start_at_ ( obj |> decode "start_at" Decode.string )
-          |> Form.setIf gender_   ( obj |> decode "gender"   Decode.string )
-          |> Form.setIf quality_  ( obj |> decode "quality"  Decode.string )
-          |> Form.setIf roles_    ( obj |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
-        }
+      { model
+      | form = model.form |> View.decodeForm
+        (value |> SafeDecode.valueAt [tmpId |> String.fromInt])
+      }
 
 fill : FrameTransition a
 fill = Frame.app >> .register >>
@@ -225,36 +189,12 @@ contents model =
     ]
   ]
 
-name_     = Form.prop .name     (\v m -> { m | name     = v })
-text_     = Form.prop .text     (\v m -> { m | text     = v })
-memo_     = Form.prop .memo     (\v m -> { m | memo     = v })
-age_      = Form.prop .age      (\v m -> { m | age      = v })
-email_    = Form.prop .email    (\v m -> { m | email    = v })
-tel_      = Form.prop .tel      (\v m -> { m | tel      = v })
-birthday_ = Form.prop .birthday (\v m -> { m | birthday = v })
-start_at_ = Form.prop .start_at (\v m -> { m | start_at = v })
-gender_   = Form.prop .gender   (\v m -> { m | gender   = v })
-quality_  = Form.prop .quality  (\v m -> { m | quality  = v })
-roles_    = Form.prop .roles    (\v m -> { m | roles    = v })
-
 register : FrameModel a -> Html Msg
 register model = L.lazy
   (\m -> Html.register
     { title = "register"
-    , form = m.form |> View.compose
-      { name     = ( name_,     [ m.form.name |> Validate.blank "blank" ] )
-      , text     = ( text_,     [ m.form.text |> Validate.empty "no-file" ] )
-      , memo     = ( memo_,     [] )
-      , age      = ( age_,      [] )
-      , email    = ( email_,    [] )
-      , tel      = ( tel_,      [] )
-      , birthday = ( birthday_, [] )
-      , start_at = ( start_at_, [] )
-      , gender   = ( gender_,   [] )
-      , quality  = ( quality_,  [] )
-      , roles    = ( roles_,    [] )
-      }
-    , http = m.upload
+    , view  = m.form |> View.view
+    , http  = m.upload
     , options =
       { gender =
         [ ( "", "please-select" |> AppI18n.form )

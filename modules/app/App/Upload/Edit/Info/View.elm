@@ -4,6 +4,7 @@ module GettoUpload.App.Upload.Edit.Info.View exposing
   , Prop
   , State(..)
   , Response
+  , response
   , init
   , encodeForm
   , decodeForm
@@ -11,7 +12,6 @@ module GettoUpload.App.Upload.Edit.Info.View exposing
   , toEdit
   , toCommit
   , changed
-  , response
   , view
   )
 import GettoUpload.App.Upload.Edit.Data.View as Data
@@ -28,9 +28,8 @@ import Set exposing ( Set )
 import Json.Encode as Encode
 import Json.Decode as Decode
 
-type alias Prop      a = Conflict.Prop Form a
-type alias Field     a = Conflict.Field a
-type alias ViewModel a = Validate.Model (Conflict.Form Form a)
+type alias Prop  a = Conflict.Prop Form a
+type alias Field a = Conflict.Field a
 
 type alias Form =
   { state : EditState
@@ -64,6 +63,14 @@ type EditState
 type State a
   = Static String
   | Edit   String (Conflict.Form Form a) (Conflict.State a) (List String)
+
+
+response : HttpView.ResponseDecoder Response
+response = HttpView.decoder
+  { header = HeaderDecode.succeed ()
+  , body   = Decode.succeed ()
+  }
+
 
 name_     = Form.prop .name     (\v m -> { m | name     = v })
 memo_     = Form.prop .memo     (\v m -> { m | memo     = v })
@@ -151,17 +158,13 @@ changed form =
     _ -> form
 
 
-response : HttpView.ResponseDecoder Response
-response = HttpView.decoder
-  { header = HeaderDecode.succeed ()
-  , body   = Decode.succeed ()
-  }
-
-
 view : HttpView.Model Data.Response -> Form -> View
 view http form =
   let
     error = "conflict"
+
+    int = String.fromInt
+    blank = Validate.blank "blank"
 
     res = http |> HttpView.response
 
@@ -173,25 +176,18 @@ view http form =
       , res |> Maybe.map HttpView.body
       )
     model =
-      { name  = ( .info >> .name,                  ( name_,  [ form.name |> Validate.blank "blank" ] ) )
-      , memo  = ( .info >> .memo,                  ( memo_,  [] ) )
-      , age   = ( .info >> .age >> String.fromInt, ( age_,   [] ) )
-      , email = ( .info >> .email,                 ( email_, [] ) )
-      , tel   = ( .info >> .tel,                   ( tel_,   [] ) )
-      }
-    result =
-      { name     = form |> Conflict.init error data model.name
-      , memo     = form |> Conflict.init error data model.memo
-      , age      = form |> Conflict.init error data model.age
-      , email    = form |> Conflict.init error data model.email
-      , tel      = form |> Conflict.init error data model.tel
+      { name  = form |> Conflict.init error data ( .info >> .name,       ( name_,  [ form.name |> blank ] ) )
+      , memo  = form |> Conflict.init error data ( .info >> .memo,       ( memo_,  [] ) )
+      , age   = form |> Conflict.init error data ( .info >> .age >> int, ( age_,   [] ) )
+      , email = form |> Conflict.init error data ( .info >> .email,      ( email_, [] ) )
+      , tel   = form |> Conflict.init error data ( .info >> .tel,        ( tel_,   [] ) )
       }
     errors = List.concat
-      [ result.name     |> Validate.errors
-      , result.memo     |> Validate.errors
-      , result.age      |> Validate.errors
-      , result.email    |> Validate.errors
-      , result.tel      |> Validate.errors
+      [ model.name     |> Validate.errors
+      , model.memo     |> Validate.errors
+      , model.age      |> Validate.errors
+      , model.email    |> Validate.errors
+      , model.tel      |> Validate.errors
       ]
   in
     { isStatic = (form.state == StaticState)
@@ -199,11 +195,11 @@ view http form =
     , state    = http |> HttpView.state
     , response = res
     , form     =
-      { name     = result.name     |> expose form.state res
-      , memo     = result.memo     |> expose form.state res
-      , age      = result.age      |> expose form.state res
-      , email    = result.email    |> expose form.state res
-      , tel      = result.tel      |> expose form.state res
+      { name  = model.name  |> expose form.state res
+      , memo  = model.memo  |> expose form.state res
+      , age   = model.age   |> expose form.state res
+      , email = model.email |> expose form.state res
+      , tel   = model.tel   |> expose form.state res
       }
     }
 
