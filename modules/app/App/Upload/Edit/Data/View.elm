@@ -1,12 +1,16 @@
 module GettoUpload.App.Upload.Edit.Data.View exposing
   ( Response
-  , ResponseHeader
-  , ResponseBody
-  , ResponseInfo
-  , ResponseDetail
+  , response
+  , encodeResponse
+  , decodeResponse
   , etag
   )
 import GettoUpload.View.Http as HttpView
+
+import Getto.Http.Header.Decode as HeaderDecode
+
+import Json.Encode as Encode
+import Json.Decode as Decode
 
 import Set exposing ( Set )
 
@@ -32,6 +36,75 @@ type alias ResponseDetail =
   , quality  : String
   , roles    : Set String
   }
+
+response : HttpView.ResponseDecoder Response
+response =  HttpView.decoder
+  { header = HeaderDecode.map ResponseHeader
+    ( HeaderDecode.at "etag" HeaderDecode.string )
+  , body = Decode.map2 ResponseBody
+    ( Decode.at ["info"]
+      ( Decode.map5 ResponseInfo
+        (Decode.at ["name"]  Decode.string)
+        (Decode.at ["memo"]  Decode.string)
+        (Decode.at ["age"]   Decode.int)
+        (Decode.at ["email"] Decode.string)
+        (Decode.at ["tel"]   Decode.string)
+      )
+    )
+    ( Decode.at ["detail"]
+      ( Decode.map5 ResponseDetail
+        (Decode.at ["birthday"] Decode.string)
+        (Decode.at ["start_at"] Decode.string)
+        (Decode.at ["gender"]   Decode.string)
+        (Decode.at ["quality"]  Decode.string)
+        (Decode.at ["roles"]   (Decode.string |> Decode.list |> Decode.map Set.fromList))
+      )
+    )
+  }
+
+encodeResponse : Response -> Encode.Value
+encodeResponse res =
+  let
+    header = res |> HttpView.header
+    body   = res |> HttpView.body
+  in
+    [ ( "header"
+      , [ ( "etag", header.etag |> Encode.string )
+        ] |> Encode.object
+      )
+    , ( "body"
+      , [ ( "info"
+          , [ ( "name",  body.info.name  |> Encode.string )
+            , ( "memo",  body.info.memo  |> Encode.string )
+            , ( "age",   body.info.age   |> Encode.int )
+            , ( "email", body.info.email |> Encode.string )
+            , ( "tel",   body.info.tel   |> Encode.string )
+            ] |> Encode.object
+          )
+        , ( "detail"
+          , [ ( "birthday", body.detail.birthday |> Encode.string )
+            , ( "start_at", body.detail.start_at |> Encode.string )
+            , ( "gender",   body.detail.gender   |> Encode.string )
+            , ( "quality",  body.detail.quality  |> Encode.string )
+            , ( "roles",    body.detail.roles |> Set.toList |> Encode.list Encode.string )
+            ] |> Encode.object
+          )
+        ] |> Encode.object
+      )
+    ] |> Encode.object
+
+decodeResponse : Decode.Decoder Response
+decodeResponse =
+  ( Decode.map2 HttpView.ResponseValue
+    ( Decode.at ["header"] (Decode.dict Decode.string) )
+    ( Decode.at ["body"]   Decode.value )
+  )
+  |> Decode.andThen
+    (\value ->
+      case value |> response of
+        Ok  res -> res |> Decode.succeed
+        Err err -> err |> Decode.fail
+    )
 
 etag : Response -> String
 etag = HttpView.header >> .etag
