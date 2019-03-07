@@ -16,6 +16,8 @@ module GettoUpload.View.Http exposing
   , success
   , failure
   , isSuccess
+  , isConflict
+  , isComplete
   , update
   , state
   , response
@@ -132,6 +134,16 @@ isSuccess mig =
   case mig of
     Success res -> Just res
     _ -> Nothing
+
+isConflict : Migration response -> Bool
+isConflict = (==) (Failure Conflict)
+
+isComplete : Migration response -> Bool
+isComplete mig =
+  case mig of
+    Success res -> True
+    Failure err -> True
+    _ -> False
 
 update : Migration response -> Model response -> Model response
 update migration (Model model) =

@@ -6,12 +6,14 @@ module GettoUpload.App.Upload.Edit.Info.View exposing
   , Response
   , response
   , init
+  , params
   , encodeForm
   , decodeForm
   , toStatic
   , toEdit
   , toCommit
   , changed
+  , put
   , view
   )
 import GettoUpload.App.Upload.Edit.Data.View as Data
@@ -65,6 +67,11 @@ type State a
   = Static String
   | Edit   String (Conflict.Form Form a) (Conflict.State a) (List String)
 
+type alias ParamValue a =
+  { from : a
+  , to   : a
+  }
+
 
 response : HttpView.ResponseDecoder Response
 response = HttpView.decoder
@@ -73,21 +80,62 @@ response = HttpView.decoder
   }
 
 
-name_     = Form.prop .name     (\v m -> { m | name     = v })
-memo_     = Form.prop .memo     (\v m -> { m | memo     = v })
-age_      = Form.prop .age      (\v m -> { m | age      = v })
-email_    = Form.prop .email    (\v m -> { m | email    = v })
-tel_      = Form.prop .tel      (\v m -> { m | tel      = v })
+name_  = Form.prop .name  (\v m -> { m | name  = v })
+memo_  = Form.prop .memo  (\v m -> { m | memo  = v })
+age_   = Form.prop .age   (\v m -> { m | age   = v })
+email_ = Form.prop .email (\v m -> { m | email = v })
+tel_   = Form.prop .tel   (\v m -> { m | tel   = v })
+
+get_name  = .info >> .name
+get_memo  = .info >> .memo
+get_age   = .info >> .age >> String.fromInt
+get_email = .info >> .email
+get_tel   = .info >> .tel
+
 
 init : String -> Form
 init signature =
-  { state    = StaticState
-  , name     = Field.init signature "name"     Conflict.none ""
-  , memo     = Field.init signature "memo"     Conflict.none ""
-  , age      = Field.init signature "age"      Conflict.none ""
-  , email    = Field.init signature "email"    Conflict.none ""
-  , tel      = Field.init signature "tel"      Conflict.none ""
+  { state = StaticState
+  , name  = Field.init signature "name"  Conflict.none ""
+  , memo  = Field.init signature "memo"  Conflict.none ""
+  , age   = Field.init signature "age"   Conflict.none ""
+  , email = Field.init signature "email" Conflict.none ""
+  , tel   = Field.init signature "tel"   Conflict.none ""
   }
+
+params : HttpView.Model Data.Response -> Form -> Encode.Value
+params get form =
+  let
+    body = get |> HttpView.response |> Maybe.map HttpView.body
+
+    encode encoder values =
+      [ ( "from", values.from |> encoder )
+      , ( "to",   values.to   |> encoder )
+      ] |> Encode.object
+  in
+    [ ( "name",  body |> Maybe.map get_name,  form.name  ) |> filter (encode Encode.string)
+    , ( "memo",  body |> Maybe.map get_memo,  form.memo  ) |> filter (encode Encode.string)
+    , ( "age",   body |> Maybe.map get_age,   form.age   ) |> filter (encode Encode.string)
+    , ( "email", body |> Maybe.map get_email, form.email ) |> filter (encode Encode.string)
+    , ( "tel",   body |> Maybe.map get_tel,   form.tel   ) |> filter (encode Encode.string)
+    ]
+    |> List.filterMap identity
+    |> Encode.object
+
+filter : (ParamValue a -> Encode.Value) -> ( String, Maybe a, Field a ) -> Maybe ( String, Encode.Value )
+filter encoder (fieldName,value,field) =
+  let
+    formValue = field |> Field.value
+
+    isSame val =
+      if val == formValue
+        then Nothing
+        else Just val
+  in
+    value |> Maybe.andThen isSame |> Maybe.map
+      (\val ->
+        ( fieldName, { from = val, to = formValue } |> encoder )
+      )
 
 encodeForm : Form -> Encode.Value
 encodeForm form =
@@ -140,11 +188,11 @@ toEdit res form =
     body = res |> HttpView.body
   in
     { form | state = EditState False res }
-    |> Form.set name_   body.info.name
-    |> Form.set memo_   body.info.memo
-    |> Form.set age_   (body.info.age |> String.fromInt)
-    |> Form.set email_  body.info.email
-    |> Form.set tel_    body.info.tel
+    |> Form.set name_  (body |> get_name)
+    |> Form.set memo_  (body |> get_memo)
+    |> Form.set age_   (body |> get_age)
+    |> Form.set email_ (body |> get_email)
+    |> Form.set tel_   (body |> get_tel)
 
 toCommit : Form -> Form
 toCommit form =
@@ -158,13 +206,18 @@ changed form =
     EditState _ res -> { form | state = EditState False res }
     _ -> form
 
+put : HttpView.Migration Response -> Form -> Form
+put mig =
+  if mig |> HttpView.isConflict
+    then changed
+    else identity
+
 
 view : HttpView.Model Data.Response -> Form -> View
 view http form =
   let
     error = "conflict"
 
-    int = String.fromInt
     blank = Validate.blank "blank"
 
     res = http |> HttpView.response
@@ -177,18 +230,18 @@ view http form =
       , res |> Maybe.map HttpView.body
       )
     model =
-      { name  = form |> Conflict.init error data ( .info >> .name,       ( name_,  [ form.name |> blank ] ) )
-      , memo  = form |> Conflict.init error data ( .info >> .memo,       ( memo_,  [] ) )
-      , age   = form |> Conflict.init error data ( .info >> .age >> int, ( age_,   [] ) )
-      , email = form |> Conflict.init error data ( .info >> .email,      ( email_, [] ) )
-      , tel   = form |> Conflict.init error data ( .info >> .tel,        ( tel_,   [] ) )
+      { name  = form |> Conflict.init error data ( get_name, ( name_,  [ form.name |> blank ] ) )
+      , memo  = form |> Conflict.init error data ( get_memo, ( memo_,  [] ) )
+      , age   = form |> Conflict.init error data ( get_age,  ( age_,   [] ) )
+      , email = form |> Conflict.init error data ( get_email,( email_, [] ) )
+      , tel   = form |> Conflict.init error data ( get_tel,  ( tel_,   [] ) )
       }
     errors = List.concat
-      [ model.name     |> Validate.errors
-      , model.memo     |> Validate.errors
-      , model.age      |> Validate.errors
-      , model.email    |> Validate.errors
-      , model.tel      |> Validate.errors
+      [ model.name  |> Validate.errors
+      , model.memo  |> Validate.errors
+      , model.age   |> Validate.errors
+      , model.email |> Validate.errors
+      , model.tel   |> Validate.errors
       ]
   in
     { isStatic = (form.state == StaticState)
@@ -206,14 +259,15 @@ view http form =
 
 expose : EditState -> Maybe Data.Response -> Validate.Model (Conflict.Form Form a) -> State a
 expose st res model =
-  case model |> Validate.expose of
-    (fieldName,form,errors) ->
-      case st of
-        StaticState -> Static fieldName
-        EditState isCommit last ->
-          if isCommit && ( last |> isDifferentResponse res )
-            then Static fieldName
-            else Edit   fieldName form ( form.field |> Conflict.state ) errors
+  let
+    (fieldName,form,errors) = model |> Validate.expose
+  in
+    case st of
+      StaticState -> Static fieldName
+      EditState isCommit last ->
+        if isCommit && ( last |> isDifferentResponse res )
+          then Static fieldName
+          else Edit   fieldName form ( form.field |> Conflict.state ) errors
 
 isDifferentResponse : Maybe Data.Response -> Data.Response -> Bool
 isDifferentResponse data last =

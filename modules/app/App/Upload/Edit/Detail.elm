@@ -68,18 +68,12 @@ put = Http.tracker "put" <|
   \model ->
     let
       data = model |> Frame.app |> .data
-      m = model |> Frame.app |> .detail
+      m    = model |> Frame.app |> .detail
     in
       Http.put ( data |> Data.etag )
-        { url     = "upload/:id/detail" |> Api.url ( data |> Data.pathInfo )
-        , headers = model |> Api.headers
-        , params  = Encode.object
-          [ ( "birthday",  m.form.birthday |> Field.value |> Encode.string )
-          , ( "start_at",  m.form.start_at |> Field.value |> Encode.string )
-          , ( "gender",    m.form.gender   |> Field.value |> Encode.string )
-          , ( "quality",   m.form.quality  |> Field.value |> Encode.string )
-          , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
-          ]
+        { url      = "upload/:id/detail" |> Api.url ( data |> Data.pathInfo )
+        , headers  = model  |> Api.headers
+        , params   = m.form |> View.params data.get
         , response = View.response
         , timeout  = 10 * 1000
         }
@@ -127,15 +121,16 @@ update data msg model =
 
     PutRequest ->
       ( { model | form = model.form |> View.toCommit }
-      , ( T.none
-        , Http.request signature put PutStateChanged
-        )
+      , ( T.none, Http.request signature put PutStateChanged )
       )
     PutStateChanged mig ->
-      ( { model | put = model.put  |> HttpView.update mig }
-      , ( case mig |> HttpView.isSuccess of
-          Just _  -> Data.request
-          Nothing -> T.none
+      ( { model
+        | put  = model.put  |> HttpView.update mig
+        , form = model.form |> View.put mig
+        }
+      , ( if mig |> HttpView.isComplete
+          then Data.request
+          else T.none
         , T.none
         )
       )
