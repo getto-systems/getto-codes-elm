@@ -252,7 +252,7 @@ table model =
                 ]
               ]
             }
-          , Table.group ( Table.th [] [ "info" |> model.i18n.field |> H.text ] )
+          , Table.group ( Table.th [ "is-center" |> A.class ] [ "info" |> model.i18n.field |> H.text ] )
             [ Table.column ( Table.none, Table.none )
               { header  = Table.th [] [ "name" |> model.i18n.field |> H.text ]
               , summary = Table.th [] [ "sum" |> model.i18n.field |> H.text ]
@@ -315,7 +315,7 @@ table model =
                   [ H.p [] [ role |> H.text ] ]
                 }
               ]
-            , Table.group ( Table.th [] [ "comment" |> model.i18n.field |> H.text ] )
+            , Table.group ( Table.th [ "is-center" |> A.class ] [ "comment" |> model.i18n.field |> H.text ] )
               [ Table.rows ( \upload -> upload.comments |> List.map (\comment -> ( upload, comment )) )
                 [ Table.column ( Table.single, Table.none )
                   { header  = Table.th [] [ "user" |> model.i18n.field |> H.text ]
@@ -329,7 +329,7 @@ table model =
                   , content = \(upload,comment) -> Table.td []
                     [ H.p [] [ comment.text |> H.text ] ]
                   }
-                , Table.group ( Table.th [] [ "like" |> model.i18n.field |> H.text ] )
+                , Table.group ( Table.th [ "is-center" |> A.class ] [ "like" |> model.i18n.field |> H.text ] )
                   [ Table.rows
                     ( \(upload,comment) -> comment.likes |> List.map (\like -> ( upload, comment, like )) )
                     [ Table.column ( Table.single, Table.none )
