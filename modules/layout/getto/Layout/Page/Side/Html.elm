@@ -119,18 +119,21 @@ breadcrumb data =
   case data of
     Nothing -> "" |> H.text
     Just (title,items) ->
-      H.ul [] <|
-        [ H.li [] [ title |> H.text ] ] ++
-        ( items |> List.map
-          (\item ->
-            H.li []
-              [ H.a [ item.href |> Href.toString |> A.href ]
-                [ item.icon |> Html.icon []
-                , " " |> H.text
-                , item.title |> H.text
+      H.ul []
+        ( [ [ H.li [] [ title |> H.text ] ]
+          , items |> List.map
+            (\item ->
+              H.li []
+                [ H.a [ item.href |> Href.toString |> A.href ]
+                  [ item.icon |> Html.icon []
+                  , " " |> H.text
+                  , item.title |> H.text
+                  ]
                 ]
-              ]
-          )
+            )
+          ]
+          |> List.concat
+          |> List.intersperse (H.li [] [ Icon.fas "caret-right" |> Html.icon ["fa-fw"] ])
         )
 
 
