@@ -7,7 +7,6 @@ module GettoUpload.App.Upload.Edit.Detail exposing
   , subscriptions
   , update
   , contents
-  , dialogs
   )
 import GettoUpload.App.Upload.Edit.Model as Model
 import GettoUpload.App.Upload.Edit.Detail.View as View
@@ -21,13 +20,8 @@ import GettoUpload.View.Http as HttpView
 import GettoUpload.I18n.App as AppI18n
 import GettoUpload.I18n.App.Upload as I18n
 import GettoUpload.I18n.Http as HttpI18n
-import GettoUpload.Extension.Href as Href
-import GettoUpload.Extension.Href.Upload as Upload
 
 import Getto.Command.Transition as T exposing ( Transition )
-import Getto.Url.Query.Encode as QueryEncode
-import Getto.Url.Query.Decode as QueryDecode
-import Getto.Url.Query.SafeDecode as QuerySafeDecode
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
 import Getto.Field.Form as Form
@@ -144,8 +138,7 @@ contents model =
 detail : FrameModel a -> Html Msg
 detail model = L.lazy2
   (\data m -> Html.detail
-    { title = signature
-    , view = m.form |> View.view data.get
+    { view = m.form |> View.view data.get
     , put  = m.put  |> HttpView.state
     , options =
       { gender =
@@ -184,6 +177,3 @@ detail model = L.lazy2
   )
   (model |> Frame.app |> .data)
   (model |> Frame.app |> .detail)
-
-dialogs : FrameModel a -> List (Html Msg)
-dialogs model = []

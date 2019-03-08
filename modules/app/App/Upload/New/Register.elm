@@ -192,9 +192,8 @@ contents model =
 register : FrameModel a -> Html Msg
 register model = L.lazy
   (\m -> Html.register
-    { title = "register"
-    , view  = m.form |> View.view
-    , http  = m.upload
+    { view   = m.form |> View.view
+    , upload = m.upload
     , options =
       { gender =
         [ ( "", "please-select" |> AppI18n.form )

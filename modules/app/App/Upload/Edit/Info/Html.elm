@@ -12,24 +12,20 @@ import GettoUpload.View.Http as HttpView
 import Getto.Field.Edit exposing ( State(..) )
 import Getto.Field.Conflict as Conflict
 
-import File exposing ( File )
-
-import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
 
 
 type alias InfoModel msg =
-  { title : String
-  , view  : View.View
+  { view  : View.View
   , put   : HttpView.State
   , msg :
     { put     : msg
-    , input   : View.Prop String -> String -> msg
     , change  : msg
     , edit    : msg
     , static  : msg
+    , input   : View.Prop String -> String -> msg
     , resolve : View.Prop String -> Conflict.Resolve String -> msg
     }
   , i18n :
@@ -54,12 +50,11 @@ info model =
             [ H.section [] [ Html.spinner ] ]
     Just res ->
       let
-        header = res |> HttpView.header
-        body   = res |> HttpView.body
+        body = res |> HttpView.body
       in
         H.section []
           [ H.form [ model.msg.put |> E.onSubmit ]
-            [ H.h2 [] [ model.title |> model.i18n.title |> H.text ]
+            [ H.h2 [] [ "info" |> model.i18n.title |> H.text ]
             , H.table []
               [ H.tbody [] <| List.concat
                 [ case model.view.form.name of

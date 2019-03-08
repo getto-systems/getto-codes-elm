@@ -1,5 +1,6 @@
 module GettoUpload.App.Upload.Edit.Data.View exposing
   ( Response
+  , State(..)
   , response
   , encodeResponse
   , decodeResponse
@@ -21,6 +22,7 @@ type alias ResponseHeader =
 type alias ResponseBody =
   { info   : ResponseInfo
   , detail : ResponseDetail
+  , state  : ResponseState
   }
 type alias ResponseInfo =
   { name     : String
@@ -36,12 +38,19 @@ type alias ResponseDetail =
   , quality  : String
   , roles    : Set String
   }
+type alias ResponseState =
+  { state : State
+  }
+
+type State
+  = Working
+  | Complete
 
 response : HttpView.ResponseDecoder Response
 response =  HttpView.decoder
   { header = HeaderDecode.map ResponseHeader
     ( HeaderDecode.at "etag" HeaderDecode.string )
-  , body = Decode.map2 ResponseBody
+  , body = Decode.map3 ResponseBody
     ( Decode.at ["info"]
       ( Decode.map5 ResponseInfo
         (Decode.at ["name"]  Decode.string)
@@ -60,7 +69,18 @@ response =  HttpView.decoder
         (Decode.at ["roles"]   (Decode.string |> Decode.list |> Decode.map Set.fromList))
       )
     )
+    ( Decode.at ["state"]
+      ( Decode.map ResponseState
+        (Decode.at ["state"] (Decode.string |> Decode.map toState))
+      )
+    )
   }
+
+toState : String -> State
+toState state =
+  case state of
+    "complete" -> Complete
+    _          -> Working
 
 encodeResponse : Response -> Encode.Value
 encodeResponse res =
