@@ -1,9 +1,10 @@
 module GettoUpload.App.Upload.Edit.Data exposing
   ( Model
   , Msg
+  , FrameTransition
   , etag
   , pathInfo
-  , request
+  , getRequestIfComplete
   , init
   , encodeQuery
   , decodeQuery
@@ -41,7 +42,7 @@ type alias Model =
   }
 
 type Msg
-  = GetStateChanged (HttpView.Migration View.Response)
+  = StateChanged (HttpView.Migration View.Response)
 
 signature = "data"
 
@@ -59,16 +60,14 @@ get = Http.tracker "get" <|
         , timeout = 10 * 1000
         }
 
-etag : Model -> Maybe String
-etag model = model.get |> HttpView.response |> Maybe.map (HttpView.header >> .etag)
+getTrack   = Http.track   signature get StateChanged
+getRequest = Http.request signature get StateChanged
 
-pathInfo : Model -> List ( String, String )
-pathInfo model =
-  [ ( "id", model.id |> String.fromInt )
-  ]
-
-request : FrameTransition a
-request = Http.request signature get GetStateChanged
+getRequestIfComplete : HttpView.Migration response -> FrameTransition a
+getRequestIfComplete mig =
+  if mig |> HttpView.isComplete
+    then getRequest
+    else T.none
 
 
 init : Frame.InitModel -> ( Model, FrameTransition a )
@@ -76,9 +75,17 @@ init model =
   ( { id  = 0
     , get = HttpView.empty
     }
-  , [ request
+  , [ getRequest
     ] |> T.batch
   )
+
+etag : Model -> Maybe String
+etag model = model.get |> HttpView.response |> Maybe.map (HttpView.header >> .etag)
+
+pathInfo : Model -> List ( String, String )
+pathInfo model =
+  [ ( "id", model.id |> String.fromInt )
+  ]
 
 encodeQuery : Model -> QueryEncode.Value
 encodeQuery model = QueryEncode.empty
@@ -93,10 +100,7 @@ decodeQuery names value model =
 encodeStore : Model -> Encode.Value
 encodeStore model = Encode.object
   [ ( model.id |> String.fromInt
-    , [ ( "response"
-        , model.get |> HttpView.response |> Maybe.map View.encodeResponse |> Maybe.withDefault Encode.null
-        )
-      ] |> Encode.object
+    , model.get |> HttpView.response |> Maybe.map View.encodeResponse |> Maybe.withDefault Encode.null
     )
   ]
 
@@ -107,19 +111,18 @@ decodeStore value model =
   in
     { model
     | get = model.get |>
-      case obj |> Decode.decodeValue (Decode.at ["response"] View.decodeResponse) of
+      case obj |> Decode.decodeValue View.decodeResponse of
         Ok res -> res |> HttpView.success |> HttpView.update
         Err _  -> identity
     }
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-  Http.track signature get GetStateChanged
+subscriptions model = getTrack
 
 update : Msg -> Model -> ( Model, FrameTransition a )
 update msg model =
   case msg of
-    GetStateChanged mig ->
+    StateChanged mig ->
       ( { model | get = model.get |> HttpView.update mig }
       , case mig |> HttpView.isSuccess of
         Just _  -> Frame.storeApp

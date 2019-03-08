@@ -4,6 +4,7 @@ module Getto.Field exposing
   , id
   , name
   , value
+  , pair
   , set
   , toggle
   , attribute
@@ -34,6 +35,9 @@ name (Model _ model) = model.name
 
 value : Model attr value -> value
 value (Model _ model) = model.value
+
+pair : Model attr value -> ( String, value )
+pair model = ( model |> id, model |> value )
 
 
 set : value -> Model attr value -> Model attr value

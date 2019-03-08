@@ -6,13 +6,14 @@ module GettoUpload.App.Upload.Edit.Info.View exposing
   , Response
   , response
   , init
+  , pairs
   , params
   , encodeForm
   , decodeForm
   , toStatic
   , toEdit
-  , toCommit
-  , changed
+  , change
+  , commit
   , put
   , view
   )
@@ -103,6 +104,15 @@ init signature =
   , tel   = Field.init signature "tel"   Conflict.none ""
   }
 
+pairs : Form -> List ( String, String )
+pairs form =
+  [ form.name  |> Field.pair
+  , form.memo  |> Field.pair
+  , form.age   |> Field.pair
+  , form.email |> Field.pair
+  , form.tel   |> Field.pair
+  ]
+
 params : HttpView.Model Data.Response -> Form -> Encode.Value
 params get form =
   let
@@ -164,7 +174,7 @@ decodeForm value =
     , value |> decode "form"     Decode.value
     )
   of
-    ( Just "edit", Just res, Just form ) -> toEdit res >> decodeFields form
+    ( Just "edit", Just res, Just form ) -> toEditWithResponse res >> decodeFields form
     _ -> identity
 
 decodeFields : Decode.Value -> Form -> Form
@@ -182,8 +192,14 @@ decode key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMa
 toStatic : Form -> Form
 toStatic form = { form | state = StaticState }
 
-toEdit : Data.Response -> Form -> Form
-toEdit res form =
+toEdit : HttpView.Model Data.Response -> Form -> Form
+toEdit http =
+  case http |> HttpView.response of
+    Nothing  -> identity
+    Just res -> toEditWithResponse res
+
+toEditWithResponse : Data.Response -> Form -> Form
+toEditWithResponse res form =
   let
     body = res |> HttpView.body
   in
@@ -194,14 +210,14 @@ toEdit res form =
     |> Form.set email_ (body |> get_email)
     |> Form.set tel_   (body |> get_tel)
 
-toCommit : Form -> Form
-toCommit form =
+commit : Form -> Form
+commit form =
   case form.state of
     EditState _ res -> { form | state = EditState True res }
     _ -> form
 
-changed : Form -> Form
-changed form =
+change : Form -> Form
+change form =
   case form.state of
     EditState _ res -> { form | state = EditState False res }
     _ -> form
@@ -209,7 +225,7 @@ changed form =
 put : HttpView.Migration Response -> Form -> Form
 put mig =
   if mig |> HttpView.isConflict
-    then changed
+    then change
     else identity
 
 

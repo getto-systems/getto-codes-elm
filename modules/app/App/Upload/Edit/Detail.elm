@@ -43,7 +43,6 @@ import Html.Attributes as A
 import Html.Lazy as L
 
 type alias FrameModel a = Frame.Model Layout.Model { a | data : Data.Model, detail : Model }
-type alias DataTransition a = Transition (FrameModel a) Data.Msg
 type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
   { form : View.Form
@@ -53,13 +52,13 @@ type alias Model =
 type Msg
   = Edit
   | Static
+  | Change
+  | Request
   | Input      (View.Prop String)       String
   | Toggle     (View.Prop (Set String)) String
   | Resolve    (View.Prop String)       (Conflict.Resolve String)
   | ResolveSet (View.Prop (Set String)) (Conflict.Resolve (Set String))
-  | Change
-  | PutRequest
-  | PutStateChanged (HttpView.Migration View.Response)
+  | StateChanged (HttpView.Migration View.Response)
 
 signature = "detail"
 
@@ -70,13 +69,16 @@ put = Http.tracker "put" <|
       data = model |> Frame.app |> .data
       m    = model |> Frame.app |> .detail
     in
-      Http.put ( data |> Data.etag )
+      Http.put
         { url      = "upload/:id/detail" |> Api.url ( data |> Data.pathInfo )
         , headers  = model  |> Api.headers
         , params   = m.form |> View.params data.get
         , response = View.response
         , timeout  = 10 * 1000
         }
+
+putTrack   = Http.track   signature put StateChanged
+putRequest = Http.request signature put StateChanged
 
 
 init : Frame.InitModel -> ( Model, FrameTransition a )
@@ -102,52 +104,32 @@ decodeStore data value model =
   }
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-  Http.track signature put PutStateChanged
+subscriptions model = putTrack
 
-update : Data.Model -> Msg -> Model -> ( Model, ( DataTransition a, FrameTransition a ) )
+update : Data.Model -> Msg -> Model -> ( Model, ( Data.FrameTransition a, FrameTransition a ) )
 update data msg model =
   case msg of
-    Edit   -> ( { model | form = model.form |> edit data },     ( T.none, fillAndStore ) )
-    Static -> ( { model | form = model.form |> View.toStatic }, ( T.none, T.none ) )
+    Edit    -> ( { model | form = model.form |> View.toEdit data.get }, ( T.none, fillAndStore   ) )
+    Static  -> ( { model | form = model.form |> View.toStatic },        ( T.none, Frame.storeApp ) )
+    Change  -> ( { model | form = model.form |> View.change },          ( T.none, Frame.storeApp ) )
+    Request -> ( { model | form = model.form |> View.commit },          ( T.none, putRequest     ) )
 
-    Input  prop value -> ( { model | form = model.form |> Form.set prop value },    ( T.none, T.none ) )
+    Input  prop value -> ( { model | form = model.form |> Form.set    prop value }, ( T.none, T.none ) )
     Toggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, ( T.none, T.none ) )
 
-    Resolve prop mig ->    ( { model | form = model.form |> Conflict.resolve prop mig }, ( T.none, fillAndStore ) )
+    Resolve    prop mig -> ( { model | form = model.form |> Conflict.resolve prop mig }, ( T.none, fillAndStore ) )
     ResolveSet prop mig -> ( { model | form = model.form |> Conflict.resolve prop mig }, ( T.none, fillAndStore ) )
 
-    Change -> ( { model | form = model.form |> View.changed }, ( T.none, Frame.storeApp ) )
-
-    PutRequest ->
-      ( { model | form = model.form |> View.toCommit }
-      , ( T.none, Http.request signature put PutStateChanged )
-      )
-    PutStateChanged mig ->
+    StateChanged mig ->
       ( { model
         | put  = model.put  |> HttpView.update mig
         , form = model.form |> View.put mig
         }
-      , ( if mig |> HttpView.isComplete
-          then Data.request
-          else T.none
-        , T.none
-        )
+      , ( mig |> Data.getRequestIfComplete, T.none )
       )
 
-edit : Data.Model -> View.Form -> View.Form
-edit data form =
-  case data.get |> HttpView.response of
-    Nothing -> form
-    Just res -> form |> View.toEdit res
-
 fill : FrameTransition a
-fill = Frame.app >> .detail >>
-  (\model -> Dom.fill
-    [ model.form.birthday |> Dom.string
-    , model.form.start_at |> Dom.string
-    ]
-  )
+fill = Frame.app >> .detail >> .form >> View.pairs >> Dom.fill
 
 fillAndStore : FrameTransition a
 fillAndStore = [ fill, Frame.storeApp ] |> T.batch
@@ -181,7 +163,7 @@ detail model = L.lazy2
         ]
       }
     , msg =
-      { put        = PutRequest
+      { put        = Request
       , input      = Input
       , toggle     = Toggle
       , resolve    = Resolve
