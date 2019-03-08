@@ -1,5 +1,6 @@
 module GettoUpload.App.Upload.New.Register.Html exposing
   ( register
+  , pairs
   )
 import GettoUpload.App.Upload.New.Register.View as View
 import GettoUpload.View.Html as Html
@@ -192,3 +193,14 @@ register model =
                 ]
       ]
     ]
+
+pairs : View.Form -> List ( String, String )
+pairs form =
+  [ form.name     |> Field.pair
+  , form.memo     |> Field.pair
+  , form.age      |> Field.pair
+  , form.email    |> Field.pair
+  , form.tel      |> Field.pair
+  , form.birthday |> Field.pair
+  , form.start_at |> Field.pair
+  ]

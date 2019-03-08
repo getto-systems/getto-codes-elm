@@ -1,5 +1,6 @@
 module GettoUpload.App.Upload.Edit.Info.Html exposing
   ( info
+  , pairs
   )
 import GettoUpload.App.Upload.Edit.Info.View as View
 import GettoUpload.View.Html as Html
@@ -9,6 +10,7 @@ import GettoUpload.View.Html.Http as Http
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Http as HttpView
 
+import Getto.Field as Field
 import Getto.Field.Edit exposing ( State(..) )
 import Getto.Field.Conflict as Conflict
 
@@ -184,3 +186,12 @@ info model =
                       ]
             ]
           ]
+
+pairs : View.Fields -> List ( String, String )
+pairs fields =
+  [ fields.name  |> Field.pair
+  , fields.memo  |> Field.pair
+  , fields.age   |> Field.pair
+  , fields.email |> Field.pair
+  , fields.tel   |> Field.pair
+  ]

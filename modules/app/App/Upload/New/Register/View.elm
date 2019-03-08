@@ -5,6 +5,7 @@ module GettoUpload.App.Upload.New.Register.View exposing
   , Response
   , response
   , init
+  , params
   , encodeForm
   , decodeForm
   , view
@@ -15,6 +16,7 @@ import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Validate as Validate
 import Getto.Http.Header.Decode as HeaderDecode
+import Getto.Http.Part as Part
 
 import Json.Encode as Encode
 import Json.Decode as Decode
@@ -100,6 +102,21 @@ init signature =
   , quality  = Field.init signature "quality"  () ""
   , roles    = Field.init signature "roles"    () Set.empty
   }
+
+params : Form -> Part.Value
+params form = Part.object
+  [ ( "name",      form.name     |> Field.value |> Part.string )
+  , ( "text" ,     form.text     |> Field.value |> Part.list Part.file )
+  , ( "memo",      form.memo     |> Field.value |> Part.string )
+  , ( "age",       form.age      |> Field.value |> Part.string )
+  , ( "email",     form.email    |> Field.value |> Part.string )
+  , ( "tel",       form.tel      |> Field.value |> Part.string )
+  , ( "birthday",  form.birthday |> Field.value |> Part.string )
+  , ( "start_at",  form.start_at |> Field.value |> Part.string )
+  , ( "gender",    form.gender   |> Field.value |> Part.string )
+  , ( "quality",   form.quality  |> Field.value |> Part.string )
+  , ( "roles",     form.roles    |> Field.value |> Set.toList |> Part.list Part.string )
+  ]
 
 encodeForm : Form -> Encode.Value
 encodeForm form =
