@@ -156,7 +156,7 @@ detail model =
                         [ H.ul []
                           ( body.detail.roles |> Set.toList |> List.map
                             (\role ->
-                              H.li [] [ role |> H.text ]
+                              H.li [] [ H.p [] [ role |> H.text ] ]
                             )
                           )
                         ]

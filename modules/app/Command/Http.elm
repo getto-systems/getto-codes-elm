@@ -27,8 +27,8 @@ import Task
 type Tracker model response = Tracker String (model -> Request response)
 type Request response
   = Get    (Maybe String) (RequestInner response QueryEncode.Value)
-  | Put    (Maybe String) (RequestInner response Encode.Value)
   | Delete (Maybe String) (RequestInner response Encode.Value)
+  | Put    (RequestInner response Encode.Value)
   | Post   (RequestInner response Encode.Value)
   | Upload (RequestInner response Part.Value)
 
@@ -66,8 +66,8 @@ request signature (Tracker marker req) msg model =
           , tracker  = trackMarker
           , msg      = msg
           }
-        Put etag data ->
-          { method   = "PUT"
+        Delete etag data ->
+          { method   = "DELETE"
           , headers  = data |> headers |> appendIfMatch etag
           , url      = data.url
           , body     = data |> json
@@ -76,9 +76,9 @@ request signature (Tracker marker req) msg model =
           , tracker  = trackMarker
           , msg      = msg
           }
-        Delete etag data ->
-          { method   = "DELETE"
-          , headers  = data |> headers |> appendIfMatch etag
+        Put data ->
+          { method   = "PUT"
+          , headers  = data |> headers
           , url      = data.url
           , body     = data |> json
           , response = data.response
@@ -148,7 +148,7 @@ get = Get Nothing
 getIfNoneMatch : Maybe String -> RequestInner response QueryEncode.Value -> Request response
 getIfNoneMatch = Get
 
-put : Maybe String -> RequestInner response Encode.Value -> Request response
+put : RequestInner response Encode.Value -> Request response
 put = Put
 
 delete : Maybe String -> RequestInner response Encode.Value -> Request response

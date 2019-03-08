@@ -6,13 +6,14 @@ module GettoUpload.App.Upload.Edit.Detail.View exposing
   , Response
   , response
   , init
+  , pairs
   , params
   , encodeForm
   , decodeForm
   , toStatic
   , toEdit
-  , toCommit
-  , changed
+  , change
+  , commit
   , put
   , view
   )
@@ -104,6 +105,12 @@ init signature =
   , roles    = Field.init signature "roles"    Conflict.none Set.empty
   }
 
+pairs : Form -> List ( String, String )
+pairs form =
+  [ form.birthday |> Field.pair
+  , form.start_at |> Field.pair
+  ]
+
 params : HttpView.Model Data.Response -> Form -> Encode.Value
 params get form =
   let
@@ -167,7 +174,7 @@ decodeForm value =
     , value |> decode "form"     Decode.value
     )
   of
-    ( Just "edit", Just res, Just form ) -> toEdit res >> decodeFields form
+    ( Just "edit", Just res, Just form ) -> toEditWithResponse res >> decodeFields form
     _ -> identity
 
 decodeFields : Decode.Value -> Form -> Form
@@ -185,8 +192,14 @@ decode key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMa
 toStatic : Form -> Form
 toStatic form = { form | state = StaticState }
 
-toEdit : Data.Response -> Form -> Form
-toEdit res form =
+toEdit : HttpView.Model Data.Response -> Form -> Form
+toEdit http =
+  case http |> HttpView.response of
+    Nothing  -> identity
+    Just res -> res |> toEditWithResponse
+
+toEditWithResponse : Data.Response -> Form -> Form
+toEditWithResponse res form =
   let
     body = res |> HttpView.body
   in
@@ -197,14 +210,14 @@ toEdit res form =
     |> Form.set quality_  (body |> get_quality)
     |> Form.set roles_    (body |> get_roles)
 
-toCommit : Form -> Form
-toCommit form =
+commit : Form -> Form
+commit form =
   case form.state of
     EditState _ res -> { form | state = EditState True res }
     _ -> form
 
-changed : Form -> Form
-changed form =
+change : Form -> Form
+change form =
   case form.state of
     EditState _ res -> { form | state = EditState False res }
     _ -> form
@@ -212,7 +225,7 @@ changed form =
 put : HttpView.Migration Response -> Form -> Form
 put mig =
   if mig |> HttpView.isConflict
-    then changed
+    then change
     else identity
 
 
