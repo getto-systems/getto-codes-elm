@@ -2,9 +2,13 @@ module GettoUpload.I18n.App.Upload exposing
   ( title
   , field
   , error
+  , message
+  , button
   , gender
   , quality
+  , state
   )
+import GettoUpload.App.Upload.Edit.Data.View as Data
 import GettoUpload.I18n.App as AppI18n
 
 title : String -> String
@@ -13,6 +17,10 @@ title name =
     "register" -> "登録"
     "info"     -> "基本情報"
     "detail"   -> "詳細情報"
+    "complete" -> "状態"
+
+    "to-complete" -> "完了します"
+    "to-work"     -> "作業中に戻します"
 
     _ -> name
 
@@ -30,6 +38,7 @@ field name =
     "gender"   -> "性別"
     "quality"  -> "品質"
     "roles"    -> "権限"
+    "state"    -> "状態"
 
     _ -> name
 
@@ -37,6 +46,25 @@ error : String -> String
 error name =
   case name of
     _ -> name |> AppI18n.error
+
+message : String -> String
+message name =
+  case name of
+    "to-complete" -> "作業を完了して内容を編集できないようにします"
+    "to-work"     -> "作業中に戻して内容を編集できるようにします"
+
+    _ -> name
+
+button : String -> String
+button name =
+  case name of
+    "to-complete" -> "完了する"
+    "to-work"     -> "作業中に戻す"
+
+    "to-complete-connecting" -> "完了しています"
+    "to-work-connecting"     -> "作業中に戻しています"
+
+    _ -> name
 
 gender : String -> String
 gender name =
@@ -54,3 +82,9 @@ quality name =
     "low"  -> "低品質"
 
     _ -> name
+
+state : Data.State -> String
+state st =
+  case st of
+    Data.Working  -> "作業中"
+    Data.Complete -> "完了"

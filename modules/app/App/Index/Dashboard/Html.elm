@@ -11,8 +11,7 @@ import Html.Attributes as A
 
 
 type alias ExampleModel =
-  { name : String
-  , data : View.Example
+  { data : View.Example
   , page : Href
   , i18n :
     { title : Href.Path -> String
@@ -23,7 +22,7 @@ type alias ExampleModel =
 example : ExampleModel -> Html msg
 example model =
   H.section []
-    [ H.h2 [] [ model.name |> model.i18n.name |> H.text ]
+    [ H.h2 [] [ "example" |> model.i18n.name |> H.text ]
     , H.p []
       [ H.em []
         [ model.data.current |> H.text

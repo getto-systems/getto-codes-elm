@@ -147,6 +147,10 @@ mock =
             , ( "roles",    ["upload"] |> Encode.list Encode.string )
             ] |> Encode.object
           )
+        , ( "state"
+          , [ ( "state", "working" |> Encode.string )
+            ] |> Encode.object
+          )
         ] |> Encode.object
       }
     --}
@@ -154,32 +158,32 @@ mock =
   , ( ( "PUT", "upload/:id/info" )
     {--, Real --}
     {--}, Mock 1000
-      { header =
-        [ ( "etag", "UPLOAD-ETAG" )
-        ] |> Dict.fromList
-      , body =
-        [ ( "name",  "John Doe - UPDATED!!" |> Encode.string )
-        , ( "memo",  "hello, world\nmulti line memo" |> Encode.string )
-        , ( "age",   40 |> Encode.int )
-        , ( "email", "john@example.com" |> Encode.string )
-        , ( "tel",   "090-xxxx-1234" |> Encode.string )
-        ] |> Encode.object
+      { header = Dict.empty
+      , body = Encode.null
       }
     --}
     )
   , ( ( "PUT", "upload/:id/detail" )
     {--, Real --}
     {--}, Mock 1000
-      { header =
-        [ ( "etag", "UPLOAD-ETAG" )
-        ] |> Dict.fromList
-      , body =
-        [ ( "birthday", "1980-10-10" |> Encode.string )
-        , ( "start_at", "10:10" |> Encode.string )
-        , ( "gender",   "male" |> Encode.string )
-        , ( "quality",  "high" |> Encode.string )
-        , ( "roles",    ["upload"] |> Encode.list Encode.string )
-        ] |> Encode.object
+      { header = Dict.empty
+      , body = Encode.null
+      }
+    --}
+    )
+  , ( ( "PUT", "upload/:id/complete" )
+    {--, Real --}
+    {--}, Mock 1000
+      { header = Dict.empty
+      , body = Encode.null
+      }
+    --}
+    )
+  , ( ( "PUT", "upload/:id/work" )
+    {--, Real --}
+    {--}, Mock 1000
+      { header = Dict.empty
+      , body = Encode.null
       }
     --}
     )

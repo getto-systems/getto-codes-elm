@@ -8,6 +8,7 @@ module GettoUpload.View.Html.Button exposing
   , cancel
   , save
   , search
+  , complete
   )
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Html as Html
@@ -67,6 +68,11 @@ save text =
 search : String -> Html msg
 search text =
   submit []
+    [ text |> H.text ]
+
+complete : List String -> String -> Html msg
+complete class text =
+  submit [ class |> String.join " " |> A.class ]
     [ text |> H.text ]
 
 submit : List (H.Attribute msg) -> List (Html msg) -> Html msg

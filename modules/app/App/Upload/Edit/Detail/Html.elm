@@ -12,8 +12,6 @@ import GettoUpload.View.Http as HttpView
 import Getto.Field.Edit exposing ( State(..) )
 import Getto.Field.Conflict as Conflict
 
-import File exposing ( File )
-
 import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
@@ -21,8 +19,7 @@ import Html.Events as E
 
 
 type alias DetailModel msg =
-  { title : String
-  , view  : View.View
+  { view  : View.View
   , put   : HttpView.State
   , options :
     { gender  : List ( String, String )
@@ -31,12 +28,12 @@ type alias DetailModel msg =
     }
   , msg :
     { put        : msg
-    , input      : View.Prop String -> String -> msg
-    , toggle     : View.Prop (Set String) -> String -> msg
     , change     : msg
     , edit       : msg
     , static     : msg
-    , resolve    : View.Prop String -> Conflict.Resolve String -> msg
+    , input      : View.Prop String       -> String -> msg
+    , toggle     : View.Prop (Set String) -> String -> msg
+    , resolve    : View.Prop String       -> Conflict.Resolve String       -> msg
     , resolveSet : View.Prop (Set String) -> Conflict.Resolve (Set String) -> msg
     }
   , i18n :
@@ -51,22 +48,14 @@ type alias DetailModel msg =
 detail : DetailModel msg -> Html msg
 detail model =
   case model.view.response of
-    Nothing ->
-      case model.view.state of
-        HttpView.Ready (Just error) ->
-          H.section [ "loading" |> A.class ]
-            [ H.section [] [ error |> model.i18n.http |> Html.badge ["is-danger"] ] ]
-        _ ->
-          H.section [ "loading" |> A.class ]
-            [ H.section [] [ Html.spinner ] ]
+    Nothing -> "" |> H.text
     Just res ->
       let
-        header = res |> HttpView.header
-        body   = res |> HttpView.body
+        body = res |> HttpView.body
       in
         H.section []
           [ H.form [ model.msg.put |> E.onSubmit ]
-            [ H.h2 [] [ model.title |> model.i18n.title |> H.text ]
+            [ H.h2 [] [ "detail" |> model.i18n.title |> H.text ]
             , H.table []
               [ H.tbody [] <| List.concat
                 [ case model.view.form.birthday of

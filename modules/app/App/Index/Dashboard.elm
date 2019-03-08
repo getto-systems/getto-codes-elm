@@ -84,8 +84,7 @@ dashboard model =
 example : FrameModel a -> Html Msg
 example model = L.lazy
   (\static -> Html.example
-    { name = "example"
-    , data = View.example
+    { data = View.example
       { current = 3
       , target = 20
       }

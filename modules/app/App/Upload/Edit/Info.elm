@@ -7,7 +7,6 @@ module GettoUpload.App.Upload.Edit.Info exposing
   , subscriptions
   , update
   , contents
-  , dialogs
   )
 import GettoUpload.App.Upload.Edit.Model as Model
 import GettoUpload.App.Upload.Edit.Info.View as View
@@ -21,13 +20,8 @@ import GettoUpload.View.Http as HttpView
 import GettoUpload.I18n.App as AppI18n
 import GettoUpload.I18n.App.Upload as I18n
 import GettoUpload.I18n.Http as HttpI18n
-import GettoUpload.Extension.Href as Href
-import GettoUpload.Extension.Href.Upload as Upload
 
 import Getto.Command.Transition as T exposing ( Transition )
-import Getto.Url.Query.Encode as QueryEncode
-import Getto.Url.Query.Decode as QueryDecode
-import Getto.Url.Query.SafeDecode as QuerySafeDecode
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
 import Getto.Field.Form as Form
@@ -38,7 +32,6 @@ import Getto.Field.Conflict as Conflict
 import Json.Encode as Encode
 import Json.Decode as Decode
 
-import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
@@ -141,8 +134,7 @@ contents model =
 info : FrameModel a -> Html Msg
 info model = L.lazy2
   (\data m -> Html.info
-    { title = signature
-    , view = m.form |> View.view data.get
+    { view = m.form |> View.view data.get
     , put  = m.put  |> HttpView.state
     , msg =
       { put     = Request
@@ -163,6 +155,3 @@ info model = L.lazy2
   )
   (model |> Frame.app |> .data)
   (model |> Frame.app |> .info)
-
-dialogs : FrameModel a -> List (Html Msg)
-dialogs model = []

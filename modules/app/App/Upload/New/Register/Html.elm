@@ -21,9 +21,8 @@ import Html.Events as E
 
 
 type alias RegisterModel msg =
-  { title : String
-  , view  : View.View
-  , http  : HttpView.Model View.Response
+  { view   : View.View
+  , upload : HttpView.Model View.Response
   , options :
     { gender  : List ( String, String )
     , quality : List ( String, String )
@@ -49,7 +48,7 @@ register : RegisterModel msg -> Html msg
 register model =
   H.section []
     [ H.form [ model.msg.upload |> E.onSubmit ]
-      [ H.h2 [] [ model.title |> model.i18n.title |> H.text ]
+      [ H.h2 [] [ "register" |> model.i18n.title |> H.text ]
       , H.table []
         [ H.tbody [] <| List.concat
           [ case model.view.form.name of
@@ -177,7 +176,7 @@ register model =
           ]
         ]
       , H.footer [] <|
-        case model.http |> HttpView.state of
+        case model.upload |> HttpView.state of
           HttpView.Connecting progress ->
             [ "uploading" |> model.i18n.form |> Button.connecting
             , progress |> Http.progress
