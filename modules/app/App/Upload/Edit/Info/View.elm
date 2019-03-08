@@ -1,11 +1,11 @@
 module GettoUpload.App.Upload.Edit.Info.View exposing
   ( Form
+  , Fields
   , View
   , Prop
   , Response
   , response
   , init
-  , pairs
   , params
   , encodeForm
   , decodeForm
@@ -83,17 +83,6 @@ init signature =
   , tel   = Field.init signature "tel"   Conflict.none ""
   }
   |> Edit.init
-
-pairs : Form -> List ( String, String )
-pairs = Edit.fields >>
-  (\fields ->
-    [ fields.name  |> Field.pair
-    , fields.memo  |> Field.pair
-    , fields.age   |> Field.pair
-    , fields.email |> Field.pair
-    , fields.tel   |> Field.pair
-    ]
-  )
 
 params : HttpView.Model Data.Response -> Form -> Encode.Value
 params get = Edit.fields >>

@@ -120,7 +120,7 @@ update data msg model =
       )
 
 fill : FrameTransition a
-fill = Frame.app >> .info >> .form >> View.pairs >> Dom.fill
+fill = Frame.app >> .info >> .form >> Edit.fields >> Html.pairs >> Dom.fill
 
 fillAndStore : FrameTransition a
 fillAndStore = [ fill, Frame.storeApp ] |> T.batch

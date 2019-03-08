@@ -28,7 +28,6 @@ import GettoUpload.Extension.Href.Upload as Upload
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
-import Getto.Http.Part as Part
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
 import Getto.Field.Form as Form
@@ -73,20 +72,8 @@ upload = Http.tracker "upload" <|
     in
       Http.upload
         { url     = "upload" |> Api.url []
-        , headers = model |> Api.headers
-        , params  = Part.object
-          [ ( "name",      m.form.name     |> Field.value |> Part.string )
-          , ( "text" ,     m.form.text     |> Field.value |> Part.list Part.file )
-          , ( "memo",      m.form.memo     |> Field.value |> Part.string )
-          , ( "age",       m.form.age      |> Field.value |> Part.string )
-          , ( "email",     m.form.email    |> Field.value |> Part.string )
-          , ( "tel",       m.form.tel      |> Field.value |> Part.string )
-          , ( "birthday",  m.form.birthday |> Field.value |> Part.string )
-          , ( "start_at",  m.form.start_at |> Field.value |> Part.string )
-          , ( "gender",    m.form.gender   |> Field.value |> Part.string )
-          , ( "quality",   m.form.quality  |> Field.value |> Part.string )
-          , ( "roles",     m.form.roles    |> Field.value |> Set.toList |> Part.list Part.string )
-          ]
+        , headers = model  |> Api.headers
+        , params  = m.form |> View.params
         , response = View.response
         , timeout = 30 * 1000
         }
@@ -144,17 +131,7 @@ decodeStore value model =
       }
 
 fill : FrameTransition a
-fill = Frame.app >> .register >>
-  (\model -> Dom.fill
-    [ model.form.name     |> Field.pair
-    , model.form.memo     |> Field.pair
-    , model.form.age      |> Field.pair
-    , model.form.email    |> Field.pair
-    , model.form.tel      |> Field.pair
-    , model.form.birthday |> Field.pair
-    , model.form.start_at |> Field.pair
-    ]
-  )
+fill = Frame.app >> .register >> .form >> Html.pairs >> Dom.fill
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
