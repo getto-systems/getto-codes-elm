@@ -36,8 +36,9 @@ getto_elm_build_main(){
   dist_target=$dist/${dist_target}.js
 
   if [ -f "$src_target" ]; then
-    echo "elm build: $target"
     getto_elm_build_remove_relative_module_cache $target
+
+    echo "elm build: $target"
     "$elm" make "$src_target" --output="$tmp_target" && getto_elm_build_after
   fi
 }

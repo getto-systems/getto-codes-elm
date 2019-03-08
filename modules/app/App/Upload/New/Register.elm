@@ -146,13 +146,13 @@ decodeStore value model =
 fill : FrameTransition a
 fill = Frame.app >> .register >>
   (\model -> Dom.fill
-    [ model.form.name     |> Dom.string
-    , model.form.memo     |> Dom.string
-    , model.form.age      |> Dom.string
-    , model.form.email    |> Dom.string
-    , model.form.tel      |> Dom.string
-    , model.form.birthday |> Dom.string
-    , model.form.start_at |> Dom.string
+    [ model.form.name     |> Field.pair
+    , model.form.memo     |> Field.pair
+    , model.form.age      |> Field.pair
+    , model.form.email    |> Field.pair
+    , model.form.tel      |> Field.pair
+    , model.form.birthday |> Field.pair
+    , model.form.start_at |> Field.pair
     ]
   )
 

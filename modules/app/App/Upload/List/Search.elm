@@ -164,15 +164,15 @@ toPage = String.toInt >> Maybe.withDefault 0
 fill : FrameTransition a
 fill = Frame.app >> .search >>
   (\model -> Dom.fill
-    [ model.form.name          |> Dom.string
-    , model.form.age_gteq      |> Dom.string
-    , model.form.age_lteq      |> Dom.string
-    , model.form.email         |> Dom.string
-    , model.form.tel           |> Dom.string
-    , model.form.birthday_gteq |> Dom.string
-    , model.form.birthday_lteq |> Dom.string
-    , model.form.start_at_gteq |> Dom.string
-    , model.form.start_at_lteq |> Dom.string
+    [ model.form.name          |> Field.pair
+    , model.form.age_gteq      |> Field.pair
+    , model.form.age_lteq      |> Field.pair
+    , model.form.email         |> Field.pair
+    , model.form.tel           |> Field.pair
+    , model.form.birthday_gteq |> Field.pair
+    , model.form.birthday_lteq |> Field.pair
+    , model.form.start_at_gteq |> Field.pair
+    , model.form.start_at_lteq |> Field.pair
     ]
   )
 
