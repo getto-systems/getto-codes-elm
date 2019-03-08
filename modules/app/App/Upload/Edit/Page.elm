@@ -1,8 +1,9 @@
 module GettoUpload.App.Upload.Edit.Page exposing ( main )
-import GettoUpload.App.Upload.Edit.Data     as Data
-import GettoUpload.App.Upload.Edit.Info     as Info
-import GettoUpload.App.Upload.Edit.Detail   as Detail
-import GettoUpload.App.Upload.Edit.Complete as Complete
+import GettoUpload.App.Upload.Edit.Data       as Data
+import GettoUpload.App.Upload.Edit.Info       as Info
+import GettoUpload.App.Upload.Edit.Detail     as Detail
+import GettoUpload.App.Upload.Edit.Complete   as Complete
+import GettoUpload.App.Upload.Edit.Unregister as Unregister
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 
@@ -30,10 +31,11 @@ type alias FrameTransition = Transition FrameModel Msg
 type alias FrameMsg = Frame.Msg Layout.Msg Msg
 
 type alias Model =
-  { data     : Data.Model
-  , info     : Info.Model
-  , detail   : Detail.Model
-  , complete : Complete.Model
+  { data       : Data.Model
+  , info       : Info.Model
+  , detail     : Detail.Model
+  , complete   : Complete.Model
+  , unregister : Unregister.Model
   }
 
 type Msg
@@ -41,15 +43,17 @@ type Msg
   | Info Info.Msg
   | Detail Detail.Msg
   | Complete Complete.Msg
+  | Unregister Unregister.Msg
 
 setup : Frame.SetupApp Layout.Model Model Msg
 setup =
   { store =
     ( \model -> Encode.object
-      [ ( "data",     model.data     |> Data.encodeStore )
-      , ( "info",     model.info     |> Info.encodeStore   model.data )
-      , ( "detail",   model.detail   |> Detail.encodeStore model.data )
-      , ( "complete", model.complete |> Complete.encodeStore )
+      [ ( "data",       model.data       |> Data.encodeStore )
+      , ( "info",       model.info       |> Info.encodeStore   model.data )
+      , ( "detail",     model.detail     |> Detail.encodeStore model.data )
+      , ( "complete",   model.complete   |> Complete.encodeStore )
+      , ( "unregister", model.unregister |> Unregister.encodeStore )
       ]
     , \value model ->
       let
@@ -57,9 +61,10 @@ setup =
       in
         Model
           data
-          ( model.info     |> Info.decodeStore   data (value |> SafeDecode.valueAt ["info"]) )
-          ( model.detail   |> Detail.decodeStore data (value |> SafeDecode.valueAt ["detail"]) )
-          ( model.complete |> Complete.decodeStore    (value |> SafeDecode.valueAt ["complete"]) )
+          ( model.info       |> Info.decodeStore   data (value |> SafeDecode.valueAt ["info"]) )
+          ( model.detail     |> Detail.decodeStore data (value |> SafeDecode.valueAt ["detail"]) )
+          ( model.complete   |> Complete.decodeStore    (value |> SafeDecode.valueAt ["complete"]) )
+          ( model.unregister |> Unregister.decodeStore  (value |> SafeDecode.valueAt ["unregister"]) )
     )
   , search =
     ( \model -> model.data |> Data.encodeQuery
@@ -70,32 +75,36 @@ setup =
 
 init : Frame.InitModel -> ( Model, FrameTransition )
 init model =
-  T.compose4 Model
-    (model |> Data.init     |> T.map Data)
-    (model |> Info.init     |> T.map Info)
-    (model |> Detail.init   |> T.map Detail)
-    (model |> Complete.init |> T.map Complete)
+  T.compose5 Model
+    (model |> Data.init       |> T.map Data)
+    (model |> Info.init       |> T.map Info)
+    (model |> Detail.init     |> T.map Detail)
+    (model |> Complete.init   |> T.map Complete)
+    (model |> Unregister.init |> T.map Unregister)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  [ model.data     |> Data.subscriptions     |> Sub.map Data
-  , model.info     |> Info.subscriptions     |> Sub.map Info
-  , model.detail   |> Detail.subscriptions   |> Sub.map Detail
-  , model.complete |> Complete.subscriptions |> Sub.map Complete
+  [ model.data       |> Data.subscriptions       |> Sub.map Data
+  , model.info       |> Info.subscriptions       |> Sub.map Info
+  , model.detail     |> Detail.subscriptions     |> Sub.map Detail
+  , model.complete   |> Complete.subscriptions   |> Sub.map Complete
+  , model.unregister |> Unregister.subscriptions |> Sub.map Unregister
   ] |> Sub.batch
 
-data_     = T.prop .data     (\v m -> { m | data     = v })
-info_     = T.prop .info     (\v m -> { m | info     = v })
-detail_   = T.prop .detail   (\v m -> { m | detail   = v })
-complete_ = T.prop .complete (\v m -> { m | complete = v })
+data_       = T.prop .data       (\v m -> { m | data       = v })
+info_       = T.prop .info       (\v m -> { m | info       = v })
+detail_     = T.prop .detail     (\v m -> { m | detail     = v })
+complete_   = T.prop .complete   (\v m -> { m | complete   = v })
+unregister_ = T.prop .unregister (\v m -> { m | unregister = v })
 
 update : Msg -> Model -> ( Model, FrameTransition )
 update message model =
   case message of
-    Data     msg -> model |> T.update data_     (Data.update msg >> T.map Data)
-    Info     msg -> model |> T.update info_     (Info.update   model.data msg >> Tuple.mapSecond (batch Info))
-    Detail   msg -> model |> T.update detail_   (Detail.update model.data msg >> Tuple.mapSecond (batch Detail))
-    Complete msg -> model |> T.update complete_ (Complete.update          msg >> Tuple.mapSecond (batch Complete))
+    Data       msg -> model |> T.update data_       (Data.update msg       >> T.map Data)
+    Unregister msg -> model |> T.update unregister_ (Unregister.update msg >> T.map Unregister)
+    Info       msg -> model |> T.update info_     (Info.update   model.data msg >> Tuple.mapSecond (batch Info))
+    Detail     msg -> model |> T.update detail_   (Detail.update model.data msg >> Tuple.mapSecond (batch Detail))
+    Complete   msg -> model |> T.update complete_ (Complete.update          msg >> Tuple.mapSecond (batch Complete))
 
 batch : (msg -> Msg) -> ( Transition FrameModel msg, Bool ) -> FrameTransition
 batch msg (t,req) =
@@ -123,9 +132,10 @@ content model =
             ]
           ]
         , [ H.section [ "edit" |> A.class ] <| List.concat
-            [ model |> Info.contents     |> Frame.mapApp Info
-            , model |> Detail.contents   |> Frame.mapApp Detail
-            , model |> Complete.contents |> Frame.mapApp Complete
+            [ model |> Info.contents       |> Frame.mapApp Info
+            , model |> Detail.contents     |> Frame.mapApp Detail
+            , model |> Complete.contents   |> Frame.mapApp Complete
+            , model |> Unregister.contents |> Frame.mapApp Unregister
             ]
           ]
         , [ model |> Layout.articleFooter ]
@@ -137,5 +147,6 @@ content model =
         , model |> Layout.navFooter
         ]
       ]
-    , model |> Complete.dialogs |> Frame.mapApp Complete
+    , model |> Complete.dialogs   |> Frame.mapApp Complete
+    , model |> Unregister.dialogs |> Frame.mapApp Unregister
     ]

@@ -6,6 +6,7 @@ module GettoUpload.I18n.App exposing
   , error
   , paging
   , table
+  , box
   )
 import GettoUpload.View.Html.Input as Input
 import GettoUpload.Extension.Href as Href
@@ -54,6 +55,9 @@ form name =
     "save"   -> "保存"
     "saving" -> "保存中"
 
+    "delete"   -> "削除"
+    "deleting" -> "削除中"
+
     "upload"    -> "アップロード"
     "uploading" -> "アップロード中"
 
@@ -83,5 +87,14 @@ table : String -> String
 table name =
   case name of
     "empty-data" -> "データがありません"
+
+    _ -> name
+
+box : String -> String
+box name =
+  case name of
+    "register"   -> "登録"
+    "info"       -> "基本情報"
+    "unregister" -> "削除"
 
     _ -> name

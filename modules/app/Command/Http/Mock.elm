@@ -187,6 +187,14 @@ mock =
       }
     --}
     )
+  , ( ( "DELETE", "upload/:id" )
+    {--, Real --}
+    {--}, Mock 1000
+      { header = Dict.empty
+      , body = Encode.null
+      }
+    --}
+    )
   , ( ( "GET", "uploads" )
     {--, Real --}
     {--}, Mock 300
