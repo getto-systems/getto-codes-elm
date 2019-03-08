@@ -1,10 +1,7 @@
 module GettoUpload.App.Upload.Edit.Data exposing
   ( Model
   , Msg
-  , FrameTransition
-  , etag
-  , pathInfo
-  , getRequestIfComplete
+  , getRequest
   , init
   , encodeQuery
   , decodeQuery
@@ -13,6 +10,7 @@ module GettoUpload.App.Upload.Edit.Data exposing
   , subscriptions
   , update
   )
+import GettoUpload.App.Upload.Edit.Model as Model
 import GettoUpload.App.Upload.Edit.Data.View as View
 import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
@@ -34,12 +32,9 @@ import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | data : Model }
+type alias FrameModel a = Frame.Model Layout.Model { a | data : Model.Data }
 type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model =
-  { id  : Int
-  , get : HttpView.Model View.Response
-  }
+type alias Model = Model.Data
 
 type Msg
   = StateChanged (HttpView.Migration View.Response)
@@ -52,8 +47,8 @@ get = Http.tracker "get" <|
     let
       m = model |> Frame.app |> .data
     in
-      Http.getIfNoneMatch ( m |> etag )
-        { url      = "upload/:id" |> Api.url ( m |> pathInfo )
+      Http.getIfNoneMatch ( m |> Model.etag )
+        { url      = "upload/:id" |> Api.url ( m |> Model.pathInfo )
         , headers  = model |> Api.headers
         , params   = QueryEncode.empty
         , response = View.response
@@ -62,12 +57,6 @@ get = Http.tracker "get" <|
 
 getTrack   = Http.track   signature get StateChanged
 getRequest = Http.request signature get StateChanged
-
-getRequestIfComplete : HttpView.Migration response -> FrameTransition a
-getRequestIfComplete mig =
-  if mig |> HttpView.isComplete
-    then getRequest
-    else T.none
 
 
 init : Frame.InitModel -> ( Model, FrameTransition a )
@@ -78,14 +67,6 @@ init model =
   , [ getRequest
     ] |> T.batch
   )
-
-etag : Model -> Maybe String
-etag model = model.get |> HttpView.response |> Maybe.map (HttpView.header >> .etag)
-
-pathInfo : Model -> List ( String, String )
-pathInfo model =
-  [ ( "id", model.id |> String.fromInt )
-  ]
 
 encodeQuery : Model -> QueryEncode.Value
 encodeQuery model = QueryEncode.empty

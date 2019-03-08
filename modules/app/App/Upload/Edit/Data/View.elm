@@ -3,7 +3,7 @@ module GettoUpload.App.Upload.Edit.Data.View exposing
   , response
   , encodeResponse
   , decodeResponse
-  , etag
+  , isDifferentResponse
   )
 import GettoUpload.View.Http as HttpView
 
@@ -105,6 +105,12 @@ decodeResponse =
         Ok  res -> res |> Decode.succeed
         Err err -> err |> Decode.fail
     )
+
+isDifferentResponse : Maybe Response -> Response -> Bool
+isDifferentResponse data last =
+  case data of
+    Nothing  -> False
+    Just res -> ( res |> etag ) /= ( last |> etag )
 
 etag : Response -> String
 etag = HttpView.header >> .etag

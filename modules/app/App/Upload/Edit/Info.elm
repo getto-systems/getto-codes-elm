@@ -9,7 +9,7 @@ module GettoUpload.App.Upload.Edit.Info exposing
   , contents
   , dialogs
   )
-import GettoUpload.App.Upload.Edit.Data as Data
+import GettoUpload.App.Upload.Edit.Model as Model
 import GettoUpload.App.Upload.Edit.Info.View as View
 import GettoUpload.App.Upload.Edit.Info.Html as Html
 import GettoUpload.Layout.Page.Page as Layout
@@ -31,6 +31,7 @@ import Getto.Url.Query.SafeDecode as QuerySafeDecode
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Field as Field
 import Getto.Field.Form as Form
+import Getto.Field.Edit as Edit
 import Getto.Field.Validate as Validate
 import Getto.Field.Conflict as Conflict
 
@@ -42,7 +43,7 @@ import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | data : Data.Model, info : Model }
+type alias FrameModel a = Frame.Model Layout.Model { a | data : Model.Data, info : Model }
 type alias FrameTransition a = Transition (FrameModel a) Msg
 type alias Model =
   { form : View.Form
@@ -68,7 +69,7 @@ put = Http.tracker "put" <|
       m    = model |> Frame.app |> .info
     in
       Http.put
-        { url      = "upload/:id/info" |> Api.url ( data |> Data.pathInfo )
+        { url      = "upload/:id/info" |> Api.url ( data |> Model.pathInfo )
         , headers  = model  |> Api.headers
         , params   = m.form |> View.params data.get
         , response = View.response
@@ -87,14 +88,14 @@ init model =
   , fill
   )
 
-encodeStore : Data.Model -> Model -> Encode.Value
+encodeStore : Model.Data -> Model -> Encode.Value
 encodeStore data model = Encode.object
   [ ( data.id |> String.fromInt
     , model.form |> View.encodeForm
     )
   ]
 
-decodeStore : Data.Model -> Decode.Value -> Model -> Model
+decodeStore : Model.Data -> Decode.Value -> Model -> Model
 decodeStore data value model =
   { model
   | form = model.form |> View.decodeForm
@@ -104,23 +105,25 @@ decodeStore data value model =
 subscriptions : Model -> Sub Msg
 subscriptions model = putTrack
 
-update : Data.Model -> Msg -> Model -> ( Model, ( Data.FrameTransition a, FrameTransition a ) )
+update : Model.Data -> Msg -> Model -> ( Model, ( FrameTransition a, Bool ) )
 update data msg model =
   case msg of
-    Edit    -> ( { model | form = model.form |> View.toEdit data.get }, ( T.none, fillAndStore   ) )
-    Static  -> ( { model | form = model.form |> View.toStatic },        ( T.none, Frame.storeApp ) )
-    Change  -> ( { model | form = model.form |> View.change },          ( T.none, Frame.storeApp ) )
-    Request -> ( { model | form = model.form |> View.commit },          ( T.none, putRequest     ) )
+    Edit    -> ( { model | form = model.form |> Edit.toEdit View.edit data.get }, ( fillAndStore,   False ) )
+    Static  -> ( { model | form = model.form |> Edit.toStatic },                  ( Frame.storeApp, False ) )
+    Change  -> ( { model | form = model.form |> Edit.change },                    ( Frame.storeApp, False ) )
+    Request -> ( { model | form = model.form |> Edit.commit },                    ( putRequest,     False ) )
 
-    Input   prop value -> ( { model | form = model.form |> Form.set prop value },       ( T.none, T.none ) )
-    Resolve prop mig   -> ( { model | form = model.form |> Conflict.resolve prop mig }, ( T.none, fillAndStore ) )
+    Input   prop value -> ( { model | form = model.form |> Form.set prop value },       ( T.none,       False ) )
+    Resolve prop mig   -> ( { model | form = model.form |> Conflict.resolve prop mig }, ( fillAndStore, False ) )
 
     StateChanged mig ->
       ( { model
         | put  = model.put  |> HttpView.update mig
-        , form = model.form |> View.put mig
+        , form = model.form |> Edit.put mig
         }
-      , ( mig |> Data.getRequestIfComplete, T.none )
+      , ( T.none
+        , mig |> HttpView.isComplete
+        )
       )
 
 fill : FrameTransition a

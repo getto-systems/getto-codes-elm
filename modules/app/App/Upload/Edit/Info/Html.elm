@@ -9,6 +9,7 @@ import GettoUpload.View.Html.Http as Http
 import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Http as HttpView
 
+import Getto.Field.Edit exposing ( State(..) )
 import Getto.Field.Conflict as Conflict
 
 import File exposing ( File )
@@ -62,7 +63,7 @@ info model =
             , H.table []
               [ H.tbody [] <| List.concat
                 [ case model.view.form.name of
-                  View.Static name ->
+                  Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
@@ -70,7 +71,7 @@ info model =
                         ]
                       ]
                     ]
-                  View.Edit name form conflict errors ->
+                  Edit name form conflict errors ->
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat
@@ -82,7 +83,7 @@ info model =
                       ]
                     ]
                 , case model.view.form.memo of
-                  View.Static name ->
+                  Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
@@ -90,7 +91,7 @@ info model =
                         ]
                       ]
                     ]
-                  View.Edit name form conflict errors ->
+                  Edit name form conflict errors ->
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat
@@ -102,7 +103,7 @@ info model =
                       ]
                     ]
                 , case model.view.form.age of
-                  View.Static name ->
+                  Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
@@ -110,7 +111,7 @@ info model =
                         ]
                       ]
                     ]
-                  View.Edit name form conflict errors ->
+                  Edit name form conflict errors ->
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat
@@ -122,7 +123,7 @@ info model =
                       ]
                     ]
                 , case model.view.form.email of
-                  View.Static name ->
+                  Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
@@ -130,7 +131,7 @@ info model =
                         ]
                       ]
                     ]
-                  View.Edit name form conflict errors ->
+                  Edit name form conflict errors ->
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat
@@ -142,7 +143,7 @@ info model =
                       ]
                     ]
                 , case model.view.form.tel of
-                  View.Static name ->
+                  Static name ->
                     [ H.tr []
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td []
@@ -150,7 +151,7 @@ info model =
                         ]
                       ]
                     ]
-                  View.Edit name form conflict errors ->
+                  Edit name form conflict errors ->
                     [ H.tr ( errors |> Input.isError )
                       [ H.th [] [ name |> model.i18n.field |> H.text ]
                       , H.td [] <| List.concat

@@ -85,8 +85,16 @@ update : Msg -> Model -> ( Model, FrameTransition )
 update message model =
   case message of
     Data   msg -> model |> T.update data_   (Data.update msg >> T.map Data)
-    Info   msg -> model |> T.update info_   (Info.update model.data msg   >> T.mapBatch (Data,Info))
-    Detail msg -> model |> T.update detail_ (Detail.update model.data msg >> T.mapBatch (Data,Detail))
+    Info   msg -> model |> T.update info_   (Info.update   model.data msg >> Tuple.mapSecond (batch Info))
+    Detail msg -> model |> T.update detail_ (Detail.update model.data msg >> Tuple.mapSecond (batch Detail))
+
+batch : (msg -> Msg) -> ( Transition FrameModel msg, Bool ) -> FrameTransition
+batch msg (t,req) =
+  [ t >> Cmd.map msg
+  , if req
+    then Data.getRequest >> Cmd.map Data
+    else T.none
+  ] |> T.batch
 
 document : FrameModel -> Browser.Document FrameMsg
 document model =

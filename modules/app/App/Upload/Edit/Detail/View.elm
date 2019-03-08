@@ -2,7 +2,6 @@ module GettoUpload.App.Upload.Edit.Detail.View exposing
   ( Form
   , View
   , Prop
-  , State(..)
   , Response
   , response
   , init
@@ -10,11 +9,7 @@ module GettoUpload.App.Upload.Edit.Detail.View exposing
   , params
   , encodeForm
   , decodeForm
-  , toStatic
-  , toEdit
-  , change
-  , commit
-  , put
+  , edit
   , view
   )
 import GettoUpload.App.Upload.Edit.Data.View as Data
@@ -22,23 +17,24 @@ import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
 import Getto.Field.Form as Form
+import Getto.Field.Edit as Edit
 import Getto.Field.Validate as Validate
 import Getto.Field.Conflict as Conflict
 import Getto.Http.Header.Decode as HeaderDecode
 
 import Json.Encode as Encode
 import Json.Decode as Decode
-import File exposing ( File )
 
 import Set exposing ( Set )
 
-type alias Prop      a = Conflict.Prop Form a
-type alias Field     a = Conflict.Field a
+type alias Prop  a = Conflict.Prop Form a
+type alias Field a = Conflict.Field a
+
 type alias ViewModel a = Validate.Model (Conflict.Form Form a)
 
-type alias Form =
-  { state    : EditState
-  , birthday : Field String
+type alias Form = Edit.Model Data.Response Fields
+type alias Fields =
+  { birthday : Field String
   , start_at : Field String
   , gender   : Field String
   , quality  : Field String
@@ -51,28 +47,15 @@ type alias View =
   , state    : HttpView.State
   , response : Maybe Data.Response
   , form :
-    { birthday : State String
-    , start_at : State String
-    , gender   : State String
-    , quality  : State String
-    , roles    : State (Set String)
+    { birthday : Edit.State Form String
+    , start_at : Edit.State Form String
+    , gender   : Edit.State Form String
+    , quality  : Edit.State Form String
+    , roles    : Edit.State Form (Set String)
     }
   }
 
 type alias Response = HttpView.Response () ()
-
-type EditState
-  = StaticState
-  | EditState Bool Data.Response
-
-type State a
-  = Static String
-  | Edit   String (Conflict.Form Form a) (Conflict.State a) (List String)
-
-type alias ParamValue a =
-  { from : a
-  , to   : a
-  }
 
 
 response : HttpView.ResponseDecoder Response
@@ -82,11 +65,11 @@ response = HttpView.decoder
   }
 
 
-birthday_ = Form.prop .birthday (\v m -> { m | birthday = v })
-start_at_ = Form.prop .start_at (\v m -> { m | start_at = v })
-gender_   = Form.prop .gender   (\v m -> { m | gender   = v })
-quality_  = Form.prop .quality  (\v m -> { m | quality  = v })
-roles_    = Form.prop .roles    (\v m -> { m | roles    = v })
+birthday_ = Form.prop (Edit.fields >> .birthday) (\v -> Edit.update (\m -> { m | birthday = v }) )
+start_at_ = Form.prop (Edit.fields >> .start_at) (\v -> Edit.update (\m -> { m | start_at = v }) )
+gender_   = Form.prop (Edit.fields >> .gender)   (\v -> Edit.update (\m -> { m | gender   = v }) )
+quality_  = Form.prop (Edit.fields >> .quality)  (\v -> Edit.update (\m -> { m | quality  = v }) )
+roles_    = Form.prop (Edit.fields >> .roles)    (\v -> Edit.update (\m -> { m | roles    = v }) )
 
 get_birthday = .detail >> .birthday
 get_start_at = .detail >> .start_at
@@ -96,9 +79,8 @@ get_roles    = .detail >> .roles
 
 
 init : String -> Form
-init signature =
-  { state    = StaticState
-  , birthday = Field.init signature "birthday" Conflict.none ""
+init signature = Edit.init
+  { birthday = Field.init signature "birthday" Conflict.none ""
   , start_at = Field.init signature "start_at" Conflict.none ""
   , gender   = Field.init signature "gender"   Conflict.none ""
   , quality  = Field.init signature "quality"  Conflict.none ""
@@ -106,76 +88,50 @@ init signature =
   }
 
 pairs : Form -> List ( String, String )
-pairs form =
-  [ form.birthday |> Field.pair
-  , form.start_at |> Field.pair
-  ]
+pairs = Edit.fields >>
+  (\fields ->
+    [ fields.birthday |> Field.pair
+    , fields.start_at |> Field.pair
+    ]
+  )
 
 params : HttpView.Model Data.Response -> Form -> Encode.Value
-params get form =
-  let
-    body = get |> HttpView.response |> Maybe.map HttpView.body
+params get = Edit.fields >>
+  (\fields ->
+    let
+      body = get |> HttpView.response |> Maybe.map HttpView.body
 
-    set encoder = Set.toList >> Encode.list encoder
+      set encoder = Set.toList >> Encode.list encoder
 
-    encode encoder values =
-      [ ( "from", values.from |> encoder )
-      , ( "to",   values.to   |> encoder )
-      ] |> Encode.object
-  in
-    [ ( "birthday", body |> Maybe.map get_birthday, form.birthday ) |> filter (encode Encode.string)
-    , ( "start_at", body |> Maybe.map get_start_at, form.start_at ) |> filter (encode Encode.string)
-    , ( "gender",   body |> Maybe.map get_gender,   form.gender   ) |> filter (encode Encode.string)
-    , ( "quality",  body |> Maybe.map get_quality,  form.quality  ) |> filter (encode Encode.string)
-    , ( "roles",    body |> Maybe.map get_roles,    form.roles    ) |> filter (encode (set Encode.string))
-    ]
-    |> List.filterMap identity
-    |> Encode.object
-
-filter : (ParamValue a -> Encode.Value) -> ( String, Maybe a, Field a ) -> Maybe ( String, Encode.Value )
-filter encoder (fieldName,value,field) =
-  let
-    formValue = field |> Field.value
-
-    isSame val =
-      if val == formValue
-        then Nothing
-        else Just val
-  in
-    value |> Maybe.andThen isSame |> Maybe.map
-      (\val ->
-        ( fieldName, { from = val, to = formValue } |> encoder )
-      )
+      encode encoder values =
+        [ ( "from", values.from |> encoder )
+        , ( "to",   values.to   |> encoder )
+        ] |> Encode.object
+    in
+      [ ( "birthday", body |> Maybe.map get_birthday, fields.birthday ) |> Edit.filter (encode Encode.string)
+      , ( "start_at", body |> Maybe.map get_start_at, fields.start_at ) |> Edit.filter (encode Encode.string)
+      , ( "gender",   body |> Maybe.map get_gender,   fields.gender   ) |> Edit.filter (encode Encode.string)
+      , ( "quality",  body |> Maybe.map get_quality,  fields.quality  ) |> Edit.filter (encode Encode.string)
+      , ( "roles",    body |> Maybe.map get_roles,    fields.roles    ) |> Edit.filter (encode (set Encode.string))
+      ]
+      |> List.filterMap identity
+      |> Encode.object
+  )
 
 encodeForm : Form -> Encode.Value
-encodeForm form =
-  case form.state of
-    StaticState -> [ ( "state", "static" |> Encode.string ) ] |> Encode.object
-    EditState _ res ->
-      [ ( "state", "edit" |> Encode.string )
-      , ( "response", res  |> Data.encodeResponse )
-      , ( "form",     form |> encodeFields )
-      ] |> Encode.object
+encodeForm = Edit.encode Data.encodeResponse encodeFields
 
-encodeFields : Form -> Encode.Value
-encodeFields form =
-  [ ( "birthday", form.birthday |> Field.value |> Encode.string )
-  , ( "start_at", form.start_at |> Field.value |> Encode.string )
-  , ( "gender",   form.gender   |> Field.value |> Encode.string )
-  , ( "quality",  form.quality  |> Field.value |> Encode.string )
-  , ( "roles",    form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+encodeFields : Fields -> Encode.Value
+encodeFields fields =
+  [ ( "birthday", fields.birthday |> Field.value |> Encode.string )
+  , ( "start_at", fields.start_at |> Field.value |> Encode.string )
+  , ( "gender",   fields.gender   |> Field.value |> Encode.string )
+  , ( "quality",  fields.quality  |> Field.value |> Encode.string )
+  , ( "roles",    fields.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
   ] |> Encode.object
 
 decodeForm : Decode.Value -> Form -> Form
-decodeForm value =
-  case
-    ( value |> decode "state"    Decode.string
-    , value |> decode "response" Data.decodeResponse
-    , value |> decode "form"     Decode.value
-    )
-  of
-    ( Just "edit", Just res, Just form ) -> toEditWithResponse res >> decodeFields form
-    _ -> identity
+decodeForm = Edit.decode Data.decodeResponse decodeFields
 
 decodeFields : Decode.Value -> Form -> Form
 decodeFields value form =
@@ -189,44 +145,17 @@ decodeFields value form =
 decode : String -> Decode.Decoder a -> Decode.Value -> Maybe a
 decode key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMaybe
 
-toStatic : Form -> Form
-toStatic form = { form | state = StaticState }
-
-toEdit : HttpView.Model Data.Response -> Form -> Form
-toEdit http =
-  case http |> HttpView.response of
-    Nothing  -> identity
-    Just res -> res |> toEditWithResponse
-
-toEditWithResponse : Data.Response -> Form -> Form
-toEditWithResponse res form =
+edit : Data.Response -> Form -> Form
+edit res form =
   let
     body = res |> HttpView.body
   in
-    { form | state = EditState False res }
+    form
     |> Form.set birthday_ (body |> get_birthday)
     |> Form.set start_at_ (body |> get_start_at)
     |> Form.set gender_   (body |> get_gender)
     |> Form.set quality_  (body |> get_quality)
     |> Form.set roles_    (body |> get_roles)
-
-commit : Form -> Form
-commit form =
-  case form.state of
-    EditState _ res -> { form | state = EditState True res }
-    _ -> form
-
-change : Form -> Form
-change form =
-  case form.state of
-    EditState _ res -> { form | state = EditState False res }
-    _ -> form
-
-put : HttpView.Migration Response -> Form -> Form
-put mig =
-  if mig |> HttpView.isConflict
-    then change
-    else identity
 
 
 view : HttpView.Model Data.Response -> Form -> View
@@ -237,12 +166,12 @@ view http form =
     res = http |> HttpView.response
 
     data =
-      ( case form.state of
-        StaticState -> Nothing
-        EditState _ r -> r |> HttpView.body |> Just
-
-      , res |> Maybe.map HttpView.body
+      ( form |> Edit.response |> Maybe.map HttpView.body
+      , res  |> Maybe.map HttpView.body
       )
+
+    fields = form |> Edit.fields
+
     model =
       { birthday = form |> Conflict.init error data ( get_birthday, ( birthday_, [] ) )
       , start_at = form |> Conflict.init error data ( get_start_at, ( start_at_, [] ) )
@@ -250,6 +179,7 @@ view http form =
       , quality  = form |> Conflict.init error data ( get_quality,  ( quality_,  [] ) )
       , roles    = form |> Conflict.init error data ( get_roles,    ( roles_,    [] ) )
       }
+
     errors = List.concat
       [ model.birthday |> Validate.errors
       , model.start_at |> Validate.errors
@@ -257,33 +187,18 @@ view http form =
       , model.quality  |> Validate.errors
       , model.roles    |> Validate.errors
       ]
+
+    expose = Edit.expose Data.isDifferentResponse form res
   in
-    { isStatic = (form.state == StaticState)
+    { isStatic = form   |> Edit.isStatic
     , hasError = errors |> List.isEmpty |> not
-    , state    = http |> HttpView.state
+    , state    = http   |> HttpView.state
     , response = res
     , form     =
-      { birthday = model.birthday |> expose form.state res
-      , start_at = model.start_at |> expose form.state res
-      , gender   = model.gender   |> expose form.state res
-      , quality  = model.quality  |> expose form.state res
-      , roles    = model.roles    |> expose form.state res
+      { birthday = model.birthday |> expose
+      , start_at = model.start_at |> expose
+      , gender   = model.gender   |> expose
+      , quality  = model.quality  |> expose
+      , roles    = model.roles    |> expose
       }
     }
-
-expose : EditState -> Maybe Data.Response -> Validate.Model (Conflict.Form Form a) -> State a
-expose st res model =
-  case model |> Validate.expose of
-    (fieldName,form,errors) ->
-      case st of
-        StaticState -> Static fieldName
-        EditState isCommit last ->
-          if isCommit && ( last |> isDifferentResponse res )
-            then Static fieldName
-            else Edit   fieldName form ( form.field |> Conflict.state ) errors
-
-isDifferentResponse : Maybe Data.Response -> Data.Response -> Bool
-isDifferentResponse data last =
-  case data of
-    Nothing  -> False
-    Just res -> ( res |> Data.etag ) /= ( last |> Data.etag )
