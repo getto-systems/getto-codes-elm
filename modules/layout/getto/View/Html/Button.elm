@@ -7,6 +7,7 @@ module GettoUpload.View.Html.Button exposing
   , edit
   , cancel
   , save
+  , delete
   , search
   , complete
   )
@@ -63,6 +64,11 @@ button attr =
 save : String -> Html msg
 save text =
   submit [ "is-save" |> A.class ]
+    [ text |> H.text ]
+
+delete : String -> Html msg
+delete text =
+  submit [ "is-delete" |> A.class ]
     [ text |> H.text ]
 
 search : String -> Html msg

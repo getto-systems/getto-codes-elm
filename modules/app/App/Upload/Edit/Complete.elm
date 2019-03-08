@@ -56,7 +56,7 @@ complete = Http.tracker "complete" <|
       data = model |> Frame.app |> .data
       m    = model |> Frame.app |> .complete
     in
-      Http.put
+      Http.putIfMatch ( data |> Model.etag )
         { url      = "upload/:id/complete" |> Api.url ( data |> Model.pathInfo )
         , headers  = model  |> Api.headers
         , params   = Encode.null
@@ -74,7 +74,7 @@ work = Http.tracker "work" <|
       data = model |> Frame.app |> .data
       m    = model |> Frame.app |> .complete
     in
-      Http.put
+      Http.putIfMatch ( data |> Model.etag )
         { url      = "upload/:id/work" |> Api.url ( data |> Model.pathInfo )
         , headers  = model  |> Api.headers
         , params   = Encode.null

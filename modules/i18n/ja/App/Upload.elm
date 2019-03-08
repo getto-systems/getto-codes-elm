@@ -14,15 +14,13 @@ import GettoUpload.I18n.App as AppI18n
 title : String -> String
 title name =
   case name of
-    "register" -> "登録"
-    "info"     -> "基本情報"
     "detail"   -> "詳細情報"
     "complete" -> "状態"
 
     "to-complete" -> "完了します"
     "to-work"     -> "作業中に戻します"
 
-    _ -> name
+    _ -> AppI18n.box name
 
 field : String -> String
 field name =
@@ -52,6 +50,8 @@ message name =
   case name of
     "to-complete" -> "作業を完了して内容を編集できないようにします"
     "to-work"     -> "作業中に戻して内容を編集できるようにします"
+
+    "unregister" -> "この項目を完全に削除します"
 
     _ -> name
 
