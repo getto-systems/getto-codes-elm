@@ -1,6 +1,5 @@
 module GettoUpload.Layout.Page.Side exposing
-  ( Model
-  , Msg
+  ( Msg
   , init
   , store
   , storeChanged
@@ -14,6 +13,7 @@ module GettoUpload.Layout.Page.Side exposing
   , nav
   , navFooter
   )
+import GettoUpload.Layout.Page.Model as Model
 import GettoUpload.Layout.Page.Side.Html as Html
 import GettoUpload.Layout.Page.Side.View as View
 import GettoUpload.Layout.Frame.Static as Static
@@ -44,15 +44,6 @@ import Dict exposing ( Dict )
 import Html as H exposing ( Html )
 import Html.Lazy as L
 
-type alias FrameModel a app = Frame.Model { a | side : Model } app
-type alias FrameTransition a app = Transition (FrameModel a app) Msg
-type alias Model =
-  { menu       : Menu
-  , badge      : HttpView.Model View.Response
-  , badgeNames : Dict String String
-  , collapsed  : Set String
-  }
-
 type Msg
   = BadgeStateChanged (HttpView.Migration View.Response)
   | MenuOpen  String
@@ -60,7 +51,7 @@ type Msg
 
 signature = "layout-side"
 
-badge : Http.Tracker (FrameModel a app) View.Response
+badge : Http.Tracker (Model.Frame app) View.Response
 badge = Http.tracker "badge" <|
   \model ->
     Http.get
@@ -84,7 +75,7 @@ badge = Http.tracker "badge" <|
       }
 
 
-init : Frame.InitModel -> ( Model, FrameTransition a app )
+init : Frame.InitModel -> ( Model.Side, Model.Transition app Msg )
 init model =
   ( { menu       = menu
     , badgeNames = badgeNames
@@ -94,22 +85,22 @@ init model =
   , Http.request signature badge BadgeStateChanged
   )
 
-store : Model -> Encode.Value
+store : Model.Side -> Encode.Value
 store model =
   [ ( "collapsed", model.collapsed |> Encode.set Encode.string )
   ] |> Encode.object
 
-storeChanged : Decode.Value -> Model -> Model
+storeChanged : Decode.Value -> Model.Side -> Model.Side
 storeChanged value model =
   { model
   | collapsed = value |> SafeDecode.at ["collapsed"] (SafeDecode.list (SafeDecode.string "")) |> Set.fromList
   }
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Side -> Sub Msg
 subscriptions model =
   Http.track signature badge BadgeStateChanged
 
-update : Msg -> Model -> ( Model, FrameTransition a app )
+update : Msg -> Model.Side -> ( Model.Side, Model.Transition app Msg )
 update msg model =
   case msg of
     BadgeStateChanged mig -> ( { model | badge = model.badge |> HttpView.update mig }, T.none )
@@ -118,7 +109,7 @@ update msg model =
     MenuClose name -> ( { model | collapsed = model.collapsed |> Set.insert name }, Frame.storeLayout )
 
 
-mobileHeader : FrameModel a app -> Html Msg
+mobileHeader : Model.Frame app -> Html Msg
 mobileHeader model = L.lazy
   (\project -> Html.mobileHeader
     { company = project.company
@@ -128,7 +119,7 @@ mobileHeader model = L.lazy
   )
   (model |> Frame.static |> Static.project)
 
-navHeader : FrameModel a app -> Html Msg
+navHeader : Model.Frame app -> Html Msg
 navHeader model = L.lazy
   (\project -> Html.navHeader
     { company = project.company
@@ -138,7 +129,7 @@ navHeader model = L.lazy
   )
   (model |> Frame.static |> Static.project)
 
-navFooter : FrameModel a app -> Html Msg
+navFooter : Model.Frame app -> Html Msg
 navFooter model = L.lazy
   (\version -> Html.navFooter
     { version = version |> .version
@@ -146,10 +137,10 @@ navFooter model = L.lazy
   )
   (model |> Frame.static |> Static.version)
 
-mobileAddress : FrameModel a app -> Html Msg
+mobileAddress : Model.Frame app -> Html Msg
 mobileAddress = navAddress
 
-breadcrumb : FrameModel a app -> Html Msg
+breadcrumb : Model.Frame app -> Html Msg
 breadcrumb model = L.lazy2
   (\static side -> Html.breadcrumb <| View.breadcrumb
     { path = static |> Static.page |> .path
@@ -160,7 +151,7 @@ breadcrumb model = L.lazy2
   (model |> Frame.static)
   (model |> Frame.layout |> .side)
 
-navAddress : FrameModel a app -> Html Msg
+navAddress : Model.Frame app -> Html Msg
 navAddress model = L.lazy2
   (\auth side -> Html.navAddress
     { title = "Upload"
@@ -191,7 +182,7 @@ navAddress model = L.lazy2
   (model |> Frame.auth)
   (model |> Frame.layout |> .side)
 
-nav : FrameModel a app -> Html Msg
+nav : Model.Frame app -> Html Msg
 nav model = L.lazy3
   (\static auth side -> Html.nav
     { open  = MenuOpen

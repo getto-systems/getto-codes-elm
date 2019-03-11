@@ -1,6 +1,5 @@
 module GettoUpload.Layout.Page.Article exposing
-  ( Model
-  , Msg
+  ( Msg
   , init
   , store
   , storeChanged
@@ -10,6 +9,7 @@ module GettoUpload.Layout.Page.Article exposing
   , header
   , footer
   )
+import GettoUpload.Layout.Page.Model as Model
 import GettoUpload.Layout.Page.Article.Html as Html
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Frame.Static as Static
@@ -23,37 +23,33 @@ import Json.Decode as Decode
 import Html as H exposing ( Html )
 import Html.Lazy as L
 
-type alias FrameModel a app = Frame.Model { a | article : Model } app
-type alias FrameTransition a app = Transition (FrameModel a app) Msg
-type alias Model = ()
-
 type Msg
   = Noop
 
 signature = "layout-article"
 
-init : Frame.InitModel -> ( Model, FrameTransition a app )
+init : Frame.InitModel -> ( Model.Article, Model.Transition app Msg )
 init model =
   ( ()
   , T.none
   )
 
-store : Model -> Encode.Value
+store : Model.Article -> Encode.Value
 store model = Encode.null
 
-storeChanged : Decode.Value -> Model -> Model
+storeChanged : Decode.Value -> Model.Article -> Model.Article
 storeChanged value model = model
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Article -> Sub Msg
 subscriptions model = Sub.none
 
-update : Msg -> Model -> ( Model, FrameTransition a app )
+update : Msg -> Model.Article -> ( Model.Article, Model.Transition app Msg )
 update msg model =
   case msg of
     Noop -> ( model, T.none )
 
 
-documentTitle : FrameModel a app -> String
+documentTitle : Model.Frame app -> String
 documentTitle model =
   let
     static  = model |> Frame.static
@@ -66,7 +62,7 @@ documentTitle model =
       , i18n    = AppI18n.title
       }
 
-header : FrameModel a app -> Html Msg
+header : Model.Frame app -> Html Msg
 header model = L.lazy
   (\static -> Html.header
     { path = static |> Static.page |> .path
@@ -75,7 +71,7 @@ header model = L.lazy
   )
   (model |> Frame.static)
 
-footer : FrameModel a app -> Html Msg
+footer : Model.Frame app -> Html Msg
 footer model = L.lazy
   (\static -> Html.footer
     { copyright = static |> Static.version |> .copyright

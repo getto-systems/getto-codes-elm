@@ -15,6 +15,7 @@ module GettoUpload.Layout.Page.Page exposing
   , nav
   , navFooter
   )
+import GettoUpload.Layout.Page.Model as Model
 import GettoUpload.Layout.Page.Side    as Side
 import GettoUpload.Layout.Page.Article as Article
 import GettoUpload.Layout.Frame as Frame
@@ -27,19 +28,13 @@ import Json.Encode as Encode
 import Html as H exposing ( Html )
 import Html.Lazy as L
 
-type alias FrameModel app = Frame.Model Model app
-type alias FrameTransition app = Transition (FrameModel app) Msg
-type alias Model =
-  { article : Article.Model
-  , side    : Side.Model
-  }
+type alias Model = Model.Page
 
-type alias FrameMsg appMsg = Frame.Msg Msg appMsg
 type Msg
   = Article Article.Msg
-  | Side    Side.Msg
+  | Side Side.Msg
 
-setup : Frame.SetupLayout Model app Msg
+setup : Frame.SetupLayout Model.Page app Msg
 setup =
   { store =
     ( \model -> Encode.object
@@ -47,20 +42,20 @@ setup =
       , ( "side",    model.side    |> Side.store )
       ]
     , \value model ->
-      Model
+      Model.Page
         ( model.article |> Article.storeChanged (value |> SafeDecode.valueAt ["article"]) )
         ( model.side    |> Side.storeChanged    (value |> SafeDecode.valueAt ["side"]) )
     )
   , init  = init
   }
 
-init : Frame.InitModel -> ( Model, FrameTransition app )
+init : Frame.InitModel -> ( Model.Page, Model.Transition app Msg )
 init model =
-  T.compose2 Model
+  T.compose2 Model.Page
     (model |> Article.init |> T.map Article)
     (model |> Side.init    |> T.map Side)
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Page -> Sub Msg
 subscriptions model =
   [ model.article |> Article.subscriptions |> Sub.map Article
   , model.side    |> Side.subscriptions    |> Sub.map Side
@@ -69,39 +64,39 @@ subscriptions model =
 article_ = T.prop .article (\v m -> { m | article = v })
 side_    = T.prop .side    (\v m -> { m | side = v })
 
-update : Msg -> Model -> ( Model, FrameTransition app )
+update : Msg -> Model.Page -> ( Model.Page, Model.Transition app Msg )
 update message =
   case message of
     Article msg -> T.update article_ (Article.update msg >> T.map Article)
     Side    msg -> T.update side_    (Side.update msg    >> T.map Side)
 
 
-documentTitle : FrameModel app -> String
+documentTitle : Model.Frame app -> String
 documentTitle = Article.documentTitle
 
-articleHeader : FrameModel app -> Html (FrameMsg appMsg)
+articleHeader : Model.Frame app -> Html (Frame.Msg Msg appMsg)
 articleHeader = Article.header >> H.map Article >> Frame.mapLayout
 
-articleFooter : FrameModel app -> Html (FrameMsg appMsg)
+articleFooter : Model.Frame app -> Html (Frame.Msg Msg appMsg)
 articleFooter = Article.footer >> H.map Article >> Frame.mapLayout
 
-mobileHeader : FrameModel app -> Html (FrameMsg appMsg)
+mobileHeader : Model.Frame app -> Html (Frame.Msg Msg appMsg)
 mobileHeader = Side.mobileHeader >> H.map Side >> Frame.mapLayout
 
-mobileAddress : FrameModel app -> Html (FrameMsg appMsg)
+mobileAddress : Model.Frame app -> Html (Frame.Msg Msg appMsg)
 mobileAddress = Side.navAddress >> H.map Side >> Frame.mapLayout
 
-breadcrumb : FrameModel app -> Html (FrameMsg appMsg)
+breadcrumb : Model.Frame app -> Html (Frame.Msg Msg appMsg)
 breadcrumb = Side.breadcrumb >> H.map Side >> Frame.mapLayout
 
-navHeader : FrameModel app -> Html (FrameMsg appMsg)
+navHeader : Model.Frame app -> Html (Frame.Msg Msg appMsg)
 navHeader = Side.navHeader >> H.map Side >> Frame.mapLayout
 
-navAddress : FrameModel app -> Html (FrameMsg appMsg)
+navAddress : Model.Frame app -> Html (Frame.Msg Msg appMsg)
 navAddress = Side.navAddress >> H.map Side >> Frame.mapLayout
 
-nav : FrameModel app -> Html (FrameMsg appMsg)
+nav : Model.Frame app -> Html (Frame.Msg Msg appMsg)
 nav = Side.nav >> H.map Side >> Frame.mapLayout
 
-navFooter : FrameModel app -> Html (FrameMsg appMsg)
+navFooter : Model.Frame app -> Html (Frame.Msg Msg appMsg)
 navFooter = Side.navFooter >> H.map Side >> Frame.mapLayout
