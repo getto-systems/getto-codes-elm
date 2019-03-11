@@ -36,7 +36,6 @@ import File.Select
 import Json.Encode as Encode
 import Json.Decode as Decode
 
-import Browser.Navigation as Navigation
 import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
@@ -143,7 +142,7 @@ update msg model =
       , case mig |> HttpView.isSuccess of
         Just res ->
           [ Frame.clearApp
-          , always ( res |> HttpView.header |> .id |> Upload.edit |> Href.toString |> Navigation.load )
+          , res |> HttpView.header |> .id |> Upload.edit |> Frame.loadUrl
           ]
           |> T.batch
         Nothing -> T.none

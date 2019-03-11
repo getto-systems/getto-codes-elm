@@ -4,7 +4,9 @@ module GettoUpload.Command.Search exposing
   , init
   , decode
   , pushUrl
+  , loadUrl
   )
+import GettoUpload.Extension.Href as Href exposing ( Href )
 
 import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
@@ -43,3 +45,6 @@ split url =
 
 pushUrl : Model model -> model -> Cmd annonymous
 pushUrl (Model model) = model.encode >> QueryEncode.encode >> Navigation.pushUrl model.key
+
+loadUrl : Href -> Cmd annonymous
+loadUrl = Href.toString >> Navigation.load
