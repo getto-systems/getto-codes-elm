@@ -1,6 +1,5 @@
 module GettoUpload.App.Upload.Edit.Data exposing
-  ( Model
-  , Msg
+  ( Msg
   , getRequest
   , init
   , encodeQuery
@@ -12,7 +11,6 @@ module GettoUpload.App.Upload.Edit.Data exposing
   )
 import GettoUpload.App.Upload.Edit.Model as Model
 import GettoUpload.App.Upload.Edit.Data.View as View
-import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
@@ -27,21 +25,16 @@ import Getto.Json.SafeDecode as SafeDecode
 import Json.Encode as Encode
 import Json.Decode as Decode
 
-import Set exposing ( Set )
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
-
-type alias FrameModel a = Frame.Model Layout.Model { a | data : Model.Data }
-type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model = Model.Data
 
 type Msg
   = StateChanged (HttpView.Migration View.Response)
 
 signature = "data"
 
-get : Http.Tracker (FrameModel a) View.Response
+get : Http.Tracker Model.Frame View.Response
 get = Http.tracker "get" <|
   \model ->
     let
@@ -59,33 +52,32 @@ getTrack   = Http.track   signature get StateChanged
 getRequest = Http.request signature get StateChanged
 
 
-init : Frame.InitModel -> ( Model, FrameTransition a )
+init : Frame.InitModel -> ( Model.Data, Model.Transition Msg )
 init model =
   ( { id  = 0
     , get = HttpView.empty
     }
-  , [ getRequest
-    ] |> T.batch
+  , getRequest
   )
 
-encodeQuery : Model -> QueryEncode.Value
+encodeQuery : Model.Data -> QueryEncode.Value
 encodeQuery model = QueryEncode.empty
 
-decodeQuery : List String -> QueryDecode.Value -> Model -> Model
+decodeQuery : List String -> QueryDecode.Value -> Model.Data -> Model.Data
 decodeQuery names value model =
   let
     entryAt name = QuerySafeDecode.entryAt (names ++ [name])
   in
     { model | id = value |> entryAt "id" (QuerySafeDecode.int 0) }
 
-encodeStore : Model -> Encode.Value
+encodeStore : Model.Data -> Encode.Value
 encodeStore model = Encode.object
   [ ( model.id |> String.fromInt
     , model.get |> HttpView.response |> Maybe.map View.encodeResponse |> Maybe.withDefault Encode.null
     )
   ]
 
-decodeStore : Decode.Value -> Model -> Model
+decodeStore : Decode.Value -> Model.Data -> Model.Data
 decodeStore value model =
   let
     obj = value |> SafeDecode.valueAt [model.id |> String.fromInt]
@@ -97,10 +89,10 @@ decodeStore value model =
         Err _  -> identity
     }
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Data -> Sub Msg
 subscriptions model = getTrack
 
-update : Msg -> Model -> ( Model, FrameTransition a )
+update : Msg -> Model.Data -> ( Model.Data, Model.Transition Msg )
 update msg model =
   case msg of
     StateChanged mig ->

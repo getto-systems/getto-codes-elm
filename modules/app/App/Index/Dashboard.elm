@@ -1,6 +1,5 @@
 module GettoUpload.App.Index.Dashboard exposing
-  ( Model
-  , Msg
+  ( Msg
   , init
   , encodeQuery
   , decodeQuery
@@ -9,11 +8,10 @@ module GettoUpload.App.Index.Dashboard exposing
   , subscriptions
   , update
   , contents
-  , dialogs
   )
+import GettoUpload.App.Index.Model as Model
 import GettoUpload.App.Index.Dashboard.Html as Html
 import GettoUpload.App.Index.Dashboard.View as View
-import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.I18n.App.Index.Dashboard as I18n
 import GettoUpload.I18n.App as AppI18n
@@ -31,47 +29,43 @@ import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | dashboard : Model }
-type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model = ()
-
 type Msg
   = HelloWorld
 
 signature = "dashboard"
 
-init : Frame.InitModel -> ( Model, FrameTransition a )
+init : Frame.InitModel -> ( Model.Dashboard, Model.Transition Msg )
 init model =
   ( ()
   , T.none
   )
 
-encodeQuery : Model -> QueryEncode.Value
+encodeQuery : Model.Dashboard -> QueryEncode.Value
 encodeQuery model = QueryEncode.empty
 
-decodeQuery : List String -> QueryDecode.Value -> Model -> Model
+decodeQuery : List String -> QueryDecode.Value -> Model.Dashboard -> Model.Dashboard
 decodeQuery names value model = model
 
-encodeStore : Model -> Encode.Value
+encodeStore : Model.Dashboard -> Encode.Value
 encodeStore model = Encode.null
 
-decodeStore : Decode.Value -> Model -> Model
+decodeStore : Decode.Value -> Model.Dashboard -> Model.Dashboard
 decodeStore value model = model
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Dashboard -> Sub Msg
 subscriptions model = Sub.none
 
-update : Msg -> Model -> ( Model, FrameTransition a )
+update : Msg -> Model.Dashboard -> ( Model.Dashboard, Model.Transition Msg )
 update msg model =
   case msg of
     HelloWorld -> ( model, T.none )
 
-contents : FrameModel a -> List (Html Msg)
+contents : Model.Frame -> List (Html Msg)
 contents model =
   [ model |> dashboard
   ]
 
-dashboard : FrameModel a -> Html Msg
+dashboard : Model.Frame -> Html Msg
 dashboard model =
   H.section [ A.class "dashboard" ]
     [ H.dl []
@@ -81,7 +75,7 @@ dashboard model =
       ]
     ]
 
-example : FrameModel a -> Html Msg
+example : Model.Frame -> Html Msg
 example model = L.lazy
   (\static -> Html.example
     { data = View.example
@@ -96,6 +90,3 @@ example model = L.lazy
     }
   )
   (model |> Frame.static)
-
-dialogs : FrameModel a -> List (Html Msg)
-dialogs model = []

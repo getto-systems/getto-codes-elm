@@ -1,6 +1,5 @@
 module GettoUpload.App.Upload.New.Register exposing
-  ( Model
-  , Msg
+  ( Msg
   , init
   , encodeStore
   , decodeStore
@@ -9,11 +8,10 @@ module GettoUpload.App.Upload.New.Register exposing
   , subscriptions
   , update
   , contents
-  , dialogs
   )
+import GettoUpload.App.Upload.New.Model as Model
 import GettoUpload.App.Upload.New.Register.View as View
 import GettoUpload.App.Upload.New.Register.Html as Html
-import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
@@ -45,14 +43,6 @@ import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | register : Model }
-type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model =
-  { tmpId  : Maybe Int
-  , form   : View.Form
-  , upload : HttpView.Model View.Response
-  }
-
 type Msg
   = FieldInput  (View.Prop String)       String
   | FieldToggle (View.Prop (Set String)) String
@@ -64,7 +54,7 @@ type Msg
 
 signature = "register"
 
-upload : Http.Tracker (FrameModel a) View.Response
+upload : Http.Tracker Model.Frame View.Response
 upload = Http.tracker "upload" <|
   \model ->
     let
@@ -79,7 +69,7 @@ upload = Http.tracker "upload" <|
         }
 
 
-init : Frame.InitModel -> ( Model, FrameTransition a )
+init : Frame.InitModel -> ( Model.Register, Model.Transition Msg )
 init model =
   ( { tmpId  = Nothing
     , form   = View.init signature
@@ -91,20 +81,20 @@ init model =
     ] |> T.batch
   )
 
-encodeQuery : Model -> QueryEncode.Value
+encodeQuery : Model.Register -> QueryEncode.Value
 encodeQuery model =
   case model.tmpId of
     Nothing    -> QueryEncode.empty
     Just tmpId -> [ ( "tmpId", tmpId |> String.fromInt |> QueryEncode.string ) ] |> QueryEncode.object
 
-decodeQuery : List String -> QueryDecode.Value -> Model -> Model
+decodeQuery : List String -> QueryDecode.Value -> Model.Register -> Model.Register
 decodeQuery names value model =
   let
     entryAt name = QueryDecode.entryAt (names ++ [name])
   in
     { model | tmpId = value |> entryAt "tmpId" QueryDecode.int }
 
-encodeStore : Model -> Encode.Value
+encodeStore : Model.Register -> Encode.Value
 encodeStore model =
   case model.tmpId of
     Nothing -> Encode.null
@@ -115,7 +105,7 @@ encodeStore model =
         )
       ]
 
-decodeStore : Decode.Value -> Model -> Model
+decodeStore : Decode.Value -> Model.Register -> Model.Register
 decodeStore value model =
   case model.tmpId of
     Nothing ->
@@ -130,14 +120,14 @@ decodeStore value model =
         (value |> SafeDecode.valueAt [tmpId |> String.fromInt])
       }
 
-fill : FrameTransition a
+fill : Model.Transition Msg
 fill = Frame.app >> .register >> .form >> Html.pairs >> Dom.fill
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Register -> Sub Msg
 subscriptions model =
   Http.track signature upload UploadStateChanged
 
-update : Msg -> Model -> ( Model, FrameTransition a )
+update : Msg -> Model.Register -> ( Model.Register, Model.Transition Msg )
 update msg model =
   case msg of
     FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    T.none )
@@ -159,14 +149,14 @@ update msg model =
         Nothing -> T.none
       )
 
-contents : FrameModel a -> List (Html Msg)
+contents : Model.Frame -> List (Html Msg)
 contents model =
   [ H.section [ A.class "edit" ]
     [ model |> register
     ]
   ]
 
-register : FrameModel a -> Html Msg
+register : Model.Frame -> Html Msg
 register model = L.lazy
   (\m -> Html.register
     { view   = m.form |> View.view
@@ -204,6 +194,3 @@ register model = L.lazy
     }
   )
   (model |> Frame.app |> .register)
-
-dialogs : FrameModel a -> List (Html Msg)
-dialogs model = []

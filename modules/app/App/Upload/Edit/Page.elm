@@ -1,4 +1,5 @@
 module GettoUpload.App.Upload.Edit.Page exposing ( main )
+import GettoUpload.App.Upload.Edit.Model      as Model
 import GettoUpload.App.Upload.Edit.Data       as Data
 import GettoUpload.App.Upload.Edit.Info       as Info
 import GettoUpload.App.Upload.Edit.Detail     as Detail
@@ -26,18 +27,6 @@ main = Browser.application
   , view          = document
   }
 
-type alias FrameModel = Frame.Model Layout.Model Model
-type alias FrameTransition = Transition FrameModel Msg
-type alias FrameMsg = Frame.Msg Layout.Msg Msg
-
-type alias Model =
-  { data       : Data.Model
-  , info       : Info.Model
-  , detail     : Detail.Model
-  , complete   : Complete.Model
-  , unregister : Unregister.Model
-  }
-
 type Msg
   = Data Data.Msg
   | Info Info.Msg
@@ -45,7 +34,7 @@ type Msg
   | Complete Complete.Msg
   | Unregister Unregister.Msg
 
-setup : Frame.SetupApp Layout.Model Model Msg
+setup : Frame.SetupApp Layout.Model Model.Page Msg
 setup =
   { store =
     ( \model -> Encode.object
@@ -59,7 +48,7 @@ setup =
       let
         data = model.data |> Data.decodeStore (value |> SafeDecode.valueAt ["data"])
       in
-        Model
+        Model.Page
           data
           ( model.info       |> Info.decodeStore   data (value |> SafeDecode.valueAt ["info"]) )
           ( model.detail     |> Detail.decodeStore data (value |> SafeDecode.valueAt ["detail"]) )
@@ -73,16 +62,16 @@ setup =
   , init = init
   }
 
-init : Frame.InitModel -> ( Model, FrameTransition )
+init : Frame.InitModel -> ( Model.Page, Model.Transition Msg )
 init model =
-  T.compose5 Model
+  T.compose5 Model.Page
     (model |> Data.init       |> T.map Data)
     (model |> Info.init       |> T.map Info)
     (model |> Detail.init     |> T.map Detail)
     (model |> Complete.init   |> T.map Complete)
     (model |> Unregister.init |> T.map Unregister)
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Page -> Sub Msg
 subscriptions model =
   [ model.data       |> Data.subscriptions       |> Sub.map Data
   , model.info       |> Info.subscriptions       |> Sub.map Info
@@ -97,7 +86,7 @@ detail_     = T.prop .detail     (\v m -> { m | detail     = v })
 complete_   = T.prop .complete   (\v m -> { m | complete   = v })
 unregister_ = T.prop .unregister (\v m -> { m | unregister = v })
 
-update : Msg -> Model -> ( Model, FrameTransition )
+update : Msg -> Model.Page -> ( Model.Page, Model.Transition Msg )
 update message model =
   case message of
     Data       msg -> model |> T.update data_       (Data.update msg       >> T.map Data)
@@ -106,7 +95,7 @@ update message model =
     Detail     msg -> model |> T.update detail_   (Detail.update model.data msg >> Tuple.mapSecond (batch Detail))
     Complete   msg -> model |> T.update complete_ (Complete.update          msg >> Tuple.mapSecond (batch Complete))
 
-batch : (msg -> Msg) -> ( Transition FrameModel msg, Bool ) -> FrameTransition
+batch : (msg -> Msg) -> ( Transition Model.Frame msg, Bool ) -> Model.Transition Msg
 batch msg (t,req) =
   [ t >> Cmd.map msg
   , if req
@@ -114,13 +103,13 @@ batch msg (t,req) =
     else T.none
   ] |> T.batch
 
-document : FrameModel -> Browser.Document FrameMsg
+document : Model.Frame -> Browser.Document (Model.Msg Msg)
 document model =
   { title = model |> Layout.documentTitle
   , body = [ L.lazy content model ]
   }
 
-content : FrameModel -> Html FrameMsg
+content : Model.Frame -> Html (Model.Msg Msg)
 content model =
   H.section [ A.class "MainLayout" ] <| List.concat
     [ [ model |> Layout.mobileHeader

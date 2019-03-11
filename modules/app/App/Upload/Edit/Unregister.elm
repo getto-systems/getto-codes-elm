@@ -1,6 +1,5 @@
 module GettoUpload.App.Upload.Edit.Unregister exposing
-  ( Model
-  , Msg
+  ( Msg
   , init
   , encodeStore
   , decodeStore
@@ -12,7 +11,6 @@ module GettoUpload.App.Upload.Edit.Unregister exposing
 import GettoUpload.App.Upload.Edit.Model as Model
 import GettoUpload.App.Upload.Edit.Unregister.View as View
 import GettoUpload.App.Upload.Edit.Unregister.Html as Html
-import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
@@ -34,13 +32,6 @@ import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | data : Model.Data, unregister : Model }
-type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model =
-  { isConfirm  : Bool
-  , unregister : HttpView.Model View.Response
-  }
-
 type Msg
   = Confirm
   | Cancel
@@ -49,7 +40,7 @@ type Msg
 
 signature = "unregister"
 
-unregister : Http.Tracker (FrameModel a) View.Response
+unregister : Http.Tracker Model.Frame View.Response
 unregister = Http.tracker "unregister" <|
   \model ->
     let
@@ -68,7 +59,7 @@ unregisterTrack   = Http.track   signature unregister StateChanged
 unregisterRequest = Http.request signature unregister StateChanged
 
 
-init : Frame.InitModel -> ( Model, FrameTransition a )
+init : Frame.InitModel -> ( Model.Unregister, Model.Transition Msg )
 init model =
   ( { isConfirm  = False
     , unregister = HttpView.empty
@@ -76,16 +67,16 @@ init model =
   , T.none
   )
 
-encodeStore : Model -> Encode.Value
+encodeStore : Model.Unregister -> Encode.Value
 encodeStore model = Encode.null
 
-decodeStore : Decode.Value -> Model -> Model
+decodeStore : Decode.Value -> Model.Unregister -> Model.Unregister
 decodeStore value model = model
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Unregister -> Sub Msg
 subscriptions model = unregisterTrack
 
-update : Msg -> Model -> ( Model, FrameTransition a )
+update : Msg -> Model.Unregister -> ( Model.Unregister, Model.Transition Msg )
 update msg model =
   case msg of
     Confirm -> ( { model | isConfirm = True  }, T.none )
@@ -100,12 +91,12 @@ update msg model =
       )
 
 
-contents : FrameModel a -> List (Html Msg)
+contents : Model.Frame -> List (Html Msg)
 contents model =
   [ model |> delete
   ]
 
-delete : FrameModel a -> Html Msg
+delete : Model.Frame -> Html Msg
 delete model = L.lazy2
   (\data m -> Html.unregister
     { get = data.get
@@ -121,12 +112,12 @@ delete model = L.lazy2
   (model |> Frame.app |> .data)
   (model |> Frame.app |> .unregister)
 
-dialogs : FrameModel a -> List (Html Msg)
+dialogs : Model.Frame -> List (Html Msg)
 dialogs model =
   [ model |> dialog
   ]
 
-dialog : FrameModel a -> Html Msg
+dialog : Model.Frame -> Html Msg
 dialog model = L.lazy
   (\m -> Html.dialog
     { isConfirm  = m.isConfirm
