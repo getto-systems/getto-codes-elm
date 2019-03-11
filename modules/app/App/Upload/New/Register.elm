@@ -43,13 +43,13 @@ import Html.Events as E
 import Html.Lazy as L
 
 type Msg
-  = FieldInput  (View.Prop String)       String
-  | FieldToggle (View.Prop (Set String)) String
+  = Change
+  | Upload
+  | Input  (View.Prop String)       String
+  | Toggle (View.Prop (Set String)) String
   | FileRequest (View.Prop (List File))
   | FileSelect  (View.Prop (List File)) File
-  | FieldChange
-  | UploadRequest
-  | UploadStateChanged (HttpView.Migration View.Response)
+  | StateChanged (HttpView.Migration View.Response)
 
 signature = "register"
 
@@ -66,6 +66,9 @@ upload = Http.tracker "upload" <|
         , response = View.response
         , timeout = 30 * 1000
         }
+
+uploadTrack   = Http.track   signature upload StateChanged
+uploadRequest = Http.request signature upload StateChanged
 
 
 init : Frame.InitModel -> ( Model.Register, Model.Transition Msg )
@@ -123,21 +126,21 @@ fill : Model.Transition Msg
 fill = Frame.app >> .register >> .form >> Html.pairs >> Dom.fill
 
 subscriptions : Model.Register -> Sub Msg
-subscriptions model =
-  Http.track signature upload UploadStateChanged
+subscriptions model = uploadTrack
 
 update : Msg -> Model.Register -> ( Model.Register, Model.Transition Msg )
 update msg model =
   case msg of
-    FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    T.none )
-    FieldToggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, T.none )
-    FieldChange -> ( model, Frame.storeApp )
+    Change -> ( model, Frame.storeApp )
+    Upload -> ( model, uploadRequest )
+
+    Input  prop value -> ( { model | form = model.form |> Form.set prop value },    T.none )
+    Toggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, T.none )
 
     FileRequest prop      -> ( model, always ( FileSelect prop |> File.Select.file [] ) )
     FileSelect  prop file -> ( { model | form = model.form |> Form.set prop [file] }, T.none )
 
-    UploadRequest -> ( model, Http.request signature upload UploadStateChanged )
-    UploadStateChanged mig ->
+    StateChanged mig ->
       ( { model | upload = model.upload |> HttpView.update mig }
       , case mig |> HttpView.isSuccess of
         Just res ->
@@ -177,10 +180,10 @@ register model = L.lazy
         ]
       }
     , msg =
-      { upload = UploadRequest
-      , input  = FieldInput
-      , toggle = FieldToggle
-      , change = FieldChange
+      { upload = Upload
+      , input  = Input
+      , toggle = Toggle
+      , change = Change
       , select = FileRequest
       }
     , i18n =
