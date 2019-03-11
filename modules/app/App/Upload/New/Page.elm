@@ -1,4 +1,5 @@
 module GettoUpload.App.Upload.New.Page exposing ( main )
+import GettoUpload.App.Upload.New.Model as Model
 import GettoUpload.App.Upload.New.Register as Register
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
@@ -22,23 +23,16 @@ main = Browser.application
   , view          = document
   }
 
-type alias FrameModel = Frame.Model Layout.Model Model
-type alias FrameTransition = Transition FrameModel Msg
-type alias Model =
-  { register : Register.Model
-  }
-
-type alias FrameMsg = Frame.Msg Layout.Msg Msg
 type Msg
   = Register Register.Msg
 
-setup : Frame.SetupApp Layout.Model Model Msg
+setup : Frame.SetupApp Layout.Model Model.Page Msg
 setup =
   { store =
     ( \model -> Encode.object
       [ ( "register", model.register |> Register.encodeStore )
       ]
-    , \value model -> Model
+    , \value model -> Model.Page
       ( model.register |> Register.decodeStore (value |> SafeDecode.valueAt ["register"]) )
     )
   , search =
@@ -48,30 +42,30 @@ setup =
   , init = init
   }
 
-init : Frame.InitModel -> ( Model, FrameTransition )
+init : Frame.InitModel -> ( Model.Page, Model.Transition Msg )
 init model =
-  T.compose Model
+  T.compose Model.Page
     (model |> Register.init |> T.map Register)
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Page -> Sub Msg
 subscriptions model =
   [ model.register |> Register.subscriptions |> Sub.map Register
   ] |> Sub.batch
 
 register_ = T.prop .register (\v m -> { m | register = v })
 
-update : Msg -> Model -> ( Model, FrameTransition )
+update : Msg -> Model.Page -> ( Model.Page, Model.Transition Msg )
 update message =
   case message of
     Register msg -> T.update register_ (Register.update msg >> T.map Register)
 
-document : FrameModel -> Browser.Document FrameMsg
+document : Model.Frame -> Browser.Document (Model.Msg Msg)
 document model =
   { title = model |> Layout.documentTitle
   , body = [ L.lazy content model ]
   }
 
-content : FrameModel -> Html FrameMsg
+content : Model.Frame -> Html (Model.Msg Msg)
 content model =
   H.section [ A.class "MainLayout" ] <| List.concat
     [ [ model |> Layout.mobileHeader
@@ -92,5 +86,4 @@ content model =
         , model |> Layout.navFooter
         ]
       ]
-    , model |> Register.dialogs |> Frame.mapApp Register
     ]

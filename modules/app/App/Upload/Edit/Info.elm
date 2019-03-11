@@ -1,6 +1,5 @@
 module GettoUpload.App.Upload.Edit.Info exposing
-  ( Model
-  , Msg
+  ( Msg
   , init
   , encodeStore
   , decodeStore
@@ -11,7 +10,6 @@ module GettoUpload.App.Upload.Edit.Info exposing
 import GettoUpload.App.Upload.Edit.Model as Model
 import GettoUpload.App.Upload.Edit.Info.View as View
 import GettoUpload.App.Upload.Edit.Info.Html as Html
-import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
@@ -36,13 +34,6 @@ import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | data : Model.Data, info : Model }
-type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model =
-  { form : View.Form
-  , put  : HttpView.Model View.Response
-  }
-
 type Msg
   = Edit
   | Static
@@ -54,7 +45,7 @@ type Msg
 
 signature = "info"
 
-put : Http.Tracker (FrameModel a) View.Response
+put : Http.Tracker Model.Frame View.Response
 put = Http.tracker "put" <|
   \model ->
     let
@@ -73,7 +64,7 @@ putTrack   = Http.track   signature put StateChanged
 putRequest = Http.request signature put StateChanged
 
 
-init : Frame.InitModel -> ( Model, FrameTransition a )
+init : Frame.InitModel -> ( Model.Info, Model.Transition Msg )
 init model =
   ( { form = signature |> View.init
     , put  = HttpView.empty
@@ -81,24 +72,24 @@ init model =
   , fill
   )
 
-encodeStore : Model.Data -> Model -> Encode.Value
+encodeStore : Model.Data -> Model.Info -> Encode.Value
 encodeStore data model = Encode.object
   [ ( data.id |> String.fromInt
     , model.form |> View.encodeForm
     )
   ]
 
-decodeStore : Model.Data -> Decode.Value -> Model -> Model
+decodeStore : Model.Data -> Decode.Value -> Model.Info -> Model.Info
 decodeStore data value model =
   { model
   | form = model.form |> View.decodeForm
     (value |> SafeDecode.valueAt [data.id |> String.fromInt])
   }
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Info -> Sub Msg
 subscriptions model = putTrack
 
-update : Model.Data -> Msg -> Model -> ( Model, ( FrameTransition a, Bool ) )
+update : Model.Data -> Msg -> Model.Info -> ( Model.Info, ( Model.Transition Msg, Bool ) )
 update data msg model =
   case msg of
     Edit    -> ( { model | form = model.form |> Edit.toEdit View.edit data.get }, ( fillAndStore,   False ) )
@@ -119,19 +110,19 @@ update data msg model =
         )
       )
 
-fill : FrameTransition a
+fill : Model.Transition Msg
 fill = Frame.app >> .info >> .form >> Edit.fields >> Html.pairs >> Dom.fill
 
-fillAndStore : FrameTransition a
+fillAndStore : Model.Transition Msg
 fillAndStore = [ fill, Frame.storeApp ] |> T.batch
 
 
-contents : FrameModel a -> List (Html Msg)
+contents : Model.Frame -> List (Html Msg)
 contents model =
   [ model |> info
   ]
 
-info : FrameModel a -> Html Msg
+info : Model.Frame -> Html Msg
 info model = L.lazy2
   (\data m -> Html.info
     { view = m.form |> View.view data.get

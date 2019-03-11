@@ -1,6 +1,5 @@
 module GettoUpload.App.Upload.Edit.Complete exposing
-  ( Model
-  , Msg
+  ( Msg
   , init
   , encodeStore
   , decodeStore
@@ -12,7 +11,6 @@ module GettoUpload.App.Upload.Edit.Complete exposing
 import GettoUpload.App.Upload.Edit.Model as Model
 import GettoUpload.App.Upload.Edit.Complete.View as View
 import GettoUpload.App.Upload.Edit.Complete.Html as Html
-import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
@@ -31,14 +29,6 @@ import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | data : Model.Data, complete : Model }
-type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model =
-  { isEdit   : Bool
-  , complete : HttpView.Model View.Response
-  , work     : HttpView.Model View.Response
-  }
-
 type Msg
   = Edit
   | Static
@@ -49,7 +39,7 @@ type Msg
 
 signature = "complete"
 
-complete : Http.Tracker (FrameModel a) View.Response
+complete : Http.Tracker Model.Frame View.Response
 complete = Http.tracker "complete" <|
   \model ->
     let
@@ -67,7 +57,7 @@ complete = Http.tracker "complete" <|
 completeTrack   = Http.track   signature complete CompleteStateChanged
 completeRequest = Http.request signature complete CompleteStateChanged
 
-work : Http.Tracker (FrameModel a) View.Response
+work : Http.Tracker Model.Frame View.Response
 work = Http.tracker "work" <|
   \model ->
     let
@@ -86,7 +76,7 @@ workTrack   = Http.track   signature work WorkStateChanged
 workRequest = Http.request signature work WorkStateChanged
 
 
-init : Frame.InitModel -> ( Model, FrameTransition a )
+init : Frame.InitModel -> ( Model.Complete, Model.Transition Msg )
 init model =
   ( { isEdit   = False
     , complete = HttpView.empty
@@ -95,19 +85,19 @@ init model =
   , T.none
   )
 
-encodeStore : Model -> Encode.Value
+encodeStore : Model.Complete -> Encode.Value
 encodeStore model = Encode.null
 
-decodeStore : Decode.Value -> Model -> Model
+decodeStore : Decode.Value -> Model.Complete -> Model.Complete
 decodeStore value model = model
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Complete -> Sub Msg
 subscriptions model =
   [ completeTrack
   , workTrack
   ] |> Sub.batch
 
-update : Msg -> Model -> ( Model, ( FrameTransition a, Bool ) )
+update : Msg -> Model.Complete -> ( Model.Complete, ( Model.Transition Msg, Bool ) )
 update msg model =
   case msg of
     Edit   -> ( { model | isEdit = True  }, ( T.none, False ) )
@@ -138,12 +128,12 @@ toStaticWhenSuccess mig =
     Just _  -> always False
 
 
-contents : FrameModel a -> List (Html Msg)
+contents : Model.Frame -> List (Html Msg)
 contents model =
   [ model |> state
   ]
 
-state : FrameModel a -> Html Msg
+state : Model.Frame -> Html Msg
 state model = L.lazy2
   (\data m -> Html.state
     { get = data.get
@@ -161,12 +151,12 @@ state model = L.lazy2
   (model |> Frame.app |> .data)
   (model |> Frame.app |> .complete)
 
-dialogs : FrameModel a -> List (Html Msg)
+dialogs : Model.Frame -> List (Html Msg)
 dialogs model =
   [ model |> dialog
   ]
 
-dialog : FrameModel a -> Html Msg
+dialog : Model.Frame -> Html Msg
 dialog model = L.lazy2
   (\data m -> Html.dialog
     { get      = data.get

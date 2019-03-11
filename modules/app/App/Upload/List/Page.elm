@@ -1,4 +1,5 @@
 module GettoUpload.App.Upload.List.Page exposing ( main )
+import GettoUpload.App.Upload.List.Model as Model
 import GettoUpload.App.Upload.List.Search as Search
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
@@ -22,23 +23,16 @@ main = Browser.application
   , view          = document
   }
 
-type alias FrameModel = Frame.Model Layout.Model Model
-type alias FrameTransition = Transition FrameModel Msg
-type alias Model =
-  { search : Search.Model
-  }
-
-type alias FrameMsg = Frame.Msg Layout.Msg Msg
 type Msg
   = Search Search.Msg
 
-setup : Frame.SetupApp Layout.Model Model Msg
+setup : Frame.SetupApp Layout.Model Model.Page Msg
 setup =
   { store =
     ( \model -> Encode.object
       [ ( "search", model.search |> Search.encodeStore )
       ]
-    , \value model -> Model
+    , \value model -> Model.Page
       ( model.search |> Search.decodeStore (value |> SafeDecode.valueAt ["search"]) )
     )
   , search =
@@ -48,30 +42,30 @@ setup =
   , init = init
   }
 
-init : Frame.InitModel -> ( Model, FrameTransition )
+init : Frame.InitModel -> ( Model.Page, Model.Transition Msg )
 init model =
-  T.compose Model
+  T.compose Model.Page
     (model |> Search.init |> T.map Search)
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Page -> Sub Msg
 subscriptions model =
   [ model.search |> Search.subscriptions |> Sub.map Search
   ] |> Sub.batch
 
 search_ = T.prop .search (\v m -> { m | search = v })
 
-update : Msg -> Model -> ( Model, FrameTransition )
+update : Msg -> Model.Page -> ( Model.Page, Model.Transition Msg )
 update message =
   case message of
     Search msg -> T.update search_ (Search.update msg >> T.map Search)
 
-document : FrameModel -> Browser.Document FrameMsg
+document : Model.Frame -> Browser.Document (Model.Msg Msg)
 document model =
   { title = model |> Layout.documentTitle
   , body = [ L.lazy content model ]
   }
 
-content : FrameModel -> Html FrameMsg
+content : Model.Frame -> Html (Model.Msg Msg)
 content model =
   H.section [ A.class "MainLayout" ] <| List.concat
     [ [ model |> Layout.mobileHeader

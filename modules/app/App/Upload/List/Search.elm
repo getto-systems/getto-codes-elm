@@ -1,6 +1,5 @@
 module GettoUpload.App.Upload.List.Search exposing
-  ( Model
-  , Msg
+  ( Msg
   , init
   , encodeQuery
   , decodeQuery
@@ -11,9 +10,9 @@ module GettoUpload.App.Upload.List.Search exposing
   , contents
   , dialogs
   )
+import GettoUpload.App.Upload.List.Model as Model
 import GettoUpload.App.Upload.List.Search.View as View
 import GettoUpload.App.Upload.List.Search.Html as Html
-import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
@@ -42,15 +41,6 @@ import Html.Attributes as A
 import Html.Events as E
 import Html.Lazy as L
 
-type alias FrameModel a = Frame.Model Layout.Model { a | search : Model }
-type alias FrameTransition a = Transition (FrameModel a) Msg
-type alias Model =
-  { form   : View.Form
-  , page   : Int
-  , sort   : Sort.Model
-  , search : HttpView.Model View.Response
-  }
-
 type Msg
   = FieldInput  (View.Prop String) String
   | FieldToggle (View.Prop (Set String)) String
@@ -62,7 +52,7 @@ type Msg
 
 signature = "search"
 
-get : Http.Tracker (FrameModel a) View.Response
+get : Http.Tracker Model.Frame View.Response
 get = Http.tracker "get" <|
   \model ->
     let
@@ -100,7 +90,7 @@ get = Http.tracker "get" <|
         }
 
 
-init : Frame.InitModel -> ( Model, FrameTransition a )
+init : Frame.InitModel -> ( Model.Search, Model.Transition Msg )
 init model =
   ( { form = View.init signature
     , page = 0
@@ -112,7 +102,7 @@ init model =
     ] |> T.batch
   )
 
-encodeQuery : Model -> QueryEncode.Value
+encodeQuery : Model.Search -> QueryEncode.Value
 encodeQuery model = QueryEncode.object
   [ ( "q",    model.form |> View.encodeForm )
   , ( "page", model.page |> QueryEncode.int )
@@ -125,7 +115,7 @@ encodeQuery model = QueryEncode.object
     )
   ]
 
-decodeQuery : List String -> QueryDecode.Value -> Model -> Model
+decodeQuery : List String -> QueryDecode.Value -> Model.Search -> Model.Search
 decodeQuery names value model =
   { model
   | form = model.form |> View.decodeForm (names ++ ["q"]) value
@@ -136,17 +126,17 @@ decodeQuery names value model =
     ) |> Sort.fromString |> Maybe.withDefault model.sort
   }
 
-encodeStore : Model -> Encode.Value
+encodeStore : Model.Search -> Encode.Value
 encodeStore model = Encode.null
 
-decodeStore : Decode.Value -> Model -> Model
+decodeStore : Decode.Value -> Model.Search -> Model.Search
 decodeStore value model = model
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Search -> Sub Msg
 subscriptions model =
   Http.track signature get SearchStateChanged
 
-update : Msg -> Model -> ( Model, FrameTransition a )
+update : Msg -> Model.Search -> ( Model.Search, Model.Transition Msg )
 update msg model =
   case msg of
     FieldInput  prop value -> ( { model | form = model.form |> Form.set prop value },    T.none )
@@ -161,7 +151,7 @@ update msg model =
 toPage : String -> Int
 toPage = String.toInt >> Maybe.withDefault 0
 
-fill : FrameTransition a
+fill : Model.Transition Msg
 fill = Frame.app >> .search >>
   (\model -> Dom.fill
     [ model.form.name          |> Field.pair
@@ -176,13 +166,13 @@ fill = Frame.app >> .search >>
     ]
   )
 
-searchAndPushUrl : FrameTransition a
+searchAndPushUrl : Model.Transition Msg
 searchAndPushUrl =
   [ Http.request signature get SearchStateChanged
   , Frame.pushUrl
   ] |> T.batch
 
-contents : FrameModel a -> List (Html Msg)
+contents : Model.Frame -> List (Html Msg)
 contents model =
   [ H.section [ A.class "list" ]
     [ H.section [ "search" |> A.class ]
@@ -196,7 +186,7 @@ contents model =
     ]
   ]
 
-search : FrameModel a -> Html Msg
+search : Model.Frame -> Html Msg
 search model = L.lazy
   (\m -> Html.search
     { view = m.form |> View.view
@@ -228,7 +218,7 @@ search model = L.lazy
   )
   (model |> Frame.app |> .search)
 
-paging : FrameModel a -> Html Msg
+paging : Model.Frame -> Html Msg
 paging model = L.lazy
   (\m -> Html.paging
     { page = m.page
@@ -243,7 +233,7 @@ paging model = L.lazy
   )
   (model |> Frame.app |> .search)
 
-table : FrameModel a -> Html Msg
+table : Model.Frame -> Html Msg
 table model = L.lazy
   (\m -> Html.table
     { http = m.search
@@ -260,5 +250,5 @@ table model = L.lazy
   )
   (model |> Frame.app |> .search)
 
-dialogs : FrameModel a -> List (Html Msg)
+dialogs : Model.Frame -> List (Html Msg)
 dialogs model = []
