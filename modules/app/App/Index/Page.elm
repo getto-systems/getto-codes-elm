@@ -1,4 +1,5 @@
 module GettoUpload.App.Index.Page exposing ( main )
+import GettoUpload.App.Index.Model as Model
 import GettoUpload.App.Index.Dashboard as Dashboard
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
@@ -22,23 +23,16 @@ main = Browser.application
   , view          = document
   }
 
-type alias FrameModel = Frame.Model Layout.Model Model
-type alias FrameTransition = Transition FrameModel Msg
-type alias Model =
-  { dashboard : Dashboard.Model
-  }
-
-type alias FrameMsg = Frame.Msg Layout.Msg Msg
 type Msg
   = Dashboard Dashboard.Msg
 
-setup : Frame.SetupApp Layout.Model Model Msg
+setup : Frame.SetupApp Layout.Model Model.Page Msg
 setup =
   { store =
     ( \model -> Encode.object
       [ ( "dashboard", model.dashboard |> Dashboard.encodeStore )
       ]
-    , \value model -> Model
+    , \value model -> Model.Page
       ( model.dashboard |> Dashboard.decodeStore (value |> SafeDecode.valueAt ["dashboard"]) )
     )
   , search =
@@ -48,30 +42,30 @@ setup =
   , init = init
   }
 
-init : Frame.InitModel -> ( Model, FrameTransition )
+init : Frame.InitModel -> ( Model.Page, Model.Transition Msg )
 init model =
-  T.compose Model
+  T.compose Model.Page
     (model |> Dashboard.init |> T.map Dashboard)
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model.Page -> Sub Msg
 subscriptions model =
   [ model.dashboard |> Dashboard.subscriptions |> Sub.map Dashboard
   ] |> Sub.batch
 
 dashboard_ = T.prop .dashboard (\v m -> { m | dashboard = v })
 
-update : Msg -> Model -> ( Model, FrameTransition )
+update : Msg -> Model.Page -> ( Model.Page, Model.Transition Msg )
 update message =
   case message of
     Dashboard msg -> T.update dashboard_ (Dashboard.update msg >> T.map Dashboard)
 
-document : FrameModel -> Browser.Document FrameMsg
+document : Model.Frame -> Browser.Document (Model.Msg Msg)
 document model =
   { title = model |> Layout.documentTitle
   , body = [ L.lazy content model ]
   }
 
-content : FrameModel -> Html FrameMsg
+content : Model.Frame -> Html (Model.Msg Msg)
 content model =
   H.section [ A.class "MainLayout" ] <| List.concat
     [ [ model |> Layout.mobileHeader
@@ -92,5 +86,4 @@ content model =
         , model |> Layout.navFooter
         ]
       ]
-    , model |> Dashboard.dialogs |> Frame.mapApp Dashboard
     ]
