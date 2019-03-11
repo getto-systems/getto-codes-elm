@@ -27,7 +27,6 @@ import Getto.Json.SafeDecode as SafeDecode
 import Json.Encode as Encode
 import Json.Decode as Decode
 
-import Browser.Navigation as Navigation
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Lazy as L
@@ -87,7 +86,7 @@ update msg model =
       ( { model | unregister = model.unregister |> HttpView.update mig }
       , case mig |> HttpView.isSuccess of
         Nothing -> T.none
-        Just _  -> always ( Upload.list |> Href.toString |> Navigation.load )
+        Just _  -> Upload.list |> Frame.loadUrl
       )
 
 

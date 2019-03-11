@@ -19,6 +19,7 @@ module GettoUpload.Layout.Frame exposing
   , clearLayout
   , clearApp
   , pushUrl
+  , loadUrl
   , mapLayout
   , mapApp
   )
@@ -27,6 +28,7 @@ import GettoUpload.Layout.Frame.Credential as Credential
 import GettoUpload.Command.Auth   as Auth
 import GettoUpload.Command.Store  as Store
 import GettoUpload.Command.Search as Search
+import GettoUpload.Extension.Href exposing ( Href )
 import GettoUpload.Version as Version
 
 import Getto.Command as Command
@@ -193,6 +195,9 @@ clearApp (Model model) = Store.clear model.store.app
 
 pushUrl : Transition (Model layout app) annonymous
 pushUrl (Model model) = model.app |> Search.pushUrl model.search
+
+loadUrl : Href -> Transition (Model layout app) annonymous
+loadUrl = Search.loadUrl >> always
 
 
 mapLayout : Html layoutMsg -> Html (Msg layoutMsg appMsg)
