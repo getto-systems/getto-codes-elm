@@ -7,6 +7,7 @@ module GettoUpload.App.Upload.ListEdit.Model exposing
   )
 import GettoUpload.App.Upload.ListEdit.Search.View as Search
 import GettoUpload.App.Upload.ListEdit.Info.View   as Info
+import GettoUpload.App.Upload.ListEdit.Detail.View as Detail
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.View.Http as HttpView
@@ -23,9 +24,10 @@ type alias Page =
   }
 
 type alias Search =
-  { form : Search.Form
-  , page : Int
-  , sort : Sort.Model
-  , get  : HttpView.Model Search.Response
-  , info : Info.Units
+  { form   : Search.Form
+  , page   : Int
+  , sort   : Sort.Model
+  , get    : HttpView.Model Search.Response
+  , info   : Info.Units
+  , detail : Maybe Detail.Unit
   }

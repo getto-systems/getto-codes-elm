@@ -13,7 +13,8 @@ module GettoUpload.App.Upload.ListEdit.Search exposing
 import GettoUpload.App.Upload.ListEdit.Model as Model
 import GettoUpload.App.Upload.ListEdit.Search.View as View
 import GettoUpload.App.Upload.ListEdit.Search.Html as Html
-import GettoUpload.App.Upload.ListEdit.Info as Info
+import GettoUpload.App.Upload.ListEdit.Info   as Info
+import GettoUpload.App.Upload.ListEdit.Detail as Detail
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
@@ -43,6 +44,7 @@ import Html.Lazy as L
 
 type Msg
   = Info Info.Msg
+  | Detail Detail.Msg
   | Input (View.Prop String) String
   | Change
   | PageTo String
@@ -86,11 +88,12 @@ getRequest = Http.request signature get StateChanged
 
 init : Frame.InitModel -> ( Model.Search, Model.Transition Msg )
 init model =
-  ( { form = View.init signature
-    , page = 0
-    , sort = "id" |> Sort.by
-    , get  = HttpView.empty
-    , info = Info.init signature
+  ( { form   = View.init signature
+    , page   = 0
+    , sort   = "id" |> Sort.by
+    , get    = HttpView.empty
+    , info   = Info.init signature
+    , detail = Nothing
     }
   , [ getRequestAndPushUrl
     , fill
@@ -130,12 +133,14 @@ decodeStore value model = model
 subscriptions : Model.Search -> Sub Msg
 subscriptions model = getTrack
 
-info_ = T.prop .info (\v m -> { m | info = v })
+info_   = T.prop .info   (\v m -> { m | info   = v })
+detail_ = T.prop .detail (\v m -> { m | detail = v })
 
 update : Msg -> Model.Search -> ( Model.Search, Model.Transition Msg )
 update message model =
   case message of
-    Info msg -> model |> T.update info_ (Info.update msg >> T.map Info)
+    Info   msg -> model |> T.update info_   (Info.update msg   >> T.map Info)
+    Detail msg -> model |> T.update detail_ (Detail.update msg >> T.map Detail)
 
     Input prop value -> ( { model | form = model.form |> Form.set prop value }, T.none )
     Change -> ( model, T.none )
@@ -232,6 +237,7 @@ table model = L.lazy
     , msg =
       { sort = SortBy
       , info = Info
+      , edit = Detail.edit >> Detail
       }
     , i18n =
       { field = I18n.field
@@ -243,4 +249,6 @@ table model = L.lazy
   (model |> Frame.app |> .search)
 
 dialogs : Model.Frame -> List (Html Msg)
-dialogs model = []
+dialogs model =
+  [ model |> Detail.detail |> H.map Detail
+  ]

@@ -173,7 +173,7 @@ view form = HttpView.response >> Maybe.map
 
       expose = Edit.expose Data.isDifferentResponse form res
     in
-      { isStatic = form   |> Edit.isStatic
+      { isStatic = Edit.isStatic Data.isDifferentResponse form res
       , hasError = errors |> List.isEmpty |> not
       , form     =
         { name  = model.name  |> expose
