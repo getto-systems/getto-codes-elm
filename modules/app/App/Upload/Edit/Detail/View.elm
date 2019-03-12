@@ -41,11 +41,9 @@ type alias Fields =
   , roles    : Field (Set String)
   }
 
-type alias View =
+type alias View = HttpView.Model Data.Response -> Maybe
   { isStatic : Bool
   , hasError : Bool
-  , state    : HttpView.State
-  , response : Maybe Data.Response
   , form :
     { birthday : Edit.State Form String
     , start_at : Edit.State Form String
@@ -71,11 +69,11 @@ gender_   = Form.prop (Edit.fields >> .gender)   (\v -> Edit.update (\m -> { m |
 quality_  = Form.prop (Edit.fields >> .quality)  (\v -> Edit.update (\m -> { m | quality  = v }) )
 roles_    = Form.prop (Edit.fields >> .roles)    (\v -> Edit.update (\m -> { m | roles    = v }) )
 
-get_birthday = .detail >> .birthday
-get_start_at = .detail >> .start_at
-get_gender   = .detail >> .gender
-get_quality  = .detail >> .quality
-get_roles    = .detail >> .roles
+get_birthday = HttpView.body >> .detail >> .birthday
+get_start_at = HttpView.body >> .detail >> .start_at
+get_gender   = HttpView.body >> .detail >> .gender
+get_quality  = HttpView.body >> .detail >> .quality
+get_roles    = HttpView.body >> .detail >> .roles
 
 
 init : String -> Form
@@ -91,7 +89,7 @@ params : HttpView.Model Data.Response -> Form -> Encode.Value
 params get = Edit.fields >>
   (\fields ->
     let
-      body = get |> HttpView.response |> Maybe.map HttpView.body
+      res = get |> HttpView.response
 
       set encoder = Set.toList >> Encode.list encoder
 
@@ -100,11 +98,11 @@ params get = Edit.fields >>
         , ( "to",   values.to   |> encoder )
         ] |> Encode.object
     in
-      [ ( "birthday", body |> Maybe.map get_birthday, fields.birthday ) |> Edit.filter (encode Encode.string)
-      , ( "start_at", body |> Maybe.map get_start_at, fields.start_at ) |> Edit.filter (encode Encode.string)
-      , ( "gender",   body |> Maybe.map get_gender,   fields.gender   ) |> Edit.filter (encode Encode.string)
-      , ( "quality",  body |> Maybe.map get_quality,  fields.quality  ) |> Edit.filter (encode Encode.string)
-      , ( "roles",    body |> Maybe.map get_roles,    fields.roles    ) |> Edit.filter (encode (set Encode.string))
+      [ ( "birthday", res |> Maybe.map get_birthday, fields.birthday ) |> Edit.filter (encode Encode.string)
+      , ( "start_at", res |> Maybe.map get_start_at, fields.start_at ) |> Edit.filter (encode Encode.string)
+      , ( "gender",   res |> Maybe.map get_gender,   fields.gender   ) |> Edit.filter (encode Encode.string)
+      , ( "quality",  res |> Maybe.map get_quality,  fields.quality  ) |> Edit.filter (encode Encode.string)
+      , ( "roles",    res |> Maybe.map get_roles,    fields.roles    ) |> Edit.filter (encode (set Encode.string))
       ]
       |> List.filterMap identity
       |> Encode.object
@@ -139,58 +137,53 @@ decode key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMa
 
 edit : Data.Response -> Form -> Form
 edit res form =
-  let
-    body = res |> HttpView.body
-  in
-    form
-    |> Form.set birthday_ (body |> get_birthday)
-    |> Form.set start_at_ (body |> get_start_at)
-    |> Form.set gender_   (body |> get_gender)
-    |> Form.set quality_  (body |> get_quality)
-    |> Form.set roles_    (body |> get_roles)
+  form
+  |> Form.set birthday_ (res |> get_birthday)
+  |> Form.set start_at_ (res |> get_start_at)
+  |> Form.set gender_   (res |> get_gender)
+  |> Form.set quality_  (res |> get_quality)
+  |> Form.set roles_    (res |> get_roles)
 
 
-view : HttpView.Model Data.Response -> Form -> View
-view http form =
-  let
-    error = "conflict"
+view : Form -> View
+view form = HttpView.response >> Maybe.map
+  (\res ->
+    let
+      error = "conflict"
 
-    res = http |> HttpView.response
+      data =
+        ( form |> Edit.response
+        , res
+        )
 
-    data =
-      ( form |> Edit.response |> Maybe.map HttpView.body
-      , res  |> Maybe.map HttpView.body
-      )
+      fields = form |> Edit.fields
 
-    fields = form |> Edit.fields
+      model =
+        { birthday = form |> Conflict.init error data ( get_birthday, ( birthday_, [] ) )
+        , start_at = form |> Conflict.init error data ( get_start_at, ( start_at_, [] ) )
+        , gender   = form |> Conflict.init error data ( get_gender,   ( gender_,   [] ) )
+        , quality  = form |> Conflict.init error data ( get_quality,  ( quality_,  [] ) )
+        , roles    = form |> Conflict.init error data ( get_roles,    ( roles_,    [] ) )
+        }
 
-    model =
-      { birthday = form |> Conflict.init error data ( get_birthday, ( birthday_, [] ) )
-      , start_at = form |> Conflict.init error data ( get_start_at, ( start_at_, [] ) )
-      , gender   = form |> Conflict.init error data ( get_gender,   ( gender_,   [] ) )
-      , quality  = form |> Conflict.init error data ( get_quality,  ( quality_,  [] ) )
-      , roles    = form |> Conflict.init error data ( get_roles,    ( roles_,    [] ) )
+      errors = List.concat
+        [ model.birthday |> Conflict.form |> Validate.errors
+        , model.start_at |> Conflict.form |> Validate.errors
+        , model.gender   |> Conflict.form |> Validate.errors
+        , model.quality  |> Conflict.form |> Validate.errors
+        , model.roles    |> Conflict.form |> Validate.errors
+        ]
+
+      expose = Edit.expose Data.isDifferentResponse form res
+    in
+      { isStatic = form   |> Edit.isStatic
+      , hasError = errors |> List.isEmpty |> not
+      , form     =
+        { birthday = model.birthday |> expose
+        , start_at = model.start_at |> expose
+        , gender   = model.gender   |> expose
+        , quality  = model.quality  |> expose
+        , roles    = model.roles    |> expose
+        }
       }
-
-    errors = List.concat
-      [ model.birthday |> Validate.errors
-      , model.start_at |> Validate.errors
-      , model.gender   |> Validate.errors
-      , model.quality  |> Validate.errors
-      , model.roles    |> Validate.errors
-      ]
-
-    expose = Edit.expose Data.isDifferentResponse form res
-  in
-    { isStatic = form   |> Edit.isStatic
-    , hasError = errors |> List.isEmpty |> not
-    , state    = http   |> HttpView.state
-    , response = res
-    , form     =
-      { birthday = model.birthday |> expose
-      , start_at = model.start_at |> expose
-      , gender   = model.gender   |> expose
-      , quality  = model.quality  |> expose
-      , roles    = model.roles    |> expose
-      }
-    }
+  )

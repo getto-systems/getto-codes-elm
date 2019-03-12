@@ -8,7 +8,6 @@ module GettoUpload.Command.Search exposing
   )
 import GettoUpload.Extension.Href as Href exposing ( Href )
 
-import Getto.Command.Transition as Transition exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 

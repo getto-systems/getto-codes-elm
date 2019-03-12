@@ -248,4 +248,26 @@ mock =
       }
     --}
     )
+  , ( ( "GET", "uploads/:id" )
+    {--, Real --}
+    {--}, Mock 1000
+      { header =
+        [ ( "etag", "UPLOAD-ETAG" )
+        ] |> Dict.fromList
+      , body =
+        [ ( "id", 1 |> Encode.int )
+        , ( "name", "John Doe" |> Encode.string )
+        , ( "gender",   "male" |> Encode.string )
+        ] |> Encode.object
+      }
+    --}
+    )
+  , ( ( "PUT", "uploads/:id/info" )
+    {--, Real --}
+    {--}, Mock 1000
+      { header = Dict.empty
+      , body = Encode.null
+      }
+    --}
+    )
   ]

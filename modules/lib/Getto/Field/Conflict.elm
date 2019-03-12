@@ -1,11 +1,14 @@
 module Getto.Field.Conflict exposing
-  ( Field
+  ( Model
+  , Field
   , Form
   , Prop
   , Init
   , State(..)
   , Resolve
   , init
+  , form
+  , expose
   , state
   , resolve
   , none
@@ -15,6 +18,8 @@ module Getto.Field.Conflict exposing
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Validate as Validate
+
+type Model response form a = Model (response -> a) (Validate.Model (Form form a))
 
 type alias Field a = Field.Model (Attribute a) a
 type alias Form form a = Form.Model form (Attribute a) a
@@ -39,7 +44,7 @@ type Resolve a
 
 type alias Init response form a = ( response -> a, Validate.Init form (Attribute a) a )
 
-init : String -> ( Maybe response, Maybe response ) -> Init response form a -> form -> Validate.Model (Form form a)
+init : String -> ( Maybe response, response ) -> Init response form a -> form -> Model response form a
 init error response (getter,initValidate) = Validate.init
   (\field ->
     let
@@ -47,7 +52,7 @@ init error response (getter,initValidate) = Validate.init
 
       newState =
         case response of
-          ( Just first, Just last ) ->
+          ( Just first, last ) ->
             let
               firstValue = first |> getter
               lastValue  = last  |> getter
@@ -77,6 +82,20 @@ init error response (getter,initValidate) = Validate.init
       )
   )
   initValidate
+  >> Model getter
+
+form : Model response form a -> Validate.Model (Form form a)
+form (Model _ model) = model
+
+expose : response -> Model response form a -> ( String, ( a, Form form a ), List String )
+expose res (Model getter model) =
+  let
+    (name,validateForm,errors) = model |> Validate.expose
+  in
+    ( name
+    , ( res |> getter, validateForm )
+    , errors
+    )
 
 state : Field a -> State a
 state = Field.attribute >> (\(Attribute attribute) -> attribute.state )

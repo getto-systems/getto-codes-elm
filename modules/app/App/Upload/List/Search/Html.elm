@@ -27,17 +27,17 @@ import Html.Events as E
 
 
 type alias SearchModel msg =
-  { view  : View.View
-  , http  : HttpView.Model View.Response
+  { view : View.View
+  , get  : HttpView.Model View.Response
   , options :
     { gender : List ( String, String )
     , roles  : List ( String, String )
     }
   , msg :
-    { search : msg
-    , input  : View.Prop String -> String -> msg
-    , toggle : View.Prop (Set String) -> String -> msg
-    , change : msg
+    { request : msg
+    , input   : View.Prop String -> String -> msg
+    , toggle  : View.Prop (Set String) -> String -> msg
+    , change  : msg
     }
   , i18n :
     { field : String -> String
@@ -48,7 +48,7 @@ type alias SearchModel msg =
 
 search : SearchModel msg -> Html msg
 search model =
-  H.form [ model.msg.search |> E.onSubmit ]
+  H.form [ model.msg.request |> E.onSubmit ]
     [ H.section []
       [ H.div []
         [ H.table []
@@ -148,7 +148,7 @@ search model =
         ]
       ]
     , H.footer [] <| List.concat
-      [ case model.http |> HttpView.state of
+      [ case model.get |> HttpView.state of
         HttpView.Connecting progress ->
           [ "searching" |> model.i18n.form |> Button.connecting
           , progress |> Http.progress
@@ -170,7 +170,7 @@ search model =
 
 type alias PagingModel msg =
   { page : Int
-  , http : HttpView.Model View.Response
+  , get  : HttpView.Model View.Response
   , msg :
     { page : String -> msg
     }
@@ -181,7 +181,7 @@ type alias PagingModel msg =
 
 paging : PagingModel msg -> Html msg
 paging model =
-  case model.http |> HttpView.response of
+  case model.get |> HttpView.response of
     Nothing -> "" |> H.text
     Just res ->
       let
@@ -194,7 +194,7 @@ paging model =
 
 
 type alias TableModel msg =
-  { http : HttpView.Model View.Response
+  { get  : HttpView.Model View.Response
   , sort : Sort.Model
   , msg :
     { sort : Sort.Model -> msg
@@ -208,7 +208,7 @@ type alias TableModel msg =
 
 table : TableModel msg -> Html msg
 table model =
-  case model.http |> HttpView.response of
+  case model.get |> HttpView.response of
     Nothing -> "" |> H.text
     Just res ->
       let

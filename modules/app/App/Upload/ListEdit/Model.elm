@@ -1,11 +1,12 @@
-module GettoUpload.App.Upload.List.Model exposing
+module GettoUpload.App.Upload.ListEdit.Model exposing
   ( Frame
   , Transition
   , Msg
   , Page
   , Search
   )
-import GettoUpload.App.Upload.List.Search.View as Search
+import GettoUpload.App.Upload.ListEdit.Search.View as Search
+import GettoUpload.App.Upload.ListEdit.Info.View   as Info
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Page.Page as Layout
 import GettoUpload.View.Http as HttpView
@@ -26,4 +27,5 @@ type alias Search =
   , page : Int
   , sort : Sort.Model
   , get  : HttpView.Model Search.Response
+  , info : Info.Units
   }

@@ -36,7 +36,7 @@ import Html.Lazy as L
 
 type Msg
   = Edit
-  | Static
+  | Cancel
   | Change
   | Request
   | Input   (View.Prop String) String
@@ -92,10 +92,10 @@ subscriptions model = putTrack
 update : Model.Data -> Msg -> Model.Info -> ( Model.Info, ( Model.Transition Msg, Bool ) )
 update data msg model =
   case msg of
-    Edit    -> ( { model | form = model.form |> Edit.toEdit View.edit data.get }, ( fillAndStore,   False ) )
-    Static  -> ( { model | form = model.form |> Edit.toStatic },                  ( Frame.storeApp, False ) )
-    Change  -> ( { model | form = model.form |> Edit.change },                    ( Frame.storeApp, False ) )
-    Request -> ( { model | form = model.form |> Edit.commit },                    ( putRequest,     False ) )
+    Edit    -> ( { model | form = model.form |> Edit.edit View.edit data.get }, ( fillAndStore,   False ) )
+    Cancel  -> ( { model | form = model.form |> Edit.cancel },                  ( Frame.storeApp, False ) )
+    Change  -> ( { model | form = model.form |> Edit.change },                  ( Frame.storeApp, False ) )
+    Request -> ( { model | form = model.form |> Edit.commit },                  ( putRequest,     False ) )
 
     Input   prop value -> ( { model | form = model.form |> Form.set prop value },       ( T.none,       False ) )
     Resolve prop mig   -> ( { model | form = model.form |> Conflict.resolve prop mig }, ( fillAndStore, False ) )
@@ -125,15 +125,16 @@ contents model =
 info : Model.Frame -> Html Msg
 info model = L.lazy2
   (\data m -> Html.info
-    { view = m.form |> View.view data.get
-    , put  = m.put  |> HttpView.state
+    { view = m.form |> View.view
+    , get  = data.get
+    , put  = m.put
     , msg =
       { put     = Request
       , input   = Input
       , resolve = Resolve
       , change  = Change
       , edit    = Edit
-      , static  = Static
+      , cancel  = Cancel
       }
     , i18n =
       { title = I18n.title

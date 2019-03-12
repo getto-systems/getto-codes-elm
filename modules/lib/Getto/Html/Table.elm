@@ -1,6 +1,7 @@
 module Getto.Html.Table exposing
   ( Config
   , BorderStyle(..)
+  , Column
   , render
   , column
   , group
@@ -13,6 +14,7 @@ module Getto.Html.Table exposing
   , empty
   , th
   , td
+  , map
   )
 import Getto.Html.Table.Struct as Struct
 
@@ -24,11 +26,17 @@ type BorderStyle
   | Single
   | Double
 
-type alias HtmlCell msg =
-  { tag  : List (H.Attribute msg) -> List (Html msg) -> Html msg
+type alias Cell msg =
+  { tag  : Tag
   , attr : List (H.Attribute msg)
   , body : List (Html msg)
   }
+
+type Tag
+  = Th
+  | Td
+
+type alias Column row msg = Struct.Column row (Cell msg)
 
 column = Struct.column
 group  = Struct.group
@@ -46,11 +54,11 @@ type alias Config msg =
     , summary : List (H.Attribute msg)
     , border  : BorderAttribute msg
     }
-  , emptyContent : Struct.Cell (HtmlCell msg)
+  , emptyContent : Struct.Cell (Cell msg)
   }
 type alias BorderAttribute msg = ( BorderStyle, BorderStyle ) -> List (H.Attribute msg)
 
-render : Config msg -> List (Struct.Column row (HtmlCell msg)) -> List row -> Html msg
+render : Config msg -> List (Column row msg) -> List row -> Html msg
 render config columns list =
   let
     data = list |> Struct.render columns
@@ -70,7 +78,7 @@ render config columns list =
       , H.tbody [] tbody
       ]
 
-cell : BorderAttribute msg -> Struct.Render (HtmlCell msg) (Html msg)
+cell : BorderAttribute msg -> Struct.Render (Cell msg) (Html msg)
 cell attr border info data =
   let
     base = List.concat
@@ -82,7 +90,7 @@ cell attr border info data =
   in
     case data of
       Struct.Empty -> H.td base []
-      Struct.Cell html -> html.tag (base ++ html.attr) html.body
+      Struct.Cell html -> tag html.tag (base ++ html.attr) html.body
 
 mapBorderStyle : Struct.BorderStyle -> BorderStyle
 mapBorderStyle style =
@@ -92,19 +100,35 @@ mapBorderStyle style =
     Struct.Double -> Double
 
 
-empty : Struct.Cell (HtmlCell msg)
+empty : Struct.Cell (Cell msg)
 empty = Struct.Empty
 
-th : List (H.Attribute msg) -> List (Html msg) -> Struct.Cell (HtmlCell msg)
+th : List (H.Attribute msg) -> List (Html msg) -> Struct.Cell (Cell msg)
 th attr body = Struct.Cell
-  { tag  = H.th
+  { tag  = Th
   , attr = attr
   , body = body
   }
 
-td : List (H.Attribute msg) -> List (Html msg) -> Struct.Cell (HtmlCell msg)
+td : List (H.Attribute msg) -> List (Html msg) -> Struct.Cell (Cell msg)
 td attr body = Struct.Cell
-  { tag  = H.td
+  { tag  = Td
   , attr = attr
   , body = body
+  }
+
+tag : Tag -> List (H.Attribute msg) -> List (Html msg) -> Html msg
+tag tagType =
+  case tagType of
+    Th -> H.th
+    Td -> H.td
+
+map : (msg -> super) -> Column row msg -> Column row super
+map msg = Struct.map (mapCell msg)
+
+mapCell : (msg -> super) -> Cell msg -> Cell super
+mapCell msg data =
+  { tag  = data.tag
+  , attr = data.attr |> List.map (A.map msg)
+  , body = data.body |> List.map (H.map msg)
   }

@@ -126,11 +126,8 @@ decodeResponse =
         Err err -> err |> Decode.fail
     )
 
-isDifferentResponse : Maybe Response -> Response -> Bool
-isDifferentResponse data last =
-  case data of
-    Nothing  -> False
-    Just res -> ( res |> etag ) /= ( last |> etag )
+isDifferentResponse : Response -> Response -> Bool
+isDifferentResponse res last = ( res |> etag ) /= ( last |> etag )
 
 etag : Response -> String
 etag = HttpView.header >> .etag
