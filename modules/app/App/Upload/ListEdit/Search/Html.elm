@@ -136,6 +136,7 @@ type alias TableModel msg info =
   , msg :
     { sort : Sort.Model -> msg
     , info : info -> msg
+    , edit : Data.Upload -> msg
     }
   , i18n :
     { field : String -> String
@@ -168,13 +169,7 @@ table model =
             { header  = Table.th [] []
             , summary = Table.empty
             , content = \upload -> Table.td []
-              [ H.p []
-                [ H.a [ upload.id |> Upload.edit |> Href.toString |> A.href ]
-                  [ Icon.edit |> Html.icon []
-                  , " " |> H.text
-                  , "detail" |> model.i18n.form |> H.text
-                  ]
-                ]
+              [ "edit" |> model.i18n.form |> Button.edit (model.msg.edit upload)
               ]
             }
           , model.info |> Table.map model.msg.info
