@@ -12,10 +12,10 @@
   "author": "shun@getto.systems",
   "license": "MIT",
   "devDependencies": {
-    "dump-routes-info": "^1.0.0",
+    "dump-routes-info": "^1.2.0",
     "ejs": "^2.6.1",
     "elm": "^0.19.0",
-    "elm-test": "^0.19.0-rev3",
+    "elm-test": "^0.19.0-rev6",
     "exec-on-changed": "^1.1.0",
     "getto-detect": "^0.1.0",
     "reload-wrapper": "^0.1.1",

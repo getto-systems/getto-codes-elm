@@ -3,5 +3,6 @@
 - name: upload
   entries:
   - name: list
+  - name: list_edit
   - name: new
   - name: edit

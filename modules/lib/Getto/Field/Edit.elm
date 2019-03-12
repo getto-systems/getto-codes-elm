@@ -9,8 +9,8 @@ module Getto.Field.Edit exposing
   , filter
   , encode
   , decode
-  , toStatic
-  , toEdit
+  , edit
+  , cancel
   , commit
   , change
   , put
@@ -32,7 +32,7 @@ type EditState response
   | EditState Bool response
 
 type State form a
-  = Static String
+  = Static String a
   | Edit   String (Conflict.Form form a) (Conflict.State a) (List String)
 
 type alias Param a =
@@ -50,8 +50,11 @@ fields (Model _ model) = model
 update : (fields -> fields) -> Model response fields -> Model response fields
 update f (Model state model) = Model state (model |> f)
 
-isStatic : Model response fields -> Bool
-isStatic (Model state _) = state == StaticState
+isStatic : (response -> response -> Bool) -> Model response fields -> response -> Bool
+isStatic isDifferentResponse (Model state _) res =
+  case state of
+    StaticState -> True
+    EditState isCommit last -> isCommit && ( last |> isDifferentResponse res )
 
 response : Model response fields -> Maybe response
 response (Model state _) =
@@ -98,14 +101,14 @@ decode decodeResponse decodeModel value (Model state model) =
 decodeValue : String -> Decode.Decoder a -> Decode.Value -> Maybe a
 decodeValue key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMaybe
 
-toStatic : Model response fields -> Model response fields
-toStatic (Model _ model) = Model StaticState model
-
-toEdit : (response -> Model response fields -> Model response fields) -> HttpView.Model response -> Model response fields -> Model response fields
-toEdit edit http (Model state model) =
+edit : (response -> Model response fields -> Model response fields) -> HttpView.Model response -> Model response fields -> Model response fields
+edit editFields http (Model state model) =
   case http |> HttpView.response of
     Nothing  -> Model state model
-    Just res -> Model (EditState False res) model |> edit res
+    Just res -> Model (EditState False res) model |> editFields res
+
+cancel : Model response fields -> Model response fields
+cancel (Model _ model) = Model StaticState model
 
 commit : Model response fields -> Model response fields
 commit (Model state model) =
@@ -126,14 +129,14 @@ put mig =
     else identity
 
 
-expose : (Maybe response -> response -> Bool) -> Model response fields -> Maybe response -> Validate.Model (Conflict.Form form a) -> State form a
+expose : (response -> response -> Bool) -> Model response fields -> response -> Conflict.Model response form a -> State form a
 expose isDifferentResponse (Model state _) res model =
   let
-    (fieldName,validateForm,errors) = model |> Validate.expose
+    (fieldName,(value,validateForm),errors) = model |> Conflict.expose res
   in
     case state of
-      StaticState -> Static fieldName
+      StaticState -> Static fieldName value
       EditState isCommit last ->
         if isCommit && ( last |> isDifferentResponse res )
-          then Static fieldName
+          then Static fieldName value
           else Edit   fieldName validateForm ( validateForm.field |> Conflict.state ) errors

@@ -37,11 +37,9 @@ type alias Fields =
   , tel   : Field String
   }
 
-type alias View =
+type alias View = HttpView.Model Data.Response -> Maybe
   { isStatic : Bool
   , hasError : Bool
-  , state    : HttpView.State
-  , response : Maybe Data.Response
   , form :
     { name  : Edit.State Form String
     , memo  : Edit.State Form String
@@ -67,11 +65,11 @@ age_   = Form.prop (Edit.fields >> .age)   (\v -> Edit.update (\m -> { m | age  
 email_ = Form.prop (Edit.fields >> .email) (\v -> Edit.update (\m -> { m | email = v }) )
 tel_   = Form.prop (Edit.fields >> .tel)   (\v -> Edit.update (\m -> { m | tel   = v }) )
 
-get_name  = .info >> .name
-get_memo  = .info >> .memo
-get_age   = .info >> .age >> String.fromInt
-get_email = .info >> .email
-get_tel   = .info >> .tel
+get_name  = HttpView.body >> .info >> .name
+get_memo  = HttpView.body >> .info >> .memo
+get_age   = HttpView.body >> .info >> .age >> String.fromInt
+get_email = HttpView.body >> .info >> .email
+get_tel   = HttpView.body >> .info >> .tel
 
 
 init : String -> Form
@@ -88,18 +86,18 @@ params : HttpView.Model Data.Response -> Form -> Encode.Value
 params get = Edit.fields >>
   (\fields ->
     let
-      body = get |> HttpView.response |> Maybe.map HttpView.body
+      res = get |> HttpView.response
 
       encode encoder values =
         [ ( "from", values.from |> encoder )
         , ( "to",   values.to   |> encoder )
         ] |> Encode.object
     in
-      [ ( "name",  body |> Maybe.map get_name,  fields.name  ) |> Edit.filter (encode Encode.string)
-      , ( "memo",  body |> Maybe.map get_memo,  fields.memo  ) |> Edit.filter (encode Encode.string)
-      , ( "age",   body |> Maybe.map get_age,   fields.age   ) |> Edit.filter (encode Encode.string)
-      , ( "email", body |> Maybe.map get_email, fields.email ) |> Edit.filter (encode Encode.string)
-      , ( "tel",   body |> Maybe.map get_tel,   fields.tel   ) |> Edit.filter (encode Encode.string)
+      [ ( "name",  res |> Maybe.map get_name,  fields.name  ) |> Edit.filter (encode Encode.string)
+      , ( "memo",  res |> Maybe.map get_memo,  fields.memo  ) |> Edit.filter (encode Encode.string)
+      , ( "age",   res |> Maybe.map get_age,   fields.age   ) |> Edit.filter (encode Encode.string)
+      , ( "email", res |> Maybe.map get_email, fields.email ) |> Edit.filter (encode Encode.string)
+      , ( "tel",   res |> Maybe.map get_tel,   fields.tel   ) |> Edit.filter (encode Encode.string)
       ]
       |> List.filterMap identity
       |> Encode.object
@@ -134,60 +132,55 @@ decode key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMa
 
 edit : Data.Response -> Form -> Form
 edit res form =
-  let
-    body = res |> HttpView.body
-  in
-    form
-    |> Form.set name_  (body |> get_name)
-    |> Form.set memo_  (body |> get_memo)
-    |> Form.set age_   (body |> get_age)
-    |> Form.set email_ (body |> get_email)
-    |> Form.set tel_   (body |> get_tel)
+  form
+  |> Form.set name_  (res |> get_name)
+  |> Form.set memo_  (res |> get_memo)
+  |> Form.set age_   (res |> get_age)
+  |> Form.set email_ (res |> get_email)
+  |> Form.set tel_   (res |> get_tel)
 
 
-view : HttpView.Model Data.Response -> Form -> View
-view http form =
-  let
-    error = "conflict"
+view : Form -> View
+view form = HttpView.response >> Maybe.map
+  (\res ->
+    let
+      error = "conflict"
 
-    blank = Validate.blank "blank"
+      blank = Validate.blank "blank"
 
-    res = http |> HttpView.response
+      data =
+        ( form |> Edit.response
+        , res
+        )
 
-    data =
-      ( form |> Edit.response |> Maybe.map HttpView.body
-      , res  |> Maybe.map HttpView.body
-      )
+      fields = form |> Edit.fields
 
-    fields = form |> Edit.fields
+      model =
+        { name  = form |> Conflict.init error data ( get_name, ( name_,  [ fields.name |> blank ] ) )
+        , memo  = form |> Conflict.init error data ( get_memo, ( memo_,  [] ) )
+        , age   = form |> Conflict.init error data ( get_age,  ( age_,   [] ) )
+        , email = form |> Conflict.init error data ( get_email,( email_, [] ) )
+        , tel   = form |> Conflict.init error data ( get_tel,  ( tel_,   [] ) )
+        }
 
-    model =
-      { name  = form |> Conflict.init error data ( get_name, ( name_,  [ fields.name |> blank ] ) )
-      , memo  = form |> Conflict.init error data ( get_memo, ( memo_,  [] ) )
-      , age   = form |> Conflict.init error data ( get_age,  ( age_,   [] ) )
-      , email = form |> Conflict.init error data ( get_email,( email_, [] ) )
-      , tel   = form |> Conflict.init error data ( get_tel,  ( tel_,   [] ) )
+      errors = List.concat
+        [ model.name  |> Conflict.form |> Validate.errors
+        , model.memo  |> Conflict.form |> Validate.errors
+        , model.age   |> Conflict.form |> Validate.errors
+        , model.email |> Conflict.form |> Validate.errors
+        , model.tel   |> Conflict.form |> Validate.errors
+        ]
+
+      expose = Edit.expose Data.isDifferentResponse form res
+    in
+      { isStatic = form   |> Edit.isStatic
+      , hasError = errors |> List.isEmpty |> not
+      , form     =
+        { name  = model.name  |> expose
+        , memo  = model.memo  |> expose
+        , age   = model.age   |> expose
+        , email = model.email |> expose
+        , tel   = model.tel   |> expose
+        }
       }
-
-    errors = List.concat
-      [ model.name  |> Validate.errors
-      , model.memo  |> Validate.errors
-      , model.age   |> Validate.errors
-      , model.email |> Validate.errors
-      , model.tel   |> Validate.errors
-      ]
-
-    expose = Edit.expose Data.isDifferentResponse form res
-  in
-    { isStatic = form   |> Edit.isStatic
-    , hasError = errors |> List.isEmpty |> not
-    , state    = http   |> HttpView.state
-    , response = res
-    , form     =
-      { name  = model.name  |> expose
-      , memo  = model.memo  |> expose
-      , age   = model.age   |> expose
-      , email = model.email |> expose
-      , tel   = model.tel   |> expose
-      }
-    }
+  )

@@ -9,6 +9,7 @@ module Getto.Html.Table.Struct exposing
   , union
   , parts
   , rows
+  , map
   )
 
 type Column row a
@@ -501,3 +502,90 @@ summaryBorder f = Maybe.map
       UnionSummary data -> data.border |> f
   )
   >> Maybe.withDefault None
+
+map : (a -> b) -> Column row a -> Column row b
+map f col =
+  case col of
+    Column data -> Column
+      { header  = data.header  |> mapHeader f
+      , summary = data.summary |> mapSummary f
+      , content = data.content >> mapContent f
+      }
+    Group data -> Group
+      { header    = data.header    |> mapHeader f
+      , summaries = data.summaries |> List.map (mapSummary f)
+      , contents  = data.contents  >> List.map (mapContent f)
+      }
+    Union data -> Union
+      { header  = data.header  |> mapHeader f
+      , summary = data.summary |> mapSummary f
+      , content = data.content >> mapContent f
+      }
+    Parts data -> Parts
+      { headers   = data.headers   |> List.map (mapHeader f)
+      , summaries = data.summaries |> List.map (mapSummary f)
+      , contents  = data.contents  >> List.map (mapContent f)
+      }
+    Rows data -> Rows
+      { headers   = data.headers   |> List.map (mapHeader f)
+      , summaries = data.summaries |> List.map (mapSummary f)
+      , content   = data.content   >> mapContent f
+      }
+
+mapHeader : (a -> b) -> Header a -> Header b
+mapHeader f header =
+  case header of
+    Header data -> Header
+      { border = data.border
+      , cell   = data.cell |> mapCell f
+      }
+    GroupHeader data -> GroupHeader
+      { border   = data.border
+      , cell     = data.cell |> mapCell f
+      , children = data.children |> List.map (mapHeader f)
+      }
+    UnionHeader data -> UnionHeader
+      { border  = data.border
+      , cell    = data.cell |> mapCell f
+      , colspan = data.colspan
+      }
+
+mapSummary : (a -> b) -> Summary a -> Summary b
+mapSummary f summary =
+  case summary of
+    Summary data -> Summary
+      { border = data.border
+      , cell   = data.cell |> mapCell f
+      }
+    UnionSummary data -> UnionSummary
+      { border  = data.border
+      , cell    = data.cell |> mapCell f
+      , colspan = data.colspan
+      }
+
+mapContent : (a -> b) -> Content a -> Content b
+mapContent f content =
+  case content of
+    Content data -> Content
+      { border = data.border
+      , cells  = data.cells |> mapCells f
+      }
+    UnionContent data -> UnionContent
+      { border    = data.border
+      , cellLists = data.cellLists |> List.map (mapCells f)
+      , colspan   = data.colspan
+      }
+    RowsContent data -> RowsContent
+      { border       = data.border
+      , contentLists = data.contentLists |> List.map (List.map (mapContent f))
+      , colspan      = data.colspan
+      }
+
+mapCell : (a -> b) -> Cell a -> Cell b
+mapCell f cell =
+  case cell of
+    Empty -> Empty
+    Cell content -> content |> f |> Cell
+
+mapCells : (a -> b) -> List (Cell a) -> List (Cell b)
+mapCells f = List.map (mapCell f)

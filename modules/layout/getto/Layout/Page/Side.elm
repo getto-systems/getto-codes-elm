@@ -229,6 +229,7 @@ menu =
         [ Menu.item (Icon.edit) Upload.new []
         , Menu.item (Icon.edit) Upload.edit_ []
         ]
+      , Menu.item (Icon.fas "file") Upload.list_edit []
       ]
     )
   ]

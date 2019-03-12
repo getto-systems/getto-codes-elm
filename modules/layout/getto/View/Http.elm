@@ -10,6 +10,7 @@ module GettoUpload.View.Http exposing
   , empty
   , clear
   , decoder
+  , toResponse
   , load
   , transfer
   , notModified
@@ -108,11 +109,15 @@ decoder decode value =
           |> Err
 
         Ok responseBody ->
-          Response
-            { header = responseHeader
-            , body   = responseBody
-            }
+          responseBody
+          |> toResponse responseHeader
           |> Ok
+
+toResponse : header -> body -> Response header body
+toResponse responseHeader responseBody = Response
+  { header = responseHeader
+  , body   = responseBody
+  }
 
 load : Migration response
 load = Load

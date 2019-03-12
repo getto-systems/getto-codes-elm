@@ -20,14 +20,16 @@ module GettoUpload.Layout.Frame exposing
   , clearApp
   , pushUrl
   , loadUrl
+  , fixedMidashi
   , mapLayout
   , mapApp
   )
 import GettoUpload.Layout.Frame.Static     as Static
 import GettoUpload.Layout.Frame.Credential as Credential
-import GettoUpload.Command.Auth   as Auth
-import GettoUpload.Command.Store  as Store
-import GettoUpload.Command.Search as Search
+import GettoUpload.Command.Auth         as Auth
+import GettoUpload.Command.Store        as Store
+import GettoUpload.Command.Search       as Search
+import GettoUpload.Command.FixedMidashi as FixedMidashi
 import GettoUpload.Extension.Href exposing ( Href )
 import GettoUpload.Version as Version
 
@@ -198,6 +200,9 @@ pushUrl (Model model) = model.app |> Search.pushUrl model.search
 
 loadUrl : Href -> Transition (Model layout app) annonymous
 loadUrl = Search.loadUrl >> always
+
+fixedMidashi : Transition (Model layout app) annonymous
+fixedMidashi = FixedMidashi.create |> always
 
 
 mapLayout : Html layoutMsg -> Html (Msg layoutMsg appMsg)

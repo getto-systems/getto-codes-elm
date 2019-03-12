@@ -1,4 +1,4 @@
-module GettoUpload.App.Upload.List.Search exposing
+module GettoUpload.App.Upload.ListEdit.Search exposing
   ( Msg
   , init
   , encodeQuery
@@ -10,9 +10,10 @@ module GettoUpload.App.Upload.List.Search exposing
   , contents
   , dialogs
   )
-import GettoUpload.App.Upload.List.Model as Model
-import GettoUpload.App.Upload.List.Search.View as View
-import GettoUpload.App.Upload.List.Search.Html as Html
+import GettoUpload.App.Upload.ListEdit.Model as Model
+import GettoUpload.App.Upload.ListEdit.Search.View as View
+import GettoUpload.App.Upload.ListEdit.Search.Html as Html
+import GettoUpload.App.Upload.ListEdit.Info as Info
 import GettoUpload.Layout.Frame as Frame
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
@@ -26,7 +27,6 @@ import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Http.Header.Decode as HeaderDecode
-import Getto.Http.Part as Part
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Present as Present
@@ -42,8 +42,8 @@ import Html.Events as E
 import Html.Lazy as L
 
 type Msg
-  = Input  (View.Prop String) String
-  | Toggle (View.Prop (Set String)) String
+  = Info Info.Msg
+  | Input (View.Prop String) String
   | Change
   | PageTo String
   | SortBy Sort.Model
@@ -63,17 +63,8 @@ get = Http.tracker "get" <|
         , headers = model |> Api.headers
         , params  = QueryEncode.object
           [ ( "q"
-            , [ ( "name",           m.form.name          |> Field.value |> QueryEncode.string )
-              , ( "age_gteq",       m.form.age_gteq      |> Field.value |> QueryEncode.string )
-              , ( "age_lteq",       m.form.age_lteq      |> Field.value |> QueryEncode.string )
-              , ( "email",          m.form.email         |> Field.value |> QueryEncode.string )
-              , ( "tel",            m.form.tel           |> Field.value |> QueryEncode.string )
-              , ( "birthday_gteq",  m.form.birthday_gteq |> Field.value |> QueryEncode.string )
-              , ( "birthday_lteq",  m.form.birthday_lteq |> Field.value |> QueryEncode.string )
-              , ( "start_at_gteq",  m.form.start_at_gteq |> Field.value |> QueryEncode.string )
-              , ( "start_at_lteq",  m.form.start_at_lteq |> Field.value |> QueryEncode.string )
-              , ( "gender",         m.form.gender        |> Field.value |> QueryEncode.string )
-              , ( "roles",          m.form.roles         |> Field.value |> QueryEncode.set QueryEncode.string )
+            , [ ( "name",   m.form.name   |> Field.value |> QueryEncode.string )
+              , ( "gender", m.form.gender |> Field.value |> QueryEncode.string )
               ] |> QueryEncode.object
             )
           , ( "page", m.page |> QueryEncode.int )
@@ -99,8 +90,9 @@ init model =
     , page = 0
     , sort = "id" |> Sort.by
     , get  = HttpView.empty
+    , info = Info.init signature
     }
-  , [ searchAndPushUrl
+  , [ getRequestAndPushUrl
     , fill
     ] |> T.batch
   )
@@ -138,39 +130,39 @@ decodeStore value model = model
 subscriptions : Model.Search -> Sub Msg
 subscriptions model = getTrack
 
+info_ = T.prop .info (\v m -> { m | info = v })
+
 update : Msg -> Model.Search -> ( Model.Search, Model.Transition Msg )
-update msg model =
-  case msg of
-    Input  prop value -> ( { model | form = model.form |> Form.set prop value },    T.none )
-    Toggle prop value -> ( { model | form = model.form |> Form.toggle prop value }, T.none )
+update message model =
+  case message of
+    Info msg -> model |> T.update info_ (Info.update msg >> T.map Info)
+
+    Input prop value -> ( { model | form = model.form |> Form.set prop value }, T.none )
     Change -> ( model, T.none )
 
-    PageTo page -> ( { model | page = page |> toPage }, searchAndPushUrl )
-    SortBy sort -> ( { model | sort = sort },           searchAndPushUrl )
-    Request     -> ( { model | page = 0 },              searchAndPushUrl )
+    PageTo page -> ( { model | page = page |> toPage }, getRequestAndPushUrl )
+    SortBy sort -> ( { model | sort = sort },           getRequestAndPushUrl )
+    Request     -> ( { model | page = 0 },              getRequestAndPushUrl )
 
-    StateChanged mig -> ( { model | get = model.get |> HttpView.update mig }, T.none )
+    StateChanged mig ->
+      ( { model
+        | get  = model.get  |> HttpView.update mig
+        , info = model.info |>
+          if mig |> HttpView.isComplete
+            then Info.clear
+            else identity
+        }
+      , Frame.fixedMidashi
+      )
 
 toPage : String -> Int
 toPage = String.toInt >> Maybe.withDefault 0
 
 fill : Model.Transition Msg
-fill = Frame.app >> .search >>
-  (\model -> Dom.fill
-    [ model.form.name          |> Field.pair
-    , model.form.age_gteq      |> Field.pair
-    , model.form.age_lteq      |> Field.pair
-    , model.form.email         |> Field.pair
-    , model.form.tel           |> Field.pair
-    , model.form.birthday_gteq |> Field.pair
-    , model.form.birthday_lteq |> Field.pair
-    , model.form.start_at_gteq |> Field.pair
-    , model.form.start_at_lteq |> Field.pair
-    ]
-  )
+fill = Frame.app >> .search >> .form >> Html.pairs >> Dom.fill
 
-searchAndPushUrl : Model.Transition Msg
-searchAndPushUrl =
+getRequestAndPushUrl : Model.Transition Msg
+getRequestAndPushUrl =
   [ getRequest
   , Frame.pushUrl
   ] |> T.batch
@@ -201,15 +193,10 @@ search model = L.lazy
         , ( "female", "female" |> I18n.gender )
         , ( "other",  "other"  |> I18n.gender )
         ]
-      , roles =
-        [ ( "admin",  "admin"  |> AppI18n.role )
-        , ( "upload", "upload" |> AppI18n.role )
-        ]
       }
     , msg =
       { request = Request
       , input   = Input
-      , toggle  = Toggle
       , change  = Change
       }
     , i18n =
@@ -241,8 +228,10 @@ table model = L.lazy
   (\m -> Html.table
     { get  = m.get
     , sort = m.sort
+    , info = m.info |> Info.info
     , msg =
       { sort = SortBy
+      , info = Info
       }
     , i18n =
       { field = I18n.field
