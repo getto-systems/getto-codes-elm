@@ -13,7 +13,7 @@ import GettoUpload.App.Index.Model as Model
 import GettoUpload.App.Index.Dashboard.Html as Html
 import GettoUpload.App.Index.Dashboard.View as View
 import GettoUpload.Layout.Frame as Frame
-import GettoUpload.I18n.App.Index.Dashboard as I18n
+import GettoUpload.I18n.App.Index as I18n
 import GettoUpload.I18n.App as AppI18n
 import GettoUpload.Extension.Href.Home as Home
 
