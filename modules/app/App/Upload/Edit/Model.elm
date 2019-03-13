@@ -50,14 +50,14 @@ type alias Detail =
   }
 
 type alias Complete =
-  { isEdit   : Bool
-  , complete : HttpView.Model Complete.Response
-  , work     : HttpView.Model Complete.Response
+  { isEdit      : Bool
+  , putComplete : HttpView.Model Complete.Response
+  , putWork     : HttpView.Model Complete.Response
   }
 
 type alias Unregister =
-  { isConfirm  : Bool
-  , unregister : HttpView.Model Unregister.Response
+  { isConfirm : Bool
+  , delete    : HttpView.Model Unregister.Response
   }
 
 pathInfo : Data -> List ( String, String )

@@ -38,22 +38,25 @@ setup : Frame.SetupApp Layout.Model Model.Page Msg
 setup =
   { store =
     ( \model -> Encode.object
-      [ ( "data",       model.data       |> Data.encodeStore )
-      , ( "info",       model.info       |> Info.encodeStore   model.data )
-      , ( "detail",     model.detail     |> Detail.encodeStore model.data )
-      , ( "complete",   model.complete   |> Complete.encodeStore )
-      , ( "unregister", model.unregister |> Unregister.encodeStore )
+      [ ( model.data.id |> String.fromInt
+        , [ ( "data",       model.data       |> Data.encodeStore )
+          , ( "info",       model.info       |> Info.encodeStore )
+          , ( "detail",     model.detail     |> Detail.encodeStore )
+          , ( "complete",   model.complete   |> Complete.encodeStore )
+          , ( "unregister", model.unregister |> Unregister.encodeStore )
+          ] |> Encode.object
+        )
       ]
     , \value model ->
       let
-        data = model.data |> Data.decodeStore (value |> SafeDecode.valueAt ["data"])
+        obj = value |> SafeDecode.valueAt [ model.data.id |> String.fromInt ]
       in
         Model.Page
-          data
-          ( model.info       |> Info.decodeStore   data (value |> SafeDecode.valueAt ["info"]) )
-          ( model.detail     |> Detail.decodeStore data (value |> SafeDecode.valueAt ["detail"]) )
-          ( model.complete   |> Complete.decodeStore    (value |> SafeDecode.valueAt ["complete"]) )
-          ( model.unregister |> Unregister.decodeStore  (value |> SafeDecode.valueAt ["unregister"]) )
+          ( model.data       |> Data.decodeStore       (obj |> SafeDecode.valueAt ["data"]) )
+          ( model.info       |> Info.decodeStore       (obj |> SafeDecode.valueAt ["info"]) )
+          ( model.detail     |> Detail.decodeStore     (obj |> SafeDecode.valueAt ["detail"]) )
+          ( model.complete   |> Complete.decodeStore   (obj |> SafeDecode.valueAt ["complete"]) )
+          ( model.unregister |> Unregister.decodeStore (obj |> SafeDecode.valueAt ["unregister"]) )
     )
   , search =
     ( \model -> model.data |> Data.encodeQuery

@@ -1,8 +1,8 @@
 module GettoUpload.Layout.Page.Article exposing
   ( Msg
   , init
-  , store
-  , storeChanged
+  , encodeStore
+  , decodeStore
   , subscriptions
   , update
   , documentTitle
@@ -34,11 +34,11 @@ init model =
   , T.none
   )
 
-store : Model.Article -> Encode.Value
-store model = Encode.null
+encodeStore : Model.Article -> Encode.Value
+encodeStore model = Encode.null
 
-storeChanged : Decode.Value -> Model.Article -> Model.Article
-storeChanged value model = model
+decodeStore : Decode.Value -> Model.Article -> Model.Article
+decodeStore value model = model
 
 subscriptions : Model.Article -> Sub Msg
 subscriptions model = Sub.none

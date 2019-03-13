@@ -1,11 +1,10 @@
 module GettoUpload.Layout.Page.Side.View exposing
   ( Response
-  , ResponseHeader
-  , ResponseBody
   , Breadcrumb
   , Menu
   , BadgeState(..)
   , MenuI18n
+  , response
   , badgeState
   , menu
   , breadcrumb
@@ -14,6 +13,10 @@ import GettoUpload.View.Menu as Menu
 import GettoUpload.View.Icon as Icon exposing ( Icon )
 import GettoUpload.View.Http as HttpView
 import GettoUpload.Extension.Href as Href exposing ( Href )
+
+import Getto.Http.Header.Decode as HeaderDecode
+
+import Json.Decode as Decode
 
 import Dict exposing ( Dict )
 
@@ -58,14 +61,28 @@ type alias MenuI18n =
   }
 
 
+response : HttpView.ResponseDecoder Response
+response = HttpView.decoder
+  { header = HeaderDecode.succeed ()
+  , body = Decode.map ResponseBody
+    ( Decode.list
+      ( Decode.map2 Tuple.pair
+        ( Decode.at ["name"]  Decode.string )
+        ( Decode.at ["count"] Decode.int )
+      )
+    |> Decode.map Dict.fromList
+    )
+  }
+
+
 type alias BadgeStateModel response =
-  { http : HttpView.Model response
+  { get  : HttpView.Model response
   , i18n : HttpView.Error -> String
   }
 
 badgeState : BadgeStateModel response -> BadgeState
 badgeState model =
-  case model.http |> HttpView.state of
+  case model.get |> HttpView.state of
     HttpView.Connecting _  -> Connecting
     HttpView.Ready Nothing -> NoProblem
     HttpView.Ready (Just error) -> error |> model.i18n |> Failure

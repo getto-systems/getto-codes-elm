@@ -1,8 +1,8 @@
 module GettoUpload.Layout.Page.Side exposing
   ( Msg
   , init
-  , store
-  , storeChanged
+  , encodeStore
+  , decodeStore
   , subscriptions
   , update
   , mobileHeader
@@ -34,7 +34,6 @@ import GettoUpload.Extension.Href.Upload as Upload
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
 import Getto.Url.Query.Encode as QueryEncode
-import Getto.Http.Header.Decode as HeaderDecode
 
 import Json.Encode as Encode
 import Json.Decode as Decode
@@ -45,65 +44,55 @@ import Html as H exposing ( Html )
 import Html.Lazy as L
 
 type Msg
-  = BadgeStateChanged (HttpView.Migration View.Response)
+  = StateChanged (HttpView.Migration View.Response)
   | MenuOpen  String
   | MenuClose String
 
 signature = "layout-side"
 
-badge : Http.Tracker (Model.Frame app) View.Response
-badge = Http.tracker "badge" <|
+get : Http.Tracker (Model.Frame app) View.Response
+get = Http.tracker "get" <|
   \model ->
     Http.get
-      { url     = "layout/menu/badge" |> Api.url []
-      , headers = model |> Api.headers
-      , params  = QueryEncode.empty
-      , response = HttpView.decoder
-        { header = HeaderDecode.succeed ()
-        , body = Decode.map View.ResponseBody
-          ( Decode.at ["badge"]
-            ( Decode.list
-              ( Decode.map2 Tuple.pair
-                ( Decode.at ["name"]  Decode.string )
-                ( Decode.at ["count"] Decode.int )
-              )
-            |> Decode.map Dict.fromList
-            )
-          )
-        }
-      , timeout = 10 * 1000
+      { url      = "layout/menu/badge" |> Api.url []
+      , headers  = model |> Api.headers
+      , params   = QueryEncode.empty
+      , response = View.response
+      , timeout  = 10 * 1000
       }
+
+getTrack   = Http.track   signature get StateChanged
+getRequest = Http.request signature get StateChanged
 
 
 init : Frame.InitModel -> ( Model.Side, Model.Transition app Msg )
 init model =
   ( { menu       = menu
     , badgeNames = badgeNames
-    , badge      = HttpView.empty
+    , get        = HttpView.empty
     , collapsed  = Set.empty
     }
-  , Http.request signature badge BadgeStateChanged
+  , getRequest
   )
 
-store : Model.Side -> Encode.Value
-store model =
+encodeStore : Model.Side -> Encode.Value
+encodeStore model =
   [ ( "collapsed", model.collapsed |> Encode.set Encode.string )
   ] |> Encode.object
 
-storeChanged : Decode.Value -> Model.Side -> Model.Side
-storeChanged value model =
+decodeStore : Decode.Value -> Model.Side -> Model.Side
+decodeStore value model =
   { model
   | collapsed = value |> SafeDecode.at ["collapsed"] (SafeDecode.list (SafeDecode.string "")) |> Set.fromList
   }
 
 subscriptions : Model.Side -> Sub Msg
-subscriptions model =
-  Http.track signature badge BadgeStateChanged
+subscriptions model = getTrack
 
 update : Msg -> Model.Side -> ( Model.Side, Model.Transition app Msg )
 update msg model =
   case msg of
-    BadgeStateChanged mig -> ( { model | badge = model.badge |> HttpView.update mig }, T.none )
+    StateChanged mig -> ( { model | get = model.get |> HttpView.update mig }, T.none )
 
     MenuOpen  name -> ( { model | collapsed = model.collapsed |> Set.remove name }, Frame.storeLayout )
     MenuClose name -> ( { model | collapsed = model.collapsed |> Set.insert name }, Frame.storeLayout )
@@ -164,7 +153,7 @@ navAddress model = L.lazy2
       , state = False
       }
     , badge = View.badgeState
-      { http = side |> .badge
+      { get  = side |> .get
       , i18n = HttpI18n.error
       }
     , roles = auth |> Auth.credential |> Credential.roles
@@ -199,7 +188,7 @@ nav model = L.lazy3
           |> Dict.get (href |> toBadgeName)
           |> Maybe.andThen
             (\name ->
-              side.badge
+              side.get
               |> HttpView.response
               |> Maybe.andThen (HttpView.body >> .badge >> Dict.get name)
             )

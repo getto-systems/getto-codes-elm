@@ -4,7 +4,7 @@ module GettoUpload.App.Upload.ListEdit.Info exposing
   , clear
   , subscriptions
   , update
-  , info
+  , content
   )
 import GettoUpload.App.Upload.ListEdit.Model as Model
 import GettoUpload.App.Upload.ListEdit.Data.View as Data
@@ -49,12 +49,12 @@ put : Data.Upload -> Http.Tracker Model.Frame View.Response
 put row = Http.tracker ("put-" ++ (row.id |> String.fromInt)) <|
   \model ->
     let
-      m = model |> Frame.app |> .search |> .info
+      info = model |> Frame.app |> .search |> .info
     in
       Http.put
         { url      = "uploads/:id/info" |> Api.url [ ( "id", row.id |> String.fromInt ) ]
         , headers  = model |> Api.headers
-        , params   = m |> View.params row
+        , params   = info  |> View.params row
         , response = View.response
         , timeout  = 10 * 1000
         }
@@ -65,16 +65,13 @@ putRequest row = Http.request signature (put row) (PutStateChanged row)
 get : Data.Upload -> Http.Tracker Model.Frame Data.Response
 get row = Http.tracker ("get-" ++ (row.id |> String.fromInt)) <|
   \model ->
-    let
-      m = model |> Frame.app |> .search |> .info
-    in
-      Http.get
-        { url      = "uploads/:id" |> Api.url [ ( "id", row.id |> String.fromInt ) ]
-        , headers  = model |> Api.headers
-        , params   = QueryEncode.empty
-        , response = Data.response
-        , timeout  = 10 * 1000
-        }
+    Http.get
+      { url      = "uploads/:id" |> Api.url [ ( "id", row.id |> String.fromInt ) ]
+      , headers  = model |> Api.headers
+      , params   = QueryEncode.empty
+      , response = Data.response
+      , timeout  = 10 * 1000
+      }
 
 getTrack   row = Http.track   signature (get row) (GetStateChanged row)
 getRequest row = Http.request signature (get row) (GetStateChanged row)
@@ -139,8 +136,8 @@ fillAndFixedMidashi row =
   , Frame.fixedMidashi
   ] |> T.batch
 
-info : View.Units -> Table.Column Data.Upload Msg
-info model = Html.info
+content : View.Units -> Table.Column Data.Upload Msg
+content model = Html.info
   { view = model |> View.view
   , options =
     { gender =

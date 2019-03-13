@@ -82,6 +82,12 @@ toState state =
     "complete" -> Complete
     _          -> Working
 
+fromState : State -> String
+fromState state =
+  case state of
+    Complete -> "complete"
+    Working  -> "working"
+
 encodeResponse : Response -> Encode.Value
 encodeResponse res =
   let
@@ -109,22 +115,16 @@ encodeResponse res =
             , ( "roles",    body.detail.roles |> Set.toList |> Encode.list Encode.string )
             ] |> Encode.object
           )
+        , ( "state"
+          , [ ( "state", body.state.state |> fromState |> Encode.string )
+            ] |> Encode.object
+          )
         ] |> Encode.object
       )
     ] |> Encode.object
 
 decodeResponse : Decode.Decoder Response
-decodeResponse =
-  ( Decode.map2 HttpView.ResponseValue
-    ( Decode.at ["header"] (Decode.dict Decode.string) )
-    ( Decode.at ["body"]   Decode.value )
-  )
-  |> Decode.andThen
-    (\value ->
-      case value |> response of
-        Ok  res -> res |> Decode.succeed
-        Err err -> err |> Decode.fail
-    )
+decodeResponse = HttpView.decodeResponse response
 
 isDifferentResponse : Response -> Response -> Bool
 isDifferentResponse res last = ( res |> etag ) /= ( last |> etag )

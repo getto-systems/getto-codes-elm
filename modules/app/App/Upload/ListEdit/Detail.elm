@@ -3,7 +3,7 @@ module GettoUpload.App.Upload.ListEdit.Detail exposing
   , edit
   , subscriptions
   , update
-  , detail
+  , content
   )
 import GettoUpload.App.Upload.ListEdit.Model as Model
 import GettoUpload.App.Upload.ListEdit.Data.View as Data
@@ -49,13 +49,13 @@ put : Http.Tracker Model.Frame View.Response
 put = Http.tracker "put" <|
   \model ->
     let
-      m = model |> Frame.app |> .search |> .detail
-      id = m |> Maybe.map (.row >> .id) |> Maybe.withDefault 0
+      detail = model |> Frame.app |> .search |> .detail
+      id = detail |> Maybe.map (.row >> .id) |> Maybe.withDefault 0
     in
       Http.put
         { url      = "uploads/:id/detail" |> Api.url [ ( "id", id |> String.fromInt ) ]
         , headers  = model |> Api.headers
-        , params   = m |> Maybe.map View.params |> Maybe.withDefault Encode.null
+        , params   = detail |> Maybe.map View.params |> Maybe.withDefault Encode.null
         , response = View.response
         , timeout  = 10 * 1000
         }
@@ -67,8 +67,8 @@ get : Http.Tracker Model.Frame Data.Response
 get = Http.tracker "get" <|
   \model ->
     let
-      m = model |> Frame.app |> .search |> .detail
-      id = m |> Maybe.map (.row >> .id) |> Maybe.withDefault 0
+      detail = model |> Frame.app |> .search |> .detail
+      id = detail |> Maybe.map (.row >> .id) |> Maybe.withDefault 0
     in
       Http.get
         { url      = "uploads/:id" |> Api.url [ ( "id", id |> String.fromInt ) ]
@@ -122,17 +122,17 @@ update msg model =
 
 fill : Model.Transition Msg
 fill = Frame.app >> .search >> .detail >>
-  (\m ->
-    case m of
+  (\detail ->
+    case detail of
       Just unit -> unit.form |> Edit.fields |> Html.pairs |> Dom.fill
       Nothing   -> Cmd.none
   )
 
-detail : Model.Frame -> Html Msg
-detail model = L.lazy
-  (\m ->
+content : Model.Frame -> Html Msg
+content model = L.lazy
+  (\detail ->
     Html.detail
-      { view = m |> View.view
+      { view = detail |> View.view
       , options =
         { gender =
           [ ( "", "please-select" |> AppI18n.form )
