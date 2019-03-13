@@ -29,7 +29,7 @@ import GettoUpload.I18n.App  as I18n
 import GettoUpload.I18n.Http as HttpI18n
 import GettoUpload.Extension.Href as Href exposing ( Href )
 import GettoUpload.Extension.Href.Home   as Home
-import GettoUpload.Extension.Href.Upload as Upload
+import GettoUpload.Extension.Href.Data.Upload as Upload
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
