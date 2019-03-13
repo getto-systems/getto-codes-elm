@@ -1,6 +1,7 @@
 module Getto.Field.Edit exposing
   ( Model
   , State(..)
+  , AggregateState(..)
   , init
   , fields
   , update
@@ -15,6 +16,7 @@ module Getto.Field.Edit exposing
   , change
   , put
   , expose
+  , aggregate
   )
 import GettoUpload.View.Http as HttpView
 
@@ -35,6 +37,11 @@ type State form a
   = Static String a
   | Edit   String (Conflict.Form form a) (Conflict.State a) (List String)
 
+type AggregateState
+  = Same
+  | HasError
+  | HasModified
+
 type alias Param a =
   { from : a
   , to   : a
@@ -50,8 +57,8 @@ fields (Model _ model) = model
 update : (fields -> fields) -> Model response fields -> Model response fields
 update f (Model state model) = Model state (model |> f)
 
-isStatic : (response -> response -> Bool) -> Model response fields -> response -> Bool
-isStatic isDifferentResponse (Model state _) res =
+isStatic : (response -> response -> Bool) -> response -> Model response fields -> Bool
+isStatic isDifferentResponse res (Model state _) =
   case state of
     StaticState -> True
     EditState isCommit last -> isCommit && ( last |> isDifferentResponse res )
@@ -129,14 +136,20 @@ put mig =
     else identity
 
 
-expose : (response -> response -> Bool) -> Model response fields -> response -> Conflict.Model response form a -> State form a
-expose isDifferentResponse (Model state _) res model =
+expose : Bool -> Conflict.Model form a -> State form a
+expose isStaticState model =
   let
-    (fieldName,(value,validateForm),errors) = model |> Conflict.expose res
+    (fieldName,(value,validateForm),errors) = model |> Conflict.expose
   in
-    case state of
-      StaticState -> Static fieldName value
-      EditState isCommit last ->
-        if isCommit && ( last |> isDifferentResponse res )
-          then Static fieldName value
-          else Edit   fieldName validateForm ( validateForm.field |> Conflict.state ) errors
+    if isStaticState
+      then Static fieldName value
+      else Edit   fieldName validateForm ( validateForm.field |> Conflict.state ) errors
+
+aggregate : List Bool -> List String -> AggregateState
+aggregate modifieds errors =
+  if errors |> List.isEmpty |> not
+    then HasError
+    else
+      if modifieds |> List.any identity
+        then HasModified
+        else Same

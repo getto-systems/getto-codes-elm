@@ -90,7 +90,7 @@ navAddress model =
 
     badge =
       case model.badge of
-        View.NoProbrem  -> "" |> H.text
+        View.NoProblem  -> "" |> H.text
         View.Connecting -> Html.spinner
         View.Failure error -> error |> Html.badge ["is-small","is-danger"]
   in

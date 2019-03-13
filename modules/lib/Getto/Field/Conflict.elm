@@ -8,6 +8,7 @@ module Getto.Field.Conflict exposing
   , Resolve
   , init
   , form
+  , modified
   , expose
   , state
   , resolve
@@ -19,7 +20,7 @@ import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Validate as Validate
 
-type Model response form a = Model (response -> a) (Validate.Model (Form form a))
+type Model form a = Model a (Validate.Model (Form form a))
 
 type alias Field a = Field.Model (Attribute a) a
 type alias Form form a = Form.Model form (Attribute a) a
@@ -44,56 +45,59 @@ type Resolve a
 
 type alias Init response form a = ( response -> a, Validate.Init form (Attribute a) a )
 
-init : String -> ( Maybe response, response ) -> Init response form a -> form -> Model response form a
-init error response (getter,initValidate) = Validate.init
-  (\field ->
-    let
-      (Attribute attribute) = field |> Field.attribute
+init : String -> ( Maybe response, response ) -> Init response form a -> form -> Model form a
+init error (first,last) (getter,initValidate) =
+  let
+    lastValue = last |> getter
+  in
+    Validate.init
+      (\field ->
+        let
+          (Attribute attribute) = field |> Field.attribute
 
-      newState =
-        case response of
-          ( Just first, last ) ->
-            let
-              firstValue = first |> getter
-              lastValue  = last  |> getter
+          formValue = field |> Field.value
 
-              formValue = field |> Field.value
-            in
-              case attribute.operation of
-                OverWrite -> NoProblem
-                None ->
-                  if ( firstValue /= lastValue ) &&
-                     ( firstValue /= formValue ) &&
-                     ( formValue  /= lastValue )
-                    then Conflict lastValue
-                    else NoProblem
+          newState =
+            case first |> Maybe.map getter of
+              Just firstValue ->
+                case attribute.operation of
+                  OverWrite -> NoProblem
+                  None ->
+                    if ( firstValue /= lastValue ) &&
+                        ( firstValue /= formValue ) &&
+                        ( formValue  /= lastValue )
+                      then Conflict lastValue
+                      else NoProblem
 
-          _ -> NoProblem
-    in
-      ( field |> Field.setAttribute
-        ( Attribute
-          { state     = newState
-          , operation = attribute.operation
-          }
-        )
-      , case newState of
-        NoProblem  -> []
-        Conflict _ -> [error]
+              _ -> NoProblem
+        in
+          ( field |> Field.setAttribute
+            ( Attribute
+              { state     = newState
+              , operation = attribute.operation
+              }
+            )
+          , case newState of
+            NoProblem  -> []
+            Conflict _ -> [error]
+          )
       )
-  )
-  initValidate
-  >> Model getter
+    initValidate
+    >> Model lastValue
 
-form : Model response form a -> Validate.Model (Form form a)
+form : Model form a -> Validate.Model (Form form a)
 form (Model _ model) = model
 
-expose : response -> Model response form a -> ( String, ( a, Form form a ), List String )
-expose res (Model getter model) =
+modified : Model form a -> Bool
+modified (Model lastValue model) = lastValue /= (model |> Validate.form |> .field |> Field.value)
+
+expose : Model form a -> ( String, ( a, Form form a ), List String )
+expose (Model lastValue model) =
   let
     (name,validateForm,errors) = model |> Validate.expose
   in
     ( name
-    , ( res |> getter, validateForm )
+    , ( lastValue, validateForm )
     , errors
     )
 

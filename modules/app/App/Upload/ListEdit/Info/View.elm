@@ -51,7 +51,7 @@ type alias Fields =
 type alias View = Data.Upload ->
   ( Data.Upload
   , { isStatic : Bool
-    , hasError : Bool
+    , state    : Edit.AggregateState
     , get      : HttpView.Model Data.Response
     , put      : HttpView.Model Response
     , form :
@@ -164,21 +164,26 @@ view units row = units |> get row |>
         , gender = unit.form |> Conflict.init error data ( get_gender, ( gender_, [] ) )
         }
 
+      modifieds =
+        [ model.name   |> Conflict.modified
+        , model.gender |> Conflict.modified
+        ]
+
       errors = List.concat
         [ model.name   |> Conflict.form |> Validate.errors
         , model.gender |> Conflict.form |> Validate.errors
         ]
 
-      expose = Edit.expose Data.isDifferentResponse unit.form res
+      isStatic = unit.form |> Edit.isStatic Data.isDifferentResponse res
     in
       ( row
-      , { isStatic = Edit.isStatic Data.isDifferentResponse unit.form res
-        , hasError = errors |> List.isEmpty |> not
+      , { isStatic = isStatic
+        , state    = errors |> Edit.aggregate modifieds
         , put = unit.put
         , get = unit.get
         , form     =
-          { name   = model.name   |> expose
-          , gender = model.gender |> expose
+          { name   = model.name   |> Edit.expose isStatic
+          , gender = model.gender |> Edit.expose isStatic
           }
         }
       )

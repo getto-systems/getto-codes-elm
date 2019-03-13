@@ -12,7 +12,7 @@ import GettoUpload.View.Icon as Icon
 import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
-import Getto.Field.Edit exposing ( State(..) )
+import Getto.Field.Edit exposing ( State(..), AggregateState(..) )
 import Getto.Field.Conflict as Conflict
 
 import Html as H exposing ( Html )
@@ -177,13 +177,13 @@ info model =
                     , progress |> Http.progress
                     ]
                   HttpView.Ready response ->
-                    [ if view.hasError
-                      then "has-error" |> model.i18n.form |> Button.error
-                      else
-                        case model.get |> HttpView.state of
-                          HttpView.Connecting _ -> Html.spinner
-                          HttpView.Ready _ ->
-                            "save" |> model.i18n.form |> Button.save
+                    [ case model.get |> HttpView.state of
+                      HttpView.Connecting _ -> Html.spinner
+                      HttpView.Ready _ ->
+                        case view.state of
+                          Same -> "" |> H.text
+                          HasError    -> "has-error" |> model.i18n.form |> Button.error
+                          HasModified -> "save"      |> model.i18n.form |> Button.save
                     , " " |> H.text
                     , "cancel" |> model.i18n.form |> Button.cancel model.msg.cancel
                     , response |> Http.error model.i18n.http

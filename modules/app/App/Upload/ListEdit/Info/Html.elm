@@ -11,7 +11,7 @@ import GettoUpload.View.Html.Http as Http
 import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
-import Getto.Field.Edit as Edit exposing ( State(..) )
+import Getto.Field.Edit as Edit exposing ( State(..), AggregateState(..) )
 import Getto.Field.Conflict as Conflict
 import Getto.Html.Table as Table
 
@@ -98,13 +98,13 @@ info model =
               HttpView.Ready response ->
                 Table.td []
                   [ H.form [ model.msg.put upload |> E.onSubmit ]
-                    [ if view.hasError
-                      then "has-error" |> model.i18n.form |> Button.error
-                      else
-                        case view.get |> HttpView.state of
-                          HttpView.Connecting _ -> Html.spinner
-                          HttpView.Ready _ ->
-                            "save" |> model.i18n.form |> Button.save
+                    [ case view.get |> HttpView.state of
+                      HttpView.Connecting _ -> Html.spinner
+                      HttpView.Ready _ ->
+                        case view.state of
+                          Same -> "" |> H.text
+                          HasError    -> "has-error" |> model.i18n.form |> Button.error
+                          HasModified -> "save"      |> model.i18n.form |> Button.save
                     , " " |> H.text
                     , "cancel" |> model.i18n.form |> Button.cancel (model.msg.cancel upload)
                     , response |> Http.error model.i18n.http
