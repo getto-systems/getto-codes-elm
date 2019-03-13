@@ -19,10 +19,10 @@ title path =
   case path of
     Href.Internal "index.html" -> "ホーム"
 
-    Href.Internal "upload/list.html"      -> "アップロード"
-    Href.Internal "upload/list_edit.html" -> "アップロード(編集)"
-    Href.Internal "upload/new.html"       -> "アップロード登録"
-    Href.Internal "upload/edit.html"      -> "アップロード情報"
+    Href.Internal "data/upload/list.html"      -> "アップロード"
+    Href.Internal "data/upload/list_edit.html" -> "アップロード(編集)"
+    Href.Internal "data/upload/new.html"       -> "アップロード登録"
+    Href.Internal "data/upload/edit.html"      -> "アップロード情報"
 
     Href.Internal p -> p
     Href.Keycloak p -> "keycloak:" ++ p
