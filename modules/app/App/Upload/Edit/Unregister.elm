@@ -39,12 +39,12 @@ type Msg
 
 signature = "unregister"
 
-unregister : Http.Tracker Model.Frame View.Response
-unregister = Http.tracker "unregister" <|
+delete : Http.Tracker Model.Frame View.Response
+delete = Http.tracker "delete" <|
   \model ->
     let
-      data = model |> Frame.app |> .data
-      m    = model |> Frame.app |> .unregister
+      data       = model |> Frame.app |> .data
+      unregister = model |> Frame.app |> .unregister
     in
       Http.delete ( data |> Model.etag )
         { url      = "upload/:id" |> Api.url ( data |> Model.pathInfo )
@@ -54,14 +54,14 @@ unregister = Http.tracker "unregister" <|
         , timeout  = 10 * 1000
         }
 
-unregisterTrack   = Http.track   signature unregister StateChanged
-unregisterRequest = Http.request signature unregister StateChanged
+deleteTrack   = Http.track   signature delete StateChanged
+deleteRequest = Http.request signature delete StateChanged
 
 
 init : Frame.InitModel -> ( Model.Unregister, Model.Transition Msg )
 init model =
-  ( { isConfirm  = False
-    , unregister = HttpView.empty
+  ( { isConfirm = False
+    , delete    = HttpView.empty
     }
   , T.none
   )
@@ -73,7 +73,7 @@ decodeStore : Decode.Value -> Model.Unregister -> Model.Unregister
 decodeStore value model = model
 
 subscriptions : Model.Unregister -> Sub Msg
-subscriptions model = unregisterTrack
+subscriptions model = deleteTrack
 
 update : Msg -> Model.Unregister -> ( Model.Unregister, Model.Transition Msg )
 update msg model =
@@ -81,9 +81,9 @@ update msg model =
     Confirm -> ( { model | isConfirm = True  }, T.none )
     Cancel  -> ( { model | isConfirm = False }, T.none )
 
-    Unregister -> ( model, unregisterRequest )
+    Unregister -> ( model, deleteRequest )
     StateChanged mig ->
-      ( { model | unregister = model.unregister |> HttpView.update mig }
+      ( { model | delete = model.delete |> HttpView.update mig }
       , case mig |> HttpView.isSuccess of
         Nothing -> T.none
         Just _  -> Upload.list |> Frame.loadUrl
@@ -92,12 +92,12 @@ update msg model =
 
 contents : Model.Frame -> List (Html Msg)
 contents model =
-  [ model |> delete
+  [ model |> content
   ]
 
-delete : Model.Frame -> Html Msg
-delete model = L.lazy2
-  (\data m -> Html.unregister
+content : Model.Frame -> Html Msg
+content model = L.lazy
+  (\data -> Html.unregister
     { get = data.get
     , msg =
       { confirm = Confirm
@@ -109,7 +109,6 @@ delete model = L.lazy2
     }
   )
   (model |> Frame.app |> .data)
-  (model |> Frame.app |> .unregister)
 
 dialogs : Model.Frame -> List (Html Msg)
 dialogs model =
@@ -118,9 +117,9 @@ dialogs model =
 
 dialog : Model.Frame -> Html Msg
 dialog model = L.lazy
-  (\m -> Html.dialog
-    { isConfirm  = m.isConfirm
-    , unregister = m.unregister |> HttpView.state
+  (\unregister -> Html.dialog
+    { isConfirm  = unregister.isConfirm
+    , unregister = unregister.delete |> HttpView.state
     , msg =
       { unregister = Unregister
       , cancel     = Cancel

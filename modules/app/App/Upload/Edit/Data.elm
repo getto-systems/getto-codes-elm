@@ -38,10 +38,10 @@ get : Http.Tracker Model.Frame View.Response
 get = Http.tracker "get" <|
   \model ->
     let
-      m = model |> Frame.app |> .data
+      data = model |> Frame.app |> .data
     in
-      Http.getIfNoneMatch ( m |> Model.etag )
-        { url      = "upload/:id" |> Api.url ( m |> Model.pathInfo )
+      Http.getIfNoneMatch ( data |> Model.etag )
+        { url      = "upload/:id" |> Api.url ( data |> Model.pathInfo )
         , headers  = model |> Api.headers
         , params   = QueryEncode.empty
         , response = View.response
@@ -71,23 +71,20 @@ decodeQuery names value model =
     { model | id = value |> entryAt "id" (QuerySafeDecode.int 0) }
 
 encodeStore : Model.Data -> Encode.Value
-encodeStore model = Encode.object
-  [ ( model.id |> String.fromInt
-    , model.get |> HttpView.response |> Maybe.map View.encodeResponse |> Maybe.withDefault Encode.null
-    )
-  ]
+encodeStore model =
+  model.get
+  |> HttpView.response
+  |> Maybe.map View.encodeResponse
+  |> Maybe.withDefault Encode.null
 
 decodeStore : Decode.Value -> Model.Data -> Model.Data
 decodeStore value model =
-  let
-    obj = value |> SafeDecode.valueAt [model.id |> String.fromInt]
-  in
-    { model
-    | get = model.get |>
-      case obj |> Decode.decodeValue View.decodeResponse of
-        Ok res -> res |> HttpView.success |> HttpView.update
-        Err _  -> identity
-    }
+  { model
+  | get = model.get |>
+    case value |> Decode.decodeValue View.decodeResponse of
+      Ok res -> res |> HttpView.success |> HttpView.update
+      Err _  -> identity
+  }
 
 subscriptions : Model.Data -> Sub Msg
 subscriptions model = getTrack
@@ -97,7 +94,7 @@ update msg model =
   case msg of
     StateChanged mig ->
       ( { model | get = model.get |> HttpView.update mig }
-      , case mig |> HttpView.isSuccess of
-        Just _  -> Frame.storeApp
-        Nothing -> T.none
+      , if mig |> HttpView.isComplete
+        then Frame.storeApp
+        else T.none
       )

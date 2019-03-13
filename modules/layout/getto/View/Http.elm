@@ -10,6 +10,7 @@ module GettoUpload.View.Http exposing
   , empty
   , clear
   , decoder
+  , decodeResponse
   , toResponse
   , load
   , transfer
@@ -112,6 +113,19 @@ decoder decode value =
           responseBody
           |> toResponse responseHeader
           |> Ok
+
+decodeResponse : ResponseDecoder (Response header body) -> Decode.Decoder (Response header body)
+decodeResponse decode =
+  ( Decode.map2 ResponseValue
+    ( Decode.at ["header"] (Decode.dict Decode.string) )
+    ( Decode.at ["body"]    Decode.value )
+  )
+  |> Decode.andThen
+    (\value ->
+      case value |> decode of
+        Ok  res -> res |> Decode.succeed
+        Err err -> err |> Decode.fail
+    )
 
 toResponse : header -> body -> Response header body
 toResponse responseHeader responseBody = Response

@@ -57,12 +57,12 @@ upload : Http.Tracker Model.Frame View.Response
 upload = Http.tracker "upload" <|
   \model ->
     let
-      m = model |> Frame.app |> .register
+      register = model |> Frame.app |> .register
     in
       Http.upload
         { url     = "upload" |> Api.url []
         , headers = model  |> Api.headers
-        , params  = m.form |> View.params
+        , params  = register.form |> View.params
         , response = View.response
         , timeout = 30 * 1000
         }
@@ -154,15 +154,15 @@ update msg model =
 contents : Model.Frame -> List (Html Msg)
 contents model =
   [ H.section [ A.class "edit" ]
-    [ model |> register
+    [ model |> content
     ]
   ]
 
-register : Model.Frame -> Html Msg
-register model = L.lazy
-  (\m -> Html.register
-    { view   = m.form |> View.view
-    , upload = m.upload
+content : Model.Frame -> Html Msg
+content model = L.lazy
+  (\register -> Html.register
+    { view   = register.form |> View.view
+    , upload = register.upload
     , options =
       { gender =
         [ ( "", "please-select" |> AppI18n.form )

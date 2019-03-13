@@ -11,6 +11,7 @@ import GettoUpload.App.Upload.Edit.Model as Model
 import GettoUpload.App.Upload.Edit.Detail.View as View
 import GettoUpload.App.Upload.Edit.Detail.Html as Html
 import GettoUpload.Layout.Frame as Frame
+import GettoUpload.Layout.Page.Options.View as Options
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
 import GettoUpload.Command.Dom as Dom
@@ -52,13 +53,13 @@ put : Http.Tracker Model.Frame View.Response
 put = Http.tracker "put" <|
   \model ->
     let
-      data = model |> Frame.app |> .data
-      m    = model |> Frame.app |> .detail
+      data   = model |> Frame.app |> .data
+      detail = model |> Frame.app |> .detail
     in
       Http.put
         { url      = "upload/:id/detail" |> Api.url ( data |> Model.pathInfo )
-        , headers  = model  |> Api.headers
-        , params   = m.form |> View.params data.get
+        , headers  = model |> Api.headers
+        , params   = detail.form |> View.params data.get
         , response = View.response
         , timeout  = 10 * 1000
         }
@@ -75,19 +76,11 @@ init model =
   , fill
   )
 
-encodeStore : Model.Data -> Model.Detail -> Encode.Value
-encodeStore data model = Encode.object
-  [ ( data.id |> String.fromInt
-    , model.form |> View.encodeForm
-    )
-  ]
+encodeStore : Model.Detail -> Encode.Value
+encodeStore model = model.form |> View.encodeForm
 
-decodeStore : Model.Data -> Decode.Value -> Model.Detail -> Model.Detail
-decodeStore data value model =
-  { model
-  | form = model.form |> View.decodeForm
-    (value |> SafeDecode.valueAt [data.id |> String.fromInt])
-  }
+decodeStore : Decode.Value -> Model.Detail -> Model.Detail
+decodeStore value model = { model | form = model.form |> View.decodeForm value }
 
 subscriptions : Model.Detail -> Sub Msg
 subscriptions model = putTrack
@@ -123,30 +116,19 @@ fillAndStore = [ fill, Frame.storeApp ] |> T.batch
 
 contents : Model.Frame -> List (Html Msg)
 contents model =
-  [ model |> detail
+  [ model |> content
   ]
 
-detail : Model.Frame -> Html Msg
-detail model = L.lazy2
-  (\data m -> Html.detail
-    { view = m.form |> View.view
+content : Model.Frame -> Html Msg
+content model = L.lazy3
+  (\options data detail -> Html.detail
+    { view = detail.form |> View.view
     , get  = data.get
-    , put  = m.put
+    , put  = detail.put
     , options =
-      { gender =
-        [ ( "", "please-select" |> AppI18n.form )
-        , ( "male",   "male"   |> I18n.gender )
-        , ( "female", "female" |> I18n.gender )
-        , ( "other",  "other"  |> I18n.gender )
-        ]
-      , quality =
-        [ ( "high", "high" |> I18n.quality )
-        , ( "low",  "low"  |> I18n.quality )
-        ]
-      , roles =
-        [ ( "admin",  "admin"  |> AppI18n.role )
-        , ( "upload", "upload" |> AppI18n.role )
-        ]
+      { gender  = options.get |> Options.gender  |> toSelectOptions I18n.gender
+      , quality = options.get |> Options.quality |> toBoxOptions I18n.quality
+      , role    = options.get |> Options.role    |> toBoxOptions AppI18n.role
       }
     , msg =
       { put        = Request
@@ -167,5 +149,21 @@ detail model = L.lazy2
       }
     }
   )
-  (model |> Frame.app |> .data)
-  (model |> Frame.app |> .detail)
+  (model |> Frame.layout |> .options)
+  (model |> Frame.app    |> .data)
+  (model |> Frame.app    |> .detail)
+
+toSelectOptions : (String -> String) -> Maybe (List String) -> List ( String, String )
+toSelectOptions i18n = Maybe.map (toOptions i18n >> includeDefault) >> withLoading
+
+toBoxOptions : (String -> String) -> Maybe (List String) -> List ( String, String )
+toBoxOptions i18n = Maybe.map (toOptions i18n) >> Maybe.withDefault []
+
+toOptions : (String -> String) -> List String -> List ( String, String )
+toOptions i18n = List.map (\value -> ( value, value |> i18n ) )
+
+includeDefault : List ( String, String ) -> List ( String, String )
+includeDefault options = ( "", "please-select" |> AppI18n.form ) :: options
+
+withLoading : Maybe (List ( String, String )) -> List ( String, String )
+withLoading = Maybe.withDefault [ ( "", "loading" |> AppI18n.form ) ]

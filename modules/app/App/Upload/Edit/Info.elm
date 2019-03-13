@@ -50,12 +50,12 @@ put = Http.tracker "put" <|
   \model ->
     let
       data = model |> Frame.app |> .data
-      m    = model |> Frame.app |> .info
+      info = model |> Frame.app |> .info
     in
       Http.put
         { url      = "upload/:id/info" |> Api.url ( data |> Model.pathInfo )
         , headers  = model  |> Api.headers
-        , params   = m.form |> View.params data.get
+        , params   = info.form |> View.params data.get
         , response = View.response
         , timeout  = 10 * 1000
         }
@@ -72,19 +72,11 @@ init model =
   , fill
   )
 
-encodeStore : Model.Data -> Model.Info -> Encode.Value
-encodeStore data model = Encode.object
-  [ ( data.id |> String.fromInt
-    , model.form |> View.encodeForm
-    )
-  ]
+encodeStore : Model.Info -> Encode.Value
+encodeStore model = model.form |> View.encodeForm
 
-decodeStore : Model.Data -> Decode.Value -> Model.Info -> Model.Info
-decodeStore data value model =
-  { model
-  | form = model.form |> View.decodeForm
-    (value |> SafeDecode.valueAt [data.id |> String.fromInt])
-  }
+decodeStore : Decode.Value -> Model.Info -> Model.Info
+decodeStore value model = { model | form = model.form |> View.decodeForm value }
 
 subscriptions : Model.Info -> Sub Msg
 subscriptions model = putTrack
@@ -119,15 +111,15 @@ fillAndStore = [ fill, Frame.storeApp ] |> T.batch
 
 contents : Model.Frame -> List (Html Msg)
 contents model =
-  [ model |> info
+  [ model |> content
   ]
 
-info : Model.Frame -> Html Msg
-info model = L.lazy2
-  (\data m -> Html.info
-    { view = m.form |> View.view
+content : Model.Frame -> Html Msg
+content model = L.lazy2
+  (\data info -> Html.info
+    { view = info.form |> View.view
     , get  = data.get
-    , put  = m.put
+    , put  = info.put
     , msg =
       { put     = Request
       , input   = Input

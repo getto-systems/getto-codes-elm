@@ -28,7 +28,7 @@ type alias DetailModel msg =
   , options :
     { gender  : List ( String, String )
     , quality : List ( String, String )
-    , roles   : List ( String, String )
+    , role    : List ( String, String )
     }
   , msg :
     { put        : msg
@@ -161,7 +161,7 @@ detail model =
                   [ H.tr ( errors |> Input.isError )
                     [ H.th [] [ name |> model.i18n.field |> H.text ]
                     , H.td [] <| List.concat
-                      [ [ form.field |> Input.checkbox model.options.roles []
+                      [ [ form.field |> Input.checkbox model.options.role []
                           (model.msg.toggle form.prop) model.msg.change
                         ]
                       , conflict |> Input.conflict model.i18n.form (model.msg.resolveSet form.prop)

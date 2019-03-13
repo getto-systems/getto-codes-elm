@@ -8,12 +8,12 @@ module GettoUpload.App.Upload.List.Search exposing
   , subscriptions
   , update
   , contents
-  , dialogs
   )
 import GettoUpload.App.Upload.List.Model as Model
 import GettoUpload.App.Upload.List.Search.View as View
 import GettoUpload.App.Upload.List.Search.Html as Html
 import GettoUpload.Layout.Frame as Frame
+import GettoUpload.Layout.Page.Options.View as Options
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
 import GettoUpload.Command.Dom as Dom
@@ -56,29 +56,29 @@ get : Http.Tracker Model.Frame View.Response
 get = Http.tracker "get" <|
   \model ->
     let
-      m = model |> Frame.app |> .search
+      search = model |> Frame.app |> .search
     in
       Http.get
         { url     = "uploads" |> Api.url []
         , headers = model |> Api.headers
         , params  = QueryEncode.object
           [ ( "q"
-            , [ ( "name",           m.form.name          |> Field.value |> QueryEncode.string )
-              , ( "age_gteq",       m.form.age_gteq      |> Field.value |> QueryEncode.string )
-              , ( "age_lteq",       m.form.age_lteq      |> Field.value |> QueryEncode.string )
-              , ( "email",          m.form.email         |> Field.value |> QueryEncode.string )
-              , ( "tel",            m.form.tel           |> Field.value |> QueryEncode.string )
-              , ( "birthday_gteq",  m.form.birthday_gteq |> Field.value |> QueryEncode.string )
-              , ( "birthday_lteq",  m.form.birthday_lteq |> Field.value |> QueryEncode.string )
-              , ( "start_at_gteq",  m.form.start_at_gteq |> Field.value |> QueryEncode.string )
-              , ( "start_at_lteq",  m.form.start_at_lteq |> Field.value |> QueryEncode.string )
-              , ( "gender",         m.form.gender        |> Field.value |> QueryEncode.string )
-              , ( "roles",          m.form.roles         |> Field.value |> QueryEncode.set QueryEncode.string )
+            , [ ( "name",           search.form.name          |> Field.value |> QueryEncode.string )
+              , ( "age_gteq",       search.form.age_gteq      |> Field.value |> QueryEncode.string )
+              , ( "age_lteq",       search.form.age_lteq      |> Field.value |> QueryEncode.string )
+              , ( "email",          search.form.email         |> Field.value |> QueryEncode.string )
+              , ( "tel",            search.form.tel           |> Field.value |> QueryEncode.string )
+              , ( "birthday_gteq",  search.form.birthday_gteq |> Field.value |> QueryEncode.string )
+              , ( "birthday_lteq",  search.form.birthday_lteq |> Field.value |> QueryEncode.string )
+              , ( "start_at_gteq",  search.form.start_at_gteq |> Field.value |> QueryEncode.string )
+              , ( "start_at_lteq",  search.form.start_at_lteq |> Field.value |> QueryEncode.string )
+              , ( "gender",         search.form.gender        |> Field.value |> QueryEncode.string )
+              , ( "roles",          search.form.roles         |> Field.value |> QueryEncode.set QueryEncode.string )
               ] |> QueryEncode.object
             )
-          , ( "page", m.page |> QueryEncode.int )
+          , ( "page", search.page |> QueryEncode.int )
           , ( "sort"
-            , case m.sort |> Sort.expose of
+            , case search.sort |> Sort.expose of
               (column,order) ->
                 [ ( "column", column |> QueryEncode.string )
                 , ( "order",  order  |> QueryEncode.string )
@@ -179,7 +179,7 @@ contents : Model.Frame -> List (Html Msg)
 contents model =
   [ H.section [ A.class "list" ]
     [ H.section [ "search" |> A.class ]
-      [ model |> search
+      [ model |> form
       ]
     , H.section [ "data" |> A.class ]
       [ model |> paging
@@ -189,22 +189,14 @@ contents model =
     ]
   ]
 
-search : Model.Frame -> Html Msg
-search model = L.lazy
-  (\m -> Html.search
-    { view = m.form |> View.view
-    , get  = m.get
+form : Model.Frame -> Html Msg
+form model = L.lazy2
+  (\options search -> Html.search
+    { view = search.form |> View.view
+    , get  = search.get
     , options =
-      { gender =
-        [ ( "", "select-nothing" |> AppI18n.form )
-        , ( "male",   "male"   |> I18n.gender )
-        , ( "female", "female" |> I18n.gender )
-        , ( "other",  "other"  |> I18n.gender )
-        ]
-      , roles =
-        [ ( "admin",  "admin"  |> AppI18n.role )
-        , ( "upload", "upload" |> AppI18n.role )
-        ]
+      { gender = options.get |> Options.gender |> toSelectOptions I18n.gender
+      , role   = options.get |> Options.role   |> toBoxOptions AppI18n.role
       }
     , msg =
       { request = Request
@@ -219,13 +211,14 @@ search model = L.lazy
       }
     }
   )
-  (model |> Frame.app |> .search)
+  (model |> Frame.layout |> .options)
+  (model |> Frame.app    |> .search)
 
 paging : Model.Frame -> Html Msg
 paging model = L.lazy
-  (\m -> Html.paging
-    { page = m.page
-    , get  = m.get
+  (\search -> Html.paging
+    { page = search.page
+    , get  = search.get
     , msg =
       { page = PageTo
       }
@@ -238,9 +231,9 @@ paging model = L.lazy
 
 table : Model.Frame -> Html Msg
 table model = L.lazy
-  (\m -> Html.table
-    { get  = m.get
-    , sort = m.sort
+  (\search -> Html.table
+    { get  = search.get
+    , sort = search.sort
     , msg =
       { sort = SortBy
       }
@@ -253,5 +246,17 @@ table model = L.lazy
   )
   (model |> Frame.app |> .search)
 
-dialogs : Model.Frame -> List (Html Msg)
-dialogs model = []
+toSelectOptions : (String -> String) -> Maybe (List String) -> List ( String, String )
+toSelectOptions i18n = Maybe.map (toOptions i18n >> includeDefault) >> withLoading
+
+toBoxOptions : (String -> String) -> Maybe (List String) -> List ( String, String )
+toBoxOptions i18n = Maybe.map (toOptions i18n) >> Maybe.withDefault []
+
+toOptions : (String -> String) -> List String -> List ( String, String )
+toOptions i18n = List.map (\value -> ( value, value |> i18n ) )
+
+includeDefault : List ( String, String ) -> List ( String, String )
+includeDefault options = ( "", "please-select" |> AppI18n.form ) :: options
+
+withLoading : Maybe (List ( String, String )) -> List ( String, String )
+withLoading = Maybe.withDefault [ ( "", "loading" |> AppI18n.form ) ]

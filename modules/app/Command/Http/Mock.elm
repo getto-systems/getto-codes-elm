@@ -104,12 +104,23 @@ mock =
         [
         ] |> Dict.fromList
       , body =
-        [ ( "badge"
-          , [ [ ( "name", "home" |> Encode.string )
-              , ( "count", 4 |> Encode.int )
-              ]
-            ] |> Encode.list Encode.object
-          )
+        [ [ ( "name", "home" |> Encode.string )
+          , ( "count", 4 |> Encode.int )
+          ]
+        ] |> Encode.list Encode.object
+      }
+    --}
+    )
+  , ( ( "GET", "layout/options" )
+    {--, Real --}
+    {--}, Mock 1000
+      { header =
+        [ ( "etag", "OPTIONS-ETAG" )
+        ] |> Dict.fromList
+      , body =
+        [ ( "role",    [ "admin", "upload" ]         |> Encode.list Encode.string )
+        , ( "gender",  [ "male", "female", "other" ] |> Encode.list Encode.string )
+        , ( "quality", [ "high", "low" ]             |> Encode.list Encode.string )
         ] |> Encode.object
       }
     --}
@@ -263,6 +274,14 @@ mock =
     --}
     )
   , ( ( "PUT", "uploads/:id/info" )
+    {--, Real --}
+    {--}, Mock 1000
+      { header = Dict.empty
+      , body = Encode.null
+      }
+    --}
+    )
+  , ( ( "PUT", "uploads/:id/detail" )
     {--, Real --}
     {--}, Mock 1000
       { header = Dict.empty

@@ -39,12 +39,12 @@ type Msg
 
 signature = "complete"
 
-complete : Http.Tracker Model.Frame View.Response
-complete = Http.tracker "complete" <|
+putComplete : Http.Tracker Model.Frame View.Response
+putComplete = Http.tracker "putComplete" <|
   \model ->
     let
       data = model |> Frame.app |> .data
-      m    = model |> Frame.app |> .complete
+      complete = model |> Frame.app |> .complete
     in
       Http.putIfMatch ( data |> Model.etag )
         { url      = "upload/:id/complete" |> Api.url ( data |> Model.pathInfo )
@@ -54,15 +54,15 @@ complete = Http.tracker "complete" <|
         , timeout  = 10 * 1000
         }
 
-completeTrack   = Http.track   signature complete CompleteStateChanged
-completeRequest = Http.request signature complete CompleteStateChanged
+putCompleteTrack   = Http.track   signature putComplete CompleteStateChanged
+putCompleteRequest = Http.request signature putComplete CompleteStateChanged
 
-work : Http.Tracker Model.Frame View.Response
-work = Http.tracker "work" <|
+putWork : Http.Tracker Model.Frame View.Response
+putWork = Http.tracker "putWork" <|
   \model ->
     let
-      data = model |> Frame.app |> .data
-      m    = model |> Frame.app |> .complete
+      data     = model |> Frame.app |> .data
+      complete = model |> Frame.app |> .complete
     in
       Http.putIfMatch ( data |> Model.etag )
         { url      = "upload/:id/work" |> Api.url ( data |> Model.pathInfo )
@@ -72,15 +72,15 @@ work = Http.tracker "work" <|
         , timeout  = 10 * 1000
         }
 
-workTrack   = Http.track   signature work WorkStateChanged
-workRequest = Http.request signature work WorkStateChanged
+putWorkTrack   = Http.track   signature putWork WorkStateChanged
+putWorkRequest = Http.request signature putWork WorkStateChanged
 
 
 init : Frame.InitModel -> ( Model.Complete, Model.Transition Msg )
 init model =
-  ( { isEdit   = False
-    , complete = HttpView.empty
-    , work     = HttpView.empty
+  ( { isEdit      = False
+    , putComplete = HttpView.empty
+    , putWork     = HttpView.empty
     }
   , T.none
   )
@@ -93,8 +93,8 @@ decodeStore value model = model
 
 subscriptions : Model.Complete -> Sub Msg
 subscriptions model =
-  [ completeTrack
-  , workTrack
+  [ putCompleteTrack
+  , putWorkTrack
   ] |> Sub.batch
 
 update : Msg -> Model.Complete -> ( Model.Complete, ( Model.Transition Msg, Bool ) )
@@ -103,20 +103,20 @@ update msg model =
     Edit   -> ( { model | isEdit = True  }, ( T.none, False ) )
     Static -> ( { model | isEdit = False }, ( T.none, False ) )
 
-    Complete -> ( model, ( completeRequest, False ) )
+    Complete -> ( model, ( putCompleteRequest, False ) )
     CompleteStateChanged mig ->
       ( { model
-        | isEdit   = model.isEdit   |> toStaticWhenSuccess mig
-        , complete = model.complete |> HttpView.update mig
+        | isEdit      = model.isEdit      |> toStaticWhenSuccess mig
+        , putComplete = model.putComplete |> HttpView.update mig
         }
       , ( T.none, mig |> HttpView.isComplete )
       )
 
-    Work -> ( model, ( workRequest, False ) )
+    Work -> ( model, ( putWorkRequest, False ) )
     WorkStateChanged mig ->
       ( { model
-        | isEdit = model.isEdit |> toStaticWhenSuccess mig
-        , work   = model.work   |> HttpView.update mig
+        | isEdit  = model.isEdit  |> toStaticWhenSuccess mig
+        , putWork = model.putWork |> HttpView.update mig
         }
       , ( T.none, mig |> HttpView.isComplete )
       )
@@ -134,8 +134,8 @@ contents model =
   ]
 
 state : Model.Frame -> Html Msg
-state model = L.lazy2
-  (\data m -> Html.state
+state model = L.lazy
+  (\data -> Html.state
     { get = data.get
     , msg =
       { edit = Edit
@@ -149,7 +149,6 @@ state model = L.lazy2
     }
   )
   (model |> Frame.app |> .data)
-  (model |> Frame.app |> .complete)
 
 dialogs : Model.Frame -> List (Html Msg)
 dialogs model =
@@ -158,11 +157,11 @@ dialogs model =
 
 dialog : Model.Frame -> Html Msg
 dialog model = L.lazy2
-  (\data m -> Html.dialog
+  (\data complete -> Html.dialog
     { get      = data.get
-    , isEdit   = m.isEdit
-    , complete = m.complete |> HttpView.state
-    , work     = m.work     |> HttpView.state
+    , isEdit   = complete.isEdit
+    , complete = complete.putComplete |> HttpView.state
+    , work     = complete.putWork     |> HttpView.state
     , msg =
       { complete = Complete
       , work     = Work

@@ -37,6 +37,7 @@ role name =
 form : String -> String
 form name =
   case name of
+    "loading"        -> "読み込み中です"
     "select-nothing" -> "すべて"
     "please-select"  -> "選択してください"
 

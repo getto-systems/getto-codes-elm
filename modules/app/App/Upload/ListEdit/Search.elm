@@ -16,6 +16,7 @@ import GettoUpload.App.Upload.ListEdit.Search.Html as Html
 import GettoUpload.App.Upload.ListEdit.Info   as Info
 import GettoUpload.App.Upload.ListEdit.Detail as Detail
 import GettoUpload.Layout.Frame as Frame
+import GettoUpload.Layout.Page.Options.View as Options
 import GettoUpload.Layout.Api as Api
 import GettoUpload.Command.Http as Http
 import GettoUpload.Command.Dom as Dom
@@ -58,20 +59,20 @@ get : Http.Tracker Model.Frame View.Response
 get = Http.tracker "get" <|
   \model ->
     let
-      m = model |> Frame.app |> .search
+      search = model |> Frame.app |> .search
     in
       Http.get
         { url     = "uploads" |> Api.url []
         , headers = model |> Api.headers
         , params  = QueryEncode.object
           [ ( "q"
-            , [ ( "name",   m.form.name   |> Field.value |> QueryEncode.string )
-              , ( "gender", m.form.gender |> Field.value |> QueryEncode.string )
+            , [ ( "name",   search.form.name   |> Field.value |> QueryEncode.string )
+              , ( "gender", search.form.gender |> Field.value |> QueryEncode.string )
               ] |> QueryEncode.object
             )
-          , ( "page", m.page |> QueryEncode.int )
+          , ( "page", search.page |> QueryEncode.int )
           , ( "sort"
-            , case m.sort |> Sort.expose of
+            , case search.sort |> Sort.expose of
               (column,order) ->
                 [ ( "column", column |> QueryEncode.string )
                 , ( "order",  order  |> QueryEncode.string )
@@ -176,7 +177,7 @@ contents : Model.Frame -> List (Html Msg)
 contents model =
   [ H.section [ A.class "list" ]
     [ H.section [ "search" |> A.class ]
-      [ model |> search
+      [ model |> form
       ]
     , H.section [ "data" |> A.class ]
       [ model |> paging
@@ -186,18 +187,13 @@ contents model =
     ]
   ]
 
-search : Model.Frame -> Html Msg
-search model = L.lazy
-  (\m -> Html.search
-    { view = m.form |> View.view
-    , get  = m.get
+form : Model.Frame -> Html Msg
+form model = L.lazy2
+  (\options search -> Html.search
+    { view = search.form |> View.view
+    , get  = search.get
     , options =
-      { gender =
-        [ ( "", "select-nothing" |> AppI18n.form )
-        , ( "male",   "male"   |> I18n.gender )
-        , ( "female", "female" |> I18n.gender )
-        , ( "other",  "other"  |> I18n.gender )
-        ]
+      { gender = options.get |> Options.gender |> toSelectOptions I18n.gender
       }
     , msg =
       { request = Request
@@ -211,13 +207,14 @@ search model = L.lazy
       }
     }
   )
-  (model |> Frame.app |> .search)
+  (model |> Frame.layout |> .options)
+  (model |> Frame.app    |> .search)
 
 paging : Model.Frame -> Html Msg
 paging model = L.lazy
-  (\m -> Html.paging
-    { page = m.page
-    , get  = m.get
+  (\search -> Html.paging
+    { page = search.page
+    , get  = search.get
     , msg =
       { page = PageTo
       }
@@ -230,10 +227,10 @@ paging model = L.lazy
 
 table : Model.Frame -> Html Msg
 table model = L.lazy
-  (\m -> Html.table
-    { get  = m.get
-    , sort = m.sort
-    , info = m.info |> Info.info
+  (\search -> Html.table
+    { get  = search.get
+    , sort = search.sort
+    , info = search.info |> Info.content
     , msg =
       { sort = SortBy
       , info = Info
@@ -250,5 +247,20 @@ table model = L.lazy
 
 dialogs : Model.Frame -> List (Html Msg)
 dialogs model =
-  [ model |> Detail.detail |> H.map Detail
+  [ model |> Detail.content |> H.map Detail
   ]
+
+toSelectOptions : (String -> String) -> Maybe (List String) -> List ( String, String )
+toSelectOptions i18n = Maybe.map (toOptions i18n >> includeDefault) >> withLoading
+
+toBoxOptions : (String -> String) -> Maybe (List String) -> List ( String, String )
+toBoxOptions i18n = Maybe.map (toOptions i18n) >> Maybe.withDefault []
+
+toOptions : (String -> String) -> List String -> List ( String, String )
+toOptions i18n = List.map (\value -> ( value, value |> i18n ) )
+
+includeDefault : List ( String, String ) -> List ( String, String )
+includeDefault options = ( "", "please-select" |> AppI18n.form ) :: options
+
+withLoading : Maybe (List ( String, String )) -> List ( String, String )
+withLoading = Maybe.withDefault [ ( "", "loading" |> AppI18n.form ) ]

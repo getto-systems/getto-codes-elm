@@ -31,7 +31,7 @@ type alias SearchModel msg =
   , get  : HttpView.Model View.Response
   , options :
     { gender : List ( String, String )
-    , roles  : List ( String, String )
+    , role   : List ( String, String )
     }
   , msg :
     { request : msg
@@ -139,7 +139,7 @@ search model =
                 [ H.tr ( present |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
-                    [ form.field |> Input.checkbox model.options.roles [] (model.msg.toggle form.prop) model.msg.change
+                    [ form.field |> Input.checkbox model.options.role [] (model.msg.toggle form.prop) model.msg.change
                     ]
                   ]
                 ]
