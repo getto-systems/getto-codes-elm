@@ -48,7 +48,7 @@ type alias MenuItem =
   }
 
 type BadgeState
-  = NoProbrem
+  = NoProblem
   | Connecting
   | Failure String
 
@@ -67,7 +67,7 @@ badgeState : BadgeStateModel response -> BadgeState
 badgeState model =
   case model.http |> HttpView.state of
     HttpView.Connecting _  -> Connecting
-    HttpView.Ready Nothing -> NoProbrem
+    HttpView.Ready Nothing -> NoProblem
     HttpView.Ready (Just error) -> error |> model.i18n |> Failure
 
 

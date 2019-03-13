@@ -43,7 +43,7 @@ type alias Fields =
 
 type alias View = HttpView.Model Data.Response -> Maybe
   { isStatic : Bool
-  , hasError : Bool
+  , state    : Edit.AggregateState
   , form :
     { birthday : Edit.State Form String
     , start_at : Edit.State Form String
@@ -166,6 +166,14 @@ view form = HttpView.response >> Maybe.map
         , roles    = form |> Conflict.init error data ( get_roles,    ( roles_,    [] ) )
         }
 
+      modifieds =
+        [ model.birthday |> Conflict.modified
+        , model.start_at |> Conflict.modified
+        , model.gender   |> Conflict.modified
+        , model.quality  |> Conflict.modified
+        , model.roles    |> Conflict.modified
+        ]
+
       errors = List.concat
         [ model.birthday |> Conflict.form |> Validate.errors
         , model.start_at |> Conflict.form |> Validate.errors
@@ -174,16 +182,16 @@ view form = HttpView.response >> Maybe.map
         , model.roles    |> Conflict.form |> Validate.errors
         ]
 
-      expose = Edit.expose Data.isDifferentResponse form res
+      isStatic = form |> Edit.isStatic Data.isDifferentResponse res
     in
-      { isStatic = Edit.isStatic Data.isDifferentResponse form res
-      , hasError = errors |> List.isEmpty |> not
+      { isStatic = isStatic
+      , state    = errors |> Edit.aggregate modifieds
       , form     =
-        { birthday = model.birthday |> expose
-        , start_at = model.start_at |> expose
-        , gender   = model.gender   |> expose
-        , quality  = model.quality  |> expose
-        , roles    = model.roles    |> expose
+        { birthday = model.birthday |> Edit.expose isStatic
+        , start_at = model.start_at |> Edit.expose isStatic
+        , gender   = model.gender   |> Edit.expose isStatic
+        , quality  = model.quality  |> Edit.expose isStatic
+        , roles    = model.roles    |> Edit.expose isStatic
         }
       }
   )
