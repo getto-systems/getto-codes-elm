@@ -141,11 +141,14 @@ content model = L.lazy3
       , cancel     = Cancel
       }
     , i18n =
-      { title = I18n.title
-      , field = I18n.field
-      , error = I18n.error
-      , form  = AppI18n.form
-      , http  = HttpI18n.error
+      { title   = I18n.title
+      , field   = I18n.field
+      , error   = I18n.error
+      , form    = AppI18n.form
+      , http    = HttpI18n.error
+      , gender  = I18n.gender
+      , quality = I18n.quality
+      , role    = AppI18n.role
       }
     }
   )

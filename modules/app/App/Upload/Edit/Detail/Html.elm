@@ -41,11 +41,14 @@ type alias DetailModel msg =
     , resolveSet : Detail.Prop (Set String) -> Conflict.Resolve (Set String) -> msg
     }
   , i18n :
-    { title : String -> String
-    , field : String -> String
-    , error : String -> String
-    , form  : String -> String
-    , http  : HttpView.Error -> String
+    { title   : String -> String
+    , field   : String -> String
+    , error   : String -> String
+    , form    : String -> String
+    , http    : HttpView.Error -> String
+    , gender  : String -> String
+    , quality : String -> String
+    , role    : String -> String
     }
   }
 
@@ -106,7 +109,7 @@ detail model =
                   [ H.tr []
                     [ H.th [] [ name |> model.i18n.field |> H.text ]
                     , H.td []
-                      [ H.p [] [ value |> H.text ]
+                      [ H.p [] [ value |> model.i18n.gender |> H.text ]
                       ]
                     ]
                   ]
@@ -127,7 +130,7 @@ detail model =
                   [ H.tr []
                     [ H.th [] [ name |> model.i18n.field |> H.text ]
                     , H.td []
-                      [ H.p [] [ value |> H.text ]
+                      [ H.p [] [ value |> model.i18n.quality |> H.text ]
                       ]
                     ]
                   ]
@@ -151,7 +154,7 @@ detail model =
                       [ H.ul []
                         ( value |> Set.toList |> List.map
                           (\role ->
-                            H.li [] [ H.p [] [ role |> H.text ] ]
+                            H.li [] [ H.p [] [ role |> model.i18n.role |> H.text ] ]
                           )
                         )
                       ]
