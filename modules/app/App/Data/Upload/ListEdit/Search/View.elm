@@ -64,18 +64,18 @@ init signature =
 
 encodeForm : Form -> QueryEncode.Value
 encodeForm form = QueryEncode.object
-  [ ( "name",   form.name   |> Field.value |> QueryEncode.string )
-  , ( "gender", form.gender |> Field.value |> QueryEncode.string )
+  [ form.name   |> Field.name_value |> Tuple.mapSecond QueryEncode.string
+  , form.gender |> Field.name_value |> Tuple.mapSecond QueryEncode.string
   ]
 
 decodeForm : List String -> QueryDecode.Value -> Form -> Form
 decodeForm names value form =
   let
-    qEntryAt name = QueryDecode.entryAt (names ++ [name]) QueryDecode.string
+    qEntryAt field = value |> QueryDecode.entryAt (names ++ [form |> field |> Field.name]) QueryDecode.string
   in
     form
-    |> Form.setIf name_   ( value |> qEntryAt "name"   )
-    |> Form.setIf gender_ ( value |> qEntryAt "gender" )
+    |> Form.setIf name_   ( qEntryAt .name   )
+    |> Form.setIf gender_ ( qEntryAt .gender )
 
 view : Form -> View
 view form =

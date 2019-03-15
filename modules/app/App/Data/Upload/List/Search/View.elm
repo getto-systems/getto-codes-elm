@@ -129,37 +129,37 @@ init signature =
 
 encodeForm : Form -> QueryEncode.Value
 encodeForm form = QueryEncode.object
-  [ ( "name",           form.name          |> Field.value |> QueryEncode.string )
-  , ( "age_gteq",       form.age_gteq      |> Field.value |> QueryEncode.string )
-  , ( "age_lteq",       form.age_lteq      |> Field.value |> QueryEncode.string )
-  , ( "email",          form.email         |> Field.value |> QueryEncode.string )
-  , ( "tel",            form.tel           |> Field.value |> QueryEncode.string )
-  , ( "birthday_gteq",  form.birthday_gteq |> Field.value |> QueryEncode.string )
-  , ( "birthday_lteq",  form.birthday_lteq |> Field.value |> QueryEncode.string )
-  , ( "start_at_gteq",  form.start_at_gteq |> Field.value |> QueryEncode.string )
-  , ( "start_at_lteq",  form.start_at_lteq |> Field.value |> QueryEncode.string )
-  , ( "gender",         form.gender        |> Field.value |> QueryEncode.string )
-  , ( "roles",          form.roles         |> Field.value |> QueryEncode.set QueryEncode.string )
+  [ ( form.name          |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.age_gteq      |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.age_lteq      |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.email         |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.tel           |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.birthday_gteq |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.birthday_lteq |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.start_at_gteq |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.start_at_lteq |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.gender        |> Field.name_value |> Tuple.mapSecond  QueryEncode.string )
+  , ( form.roles         |> Field.name_value |> Tuple.mapSecond (QueryEncode.set QueryEncode.string) )
   ]
 
 decodeForm : List String -> QueryDecode.Value -> Form -> Form
 decodeForm names value form =
   let
-    qEntryAt name = QueryDecode.entryAt (names ++ [name]) QueryDecode.string
-    qListAt  name = QueryDecode.listAt  (names ++ [name]) QueryDecode.string
+    qEntryAt field = value |> QueryDecode.entryAt (names ++ [form |> field |> Field.name]) QueryDecode.string
+    qListAt  field = value |> QueryDecode.listAt  (names ++ [form |> field |> Field.name]) QueryDecode.string
   in
     form
-    |> Form.setIf name_          ( value |> qEntryAt "name"          )
-    |> Form.setIf age_gteq_      ( value |> qEntryAt "age_gteq"      )
-    |> Form.setIf age_lteq_      ( value |> qEntryAt "age_lteq"      )
-    |> Form.setIf email_         ( value |> qEntryAt "email"         )
-    |> Form.setIf tel_           ( value |> qEntryAt "tel"           )
-    |> Form.setIf birthday_gteq_ ( value |> qEntryAt "birthday_gteq" )
-    |> Form.setIf birthday_lteq_ ( value |> qEntryAt "birthday_lteq" )
-    |> Form.setIf start_at_gteq_ ( value |> qEntryAt "start_at_gteq" )
-    |> Form.setIf start_at_lteq_ ( value |> qEntryAt "start_at_lteq" )
-    |> Form.setIf gender_        ( value |> qEntryAt "gender"        )
-    |> Form.setIf roles_         ( value |> qListAt  "roles" |> Maybe.map Set.fromList )
+    |> Form.setIf name_          ( qEntryAt .name          )
+    |> Form.setIf age_gteq_      ( qEntryAt .age_gteq      )
+    |> Form.setIf age_lteq_      ( qEntryAt .age_lteq      )
+    |> Form.setIf email_         ( qEntryAt .email         )
+    |> Form.setIf tel_           ( qEntryAt .tel           )
+    |> Form.setIf birthday_gteq_ ( qEntryAt .birthday_gteq )
+    |> Form.setIf birthday_lteq_ ( qEntryAt .birthday_lteq )
+    |> Form.setIf start_at_gteq_ ( qEntryAt .start_at_gteq )
+    |> Form.setIf start_at_lteq_ ( qEntryAt .start_at_lteq )
+    |> Form.setIf gender_        ( qEntryAt .gender        )
+    |> Form.setIf roles_         ( qListAt  .roles |> Maybe.map Set.fromList )
 
 view : Form -> View
 view form =

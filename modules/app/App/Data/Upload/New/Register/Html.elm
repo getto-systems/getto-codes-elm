@@ -196,11 +196,11 @@ register model =
 
 pairs : View.Form -> List ( String, String )
 pairs form =
-  [ form.name     |> Field.pair
-  , form.memo     |> Field.pair
-  , form.age      |> Field.pair
-  , form.email    |> Field.pair
-  , form.tel      |> Field.pair
-  , form.birthday |> Field.pair
-  , form.start_at |> Field.pair
+  [ form.name     |> Field.id_value
+  , form.memo     |> Field.id_value
+  , form.age      |> Field.id_value
+  , form.email    |> Field.id_value
+  , form.tel      |> Field.id_value
+  , form.birthday |> Field.id_value
+  , form.start_at |> Field.id_value
   ]

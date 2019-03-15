@@ -100,7 +100,7 @@ search model =
 
 pairs : View.Form -> List ( String, String )
 pairs form =
-  [ form.name |> Field.pair
+  [ form.name |> Field.id_value
   ]
 
 

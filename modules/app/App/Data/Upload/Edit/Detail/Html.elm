@@ -202,6 +202,6 @@ detail model =
 
 pairs : Detail.Fields -> List ( String, String )
 pairs fields =
-  [ fields.birthday |> Field.pair
-  , fields.start_at |> Field.pair
+  [ fields.birthday |> Field.id_value
+  , fields.start_at |> Field.id_value
   ]

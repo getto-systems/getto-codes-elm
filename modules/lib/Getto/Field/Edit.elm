@@ -7,7 +7,7 @@ module Getto.Field.Edit exposing
   , update
   , isStatic
   , response
-  , filter
+  , param
   , encode
   , decode
   , edit
@@ -69,20 +69,14 @@ response (Model state _) =
     StaticState   -> Nothing
     EditState _ r -> r |> Just
 
-filter : (Param a -> Encode.Value) -> ( String, Maybe a, Field.Model attr a ) -> Maybe ( String, Encode.Value )
-filter encoder (fieldName,value,field) =
-  let
-    formValue = field |> Field.value
-
-    isSame val =
-      if val == formValue
-        then Nothing
-        else Just val
-  in
-    value |> Maybe.andThen isSame |> Maybe.map
-      (\val ->
-        ( fieldName, { from = val, to = formValue } |> encoder )
-      )
+param : a -> a -> Maybe (Param a)
+param lastValue formValue =
+  if lastValue == formValue
+    then Nothing
+    else Just
+      { from = lastValue
+      , to   = formValue
+      }
 
 encode : (response -> Encode.Value) -> (fields -> Encode.Value) -> Model response fields -> Encode.Value
 encode encodeResponse encodeModel (Model state model) =

@@ -83,36 +83,44 @@ init signature =
   |> Edit.init
 
 params : HttpView.Model Data.Response -> Form -> Encode.Value
-params get = Edit.fields >>
-  (\fields ->
-    let
-      res = get |> HttpView.response
+params get =
+  case get |> HttpView.response of
+    Nothing  -> always Encode.null
+    Just res -> Edit.fields >>
+      (\fields ->
+        let
+          encode encoder values =
+            [ ( "from", values.from |> encoder )
+            , ( "to",   values.to   |> encoder )
+            ] |> Encode.object
 
-      encode encoder values =
-        [ ( "from", values.from |> encoder )
-        , ( "to",   values.to   |> encoder )
-        ] |> Encode.object
-    in
-      [ ( "name",  res |> Maybe.map get_name,  fields.name  ) |> Edit.filter (encode Encode.string)
-      , ( "memo",  res |> Maybe.map get_memo,  fields.memo  ) |> Edit.filter (encode Encode.string)
-      , ( "age",   res |> Maybe.map get_age,   fields.age   ) |> Edit.filter (encode Encode.string)
-      , ( "email", res |> Maybe.map get_email, fields.email ) |> Edit.filter (encode Encode.string)
-      , ( "tel",   res |> Maybe.map get_tel,   fields.tel   ) |> Edit.filter (encode Encode.string)
-      ]
-      |> List.filterMap identity
-      |> Encode.object
-  )
+          map_name_param getter encoder =
+            Field.name_value >>
+            Tuple.mapSecond
+              ( Edit.param ( res |> getter )
+                >> Maybe.map (encode encoder)
+              )
+        in
+          [ fields.name  |> map_name_param get_name  Encode.string
+          , fields.memo  |> map_name_param get_memo  Encode.string
+          , fields.age   |> map_name_param get_age   Encode.string
+          , fields.email |> map_name_param get_email Encode.string
+          , fields.tel   |> map_name_param get_tel   Encode.string
+          ]
+          |> List.filterMap (\(k,v) -> v |> Maybe.map (\val -> ( k, val )))
+          |> Encode.object
+      )
 
 encodeForm : Form -> Encode.Value
 encodeForm = Edit.encode Data.encodeResponse encodeFields
 
 encodeFields : Fields -> Encode.Value
 encodeFields fields =
-  [ ( "name",  fields.name  |> Field.value |> Encode.string )
-  , ( "memo",  fields.memo  |> Field.value |> Encode.string )
-  , ( "age",   fields.age   |> Field.value |> Encode.string )
-  , ( "email", fields.email |> Field.value |> Encode.string )
-  , ( "tel",   fields.tel   |> Field.value |> Encode.string )
+  [ fields.name  |> Field.name_value |> Tuple.mapSecond Encode.string
+  , fields.memo  |> Field.name_value |> Tuple.mapSecond Encode.string
+  , fields.age   |> Field.name_value |> Tuple.mapSecond Encode.string
+  , fields.email |> Field.name_value |> Tuple.mapSecond Encode.string
+  , fields.tel   |> Field.name_value |> Tuple.mapSecond Encode.string
   ] |> Encode.object
 
 decodeForm : Decode.Value -> Form -> Form
@@ -120,15 +128,19 @@ decodeForm = Edit.decode Data.decodeResponse decodeFields
 
 decodeFields : Decode.Value -> Form -> Form
 decodeFields value form =
-  form
-  |> Form.setIf name_  ( value |> decode "name"  Decode.string )
-  |> Form.setIf memo_  ( value |> decode "memo"  Decode.string )
-  |> Form.setIf age_   ( value |> decode "age"   Decode.string )
-  |> Form.setIf email_ ( value |> decode "email" Decode.string )
-  |> Form.setIf tel_   ( value |> decode "tel"   Decode.string )
-
-decode : String -> Decode.Decoder a -> Decode.Value -> Maybe a
-decode key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMaybe
+  let
+    decode field decoder =
+      value
+      |> Decode.decodeValue
+        (Decode.at [form |> Edit.fields |> field |> Field.name] decoder)
+      |> Result.toMaybe
+  in
+    form
+    |> Form.setIf name_  ( decode .name  Decode.string )
+    |> Form.setIf memo_  ( decode .memo  Decode.string )
+    |> Form.setIf age_   ( decode .age   Decode.string )
+    |> Form.setIf email_ ( decode .email Decode.string )
+    |> Form.setIf tel_   ( decode .tel   Decode.string )
 
 edit : Data.Response -> Form -> Form
 edit res form =

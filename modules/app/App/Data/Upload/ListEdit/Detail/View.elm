@@ -99,11 +99,18 @@ params unit = unit.form |> Edit.fields |>
         [ ( "from", values.from |> encoder )
         , ( "to",   values.to   |> encoder )
         ] |> Encode.object
+
+      map_name_param getter encoder =
+        Field.name_value >>
+        Tuple.mapSecond
+          ( Edit.param ( res |> getter )
+            >> Maybe.map (encode encoder)
+          )
     in
-      [ ( "name",   res |> get_name   |> Just, fields.name   ) |> Edit.filter (encode Encode.string)
-      , ( "gender", res |> get_gender |> Just, fields.gender ) |> Edit.filter (encode Encode.string)
+      [ fields.name   |> map_name_param get_name   Encode.string
+      , fields.gender |> map_name_param get_gender Encode.string
       ]
-      |> List.filterMap identity
+      |> List.filterMap (\(k,v) -> v |> Maybe.map (\val -> ( k, val )))
       |> Encode.object
   )
 
