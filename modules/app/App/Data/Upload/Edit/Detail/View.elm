@@ -78,11 +78,11 @@ get_roles    = HttpView.body >> .detail >> .roles
 
 init : String -> Form
 init signature = Edit.init
-  { birthday = Field.init signature "birthday" Conflict.none ""
-  , start_at = Field.init signature "start_at" Conflict.none ""
-  , gender   = Field.init signature "gender"   Conflict.none ""
-  , quality  = Field.init signature "quality"  Conflict.none ""
-  , roles    = Field.init signature "roles"    Conflict.none Set.empty
+  { birthday = "birthday" |> Field.init signature Conflict.none ""
+  , start_at = "start_at" |> Field.init signature Conflict.none ""
+  , gender   = "gender"   |> Field.init signature Conflict.none ""
+  , quality  = "quality"  |> Field.init signature Conflict.none ""
+  , roles    = "roles"    |> Field.init signature Conflict.none Set.empty
   }
 
 params : HttpView.Model Data.Response -> Form -> Encode.Value

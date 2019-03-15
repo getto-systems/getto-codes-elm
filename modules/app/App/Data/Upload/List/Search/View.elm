@@ -114,17 +114,17 @@ roles_         = Form.prop .roles         (\v m -> { m | roles         = v })
 
 init : String -> Form
 init signature =
-  { name          = Field.init signature "name"          () ""
-  , age_gteq      = Field.init signature "age_gteq"      () ""
-  , age_lteq      = Field.init signature "age_lteq"      () ""
-  , email         = Field.init signature "email"         () ""
-  , tel           = Field.init signature "tel"           () ""
-  , birthday_gteq = Field.init signature "birthday_gteq" () ""
-  , birthday_lteq = Field.init signature "birthday_lteq" () ""
-  , start_at_gteq = Field.init signature "start_at_gteq" () ""
-  , start_at_lteq = Field.init signature "start_at_lteq" () ""
-  , gender        = Field.init signature "gender"        () ""
-  , roles         = Field.init signature "roles"         () Set.empty
+  { name          = "name"          |> Field.init signature () ""
+  , age_gteq      = "age_gteq"      |> Field.init signature () ""
+  , age_lteq      = "age_lteq"      |> Field.init signature () ""
+  , email         = "email"         |> Field.init signature () ""
+  , tel           = "tel"           |> Field.init signature () ""
+  , birthday_gteq = "birthday_gteq" |> Field.init signature () ""
+  , birthday_lteq = "birthday_lteq" |> Field.init signature () ""
+  , start_at_gteq = "start_at_gteq" |> Field.init signature () ""
+  , start_at_lteq = "start_at_lteq" |> Field.init signature () ""
+  , gender        = "gender"        |> Field.init signature () ""
+  , roles         = "roles"         |> Field.init signature () Set.empty
   }
 
 encodeForm : Form -> QueryEncode.Value

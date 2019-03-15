@@ -74,11 +74,11 @@ get_tel   = HttpView.body >> .info >> .tel
 
 init : String -> Form
 init signature =
-  { name  = Field.init signature "name"  Conflict.none ""
-  , memo  = Field.init signature "memo"  Conflict.none ""
-  , age   = Field.init signature "age"   Conflict.none ""
-  , email = Field.init signature "email" Conflict.none ""
-  , tel   = Field.init signature "tel"   Conflict.none ""
+  { name  = "name"  |> Field.init signature Conflict.none ""
+  , memo  = "memo"  |> Field.init signature Conflict.none ""
+  , age   = "age"   |> Field.init signature Conflict.none ""
+  , email = "email" |> Field.init signature Conflict.none ""
+  , tel   = "tel"   |> Field.init signature Conflict.none ""
   }
   |> Edit.init
 

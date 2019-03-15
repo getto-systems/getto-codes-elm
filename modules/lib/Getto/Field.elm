@@ -19,8 +19,8 @@ type Model attr value = Model attr
   , value : value
   }
 
-init : String -> String -> attr -> value -> Model attr value
-init parentId fieldName attr defaultValue = Model attr
+init : String -> attr -> value -> String -> Model attr value
+init parentId attr defaultValue fieldName = Model attr
   { id    = parentId ++ "-" ++ fieldName
   , name  = fieldName
   , value = defaultValue

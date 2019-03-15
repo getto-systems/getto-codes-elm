@@ -112,8 +112,8 @@ withId id signature = signature ++ "-" ++ (id |> String.fromInt)
 
 initForm : String -> Form
 initForm signature =
-  { name   = Field.init signature "name"   Conflict.none ""
-  , gender = Field.init signature "gender" Conflict.none ""
+  { name   = "name"   |> Field.init signature Conflict.none ""
+  , gender = "gender" |> Field.init signature Conflict.none ""
   }
   |> Edit.init
 
