@@ -7,6 +7,7 @@
     "watch:build": "exec-on-changed -d ./src -f ./bin/build.sh",
     "watch:test": "exec-on-changed -d ./tests -f ./bin/test.sh",
     "watch:routes": "exec-on-changed -d ./config/routes -f ./bin/routes.sh",
+    "elm": "elm",
     "test": "elm-test"
   },
   "author": "shun@getto.systems",
