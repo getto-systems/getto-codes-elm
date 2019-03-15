@@ -90,17 +90,17 @@ roles_    = Form.prop .roles    (\v m -> { m | roles    = v })
 
 init : String -> Form
 init signature =
-  { name     = Field.init signature "name"     () ""
-  , text     = Field.init signature "text"     () []
-  , memo     = Field.init signature "memo"     () ""
-  , age      = Field.init signature "age"      () ""
-  , email    = Field.init signature "email"    () ""
-  , tel      = Field.init signature "tel"      () ""
-  , birthday = Field.init signature "birthday" () ""
-  , start_at = Field.init signature "start_at" () ""
-  , gender   = Field.init signature "gender"   () ""
-  , quality  = Field.init signature "quality"  () ""
-  , roles    = Field.init signature "roles"    () Set.empty
+  { name     = "name"     |> Field.init signature () ""
+  , text     = "text"     |> Field.init signature () []
+  , memo     = "memo"     |> Field.init signature () ""
+  , age      = "age"      |> Field.init signature () ""
+  , email    = "email"    |> Field.init signature () ""
+  , tel      = "tel"      |> Field.init signature () ""
+  , birthday = "birthday" |> Field.init signature () ""
+  , start_at = "start_at" |> Field.init signature () ""
+  , gender   = "gender"   |> Field.init signature () ""
+  , quality  = "quality"  |> Field.init signature () ""
+  , roles    = "roles"    |> Field.init signature () Set.empty
   }
 
 params : Form -> Part.Value

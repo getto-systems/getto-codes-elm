@@ -58,8 +58,8 @@ gender_ = Form.prop .gender (\v m -> { m | gender = v })
 
 init : String -> Form
 init signature =
-  { name   = Field.init signature "name"   () ""
-  , gender = Field.init signature "gender" () ""
+  { name   = "name"   |> Field.init signature () ""
+  , gender = "gender" |> Field.init signature () ""
   }
 
 encodeForm : Form -> QueryEncode.Value
