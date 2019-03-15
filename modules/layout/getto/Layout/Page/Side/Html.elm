@@ -6,7 +6,9 @@ module GettoUpload.Layout.Page.Side.Html exposing
   , navAddress
   , nav
   )
-import GettoUpload.Layout.Page.Side.View as View
+import GettoUpload.Layout.Page.Side.View as Side
+import GettoUpload.Layout.Page.Options.View as Options
+import GettoUpload.View.Http as HttpView
 import GettoUpload.View.Html as Html
 import GettoUpload.View.Icon as Icon
 import GettoUpload.Extension.Href as Href exposing ( Href )
@@ -50,11 +52,14 @@ navFooter model =
 
 
 type alias NavAddress =
-  { title   : String
-  , mode1   : NavAddressMode
-  , mode2   : NavAddressMode
-  , badge   : View.BadgeState
-  , roles   : List String
+  { title : String
+  , mode1 : NavAddressMode
+  , mode2 : NavAddressMode
+  , roles : List String
+  , get :
+    { side    : HttpView.Model Side.Response
+    , options : HttpView.Model Options.Response
+    }
   , href :
     { config  : Href
     , profile : Href
@@ -63,6 +68,7 @@ type alias NavAddress =
     { title : String -> String
     , mode  : String -> String
     , role  : String -> String
+    , http  : HttpView.Error -> String
     }
   }
 type alias NavAddressMode =
@@ -88,11 +94,11 @@ navAddress model =
             ]
           ]
 
-    badge =
-      case model.badge of
-        View.NoProblem  -> "" |> H.text
-        View.Connecting -> Html.spinner
-        View.Failure error -> error |> Html.badge ["is-small","is-danger"]
+    badge get =
+      case get |> HttpView.state of
+        HttpView.Ready (Just error) -> error |> model.i18n.http |> Html.badge ["is-small","is-danger"]
+        HttpView.Connecting _       -> Html.spinner
+        _ -> "" |> H.text
   in
     H.address []
       [ H.a [ model.href.config |> Href.toString |> A.href ]
@@ -103,7 +109,9 @@ navAddress model =
           ]
         ]
       , H.footer []
-        [ badge
+        [ model.get.side |> badge
+        , " " |> H.text
+        , model.get.options |> badge
         , " " |> H.text
         , H.a [ model.href.profile |> Href.toString |> A.href ]
           [ Icon.fas "user-circle" |> Html.icon []
@@ -114,7 +122,7 @@ navAddress model =
       ]
 
 
-breadcrumb : Maybe View.Breadcrumb -> Html msg
+breadcrumb : Maybe Side.Breadcrumb -> Html msg
 breadcrumb data =
   case data of
     Nothing -> "" |> H.text
@@ -137,7 +145,15 @@ breadcrumb data =
         )
 
 
-nav : { open : String -> msg, close : String -> msg, menu : List View.Menu } -> Html msg
+type alias NavModel msg =
+  { menu : List Side.Menu
+  , msg :
+    { open : String -> msg
+    , close : String -> msg
+    }
+  }
+
+nav : NavModel msg -> Html msg
 nav model =
   let
     class item =
@@ -147,8 +163,8 @@ nav model =
 
     onClick item =
       if item.collapsed
-        then item.name |> model.open  |> E.onClick
-        else item.name |> model.close |> E.onClick
+        then item.name |> model.msg.open  |> E.onClick
+        else item.name |> model.msg.close |> E.onClick
 
     badge count =
       case count of
