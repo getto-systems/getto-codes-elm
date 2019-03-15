@@ -105,50 +105,55 @@ init signature =
 
 params : Form -> Part.Value
 params form = Part.object
-  [ ( "name",      form.name     |> Field.value |> Part.string )
-  , ( "text" ,     form.text     |> Field.value |> Part.list Part.file )
-  , ( "memo",      form.memo     |> Field.value |> Part.string )
-  , ( "age",       form.age      |> Field.value |> Part.string )
-  , ( "email",     form.email    |> Field.value |> Part.string )
-  , ( "tel",       form.tel      |> Field.value |> Part.string )
-  , ( "birthday",  form.birthday |> Field.value |> Part.string )
-  , ( "start_at",  form.start_at |> Field.value |> Part.string )
-  , ( "gender",    form.gender   |> Field.value |> Part.string )
-  , ( "quality",   form.quality  |> Field.value |> Part.string )
-  , ( "roles",     form.roles    |> Field.value |> Set.toList |> Part.list Part.string )
+  [ form.name     |> Field.name_value |> Tuple.mapSecond  Part.string
+  , form.text     |> Field.name_value |> Tuple.mapSecond (Part.list Part.file)
+  , form.memo     |> Field.name_value |> Tuple.mapSecond  Part.string
+  , form.age      |> Field.name_value |> Tuple.mapSecond  Part.string
+  , form.email    |> Field.name_value |> Tuple.mapSecond  Part.string
+  , form.tel      |> Field.name_value |> Tuple.mapSecond  Part.string
+  , form.birthday |> Field.name_value |> Tuple.mapSecond  Part.string
+  , form.start_at |> Field.name_value |> Tuple.mapSecond  Part.string
+  , form.gender   |> Field.name_value |> Tuple.mapSecond  Part.string
+  , form.quality  |> Field.name_value |> Tuple.mapSecond  Part.string
+  , form.roles    |> Field.name_value |> Tuple.mapSecond (Set.toList >> Part.list Part.string)
   ]
 
 encodeForm : Form -> Encode.Value
 encodeForm form =
-  [ ( "name",     form.name     |> Field.value |> Encode.string )
-  , ( "memo",     form.memo     |> Field.value |> Encode.string )
-  , ( "age",      form.age      |> Field.value |> Encode.string )
-  , ( "email",    form.email    |> Field.value |> Encode.string )
-  , ( "tel",      form.tel      |> Field.value |> Encode.string )
-  , ( "birthday", form.birthday |> Field.value |> Encode.string )
-  , ( "start_at", form.start_at |> Field.value |> Encode.string )
-  , ( "gender",   form.gender   |> Field.value |> Encode.string )
-  , ( "quality",  form.quality  |> Field.value |> Encode.string )
-  , ( "roles",    form.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+  [ form.name     |> Field.name_value |> Tuple.mapSecond  Encode.string
+  , form.memo     |> Field.name_value |> Tuple.mapSecond  Encode.string
+  , form.age      |> Field.name_value |> Tuple.mapSecond  Encode.string
+  , form.email    |> Field.name_value |> Tuple.mapSecond  Encode.string
+  , form.tel      |> Field.name_value |> Tuple.mapSecond  Encode.string
+  , form.birthday |> Field.name_value |> Tuple.mapSecond  Encode.string
+  , form.start_at |> Field.name_value |> Tuple.mapSecond  Encode.string
+  , form.gender   |> Field.name_value |> Tuple.mapSecond  Encode.string
+  , form.quality  |> Field.name_value |> Tuple.mapSecond  Encode.string
+  , form.roles    |> Field.name_value |> Tuple.mapSecond (Set.toList >> Encode.list Encode.string)
   ] |> Encode.object
 
 decodeForm : Decode.Value -> Form -> Form
 decodeForm value form =
-  form
-  |> Form.setIf name_     ( value |> decode "name"     Decode.string )
-  |> Form.setIf memo_     ( value |> decode "memo"     Decode.string )
-  |> Form.setIf age_      ( value |> decode "age"      Decode.string )
-  |> Form.setIf email_    ( value |> decode "email"    Decode.string )
-  |> Form.setIf tel_      ( value |> decode "tel"      Decode.string )
-  |> Form.setIf birthday_ ( value |> decode "birthday" Decode.string )
-  |> Form.setIf start_at_ ( value |> decode "start_at" Decode.string )
-  |> Form.setIf gender_   ( value |> decode "gender"   Decode.string )
-  |> Form.setIf quality_  ( value |> decode "quality"  Decode.string )
-  |> Form.setIf roles_    ( value |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
+  let
+    decode field decoder =
+      value
+      |> Decode.decodeValue
+        (Decode.at [form |> field |> Field.name] decoder)
+      |> Result.toMaybe
 
-
-decode : String -> Decode.Decoder a -> Decode.Value -> Maybe a
-decode name decoder = Decode.decodeValue (Decode.at [name] decoder) >> Result.toMaybe
+    set = Decode.list Decode.string |> Decode.map Set.fromList
+  in
+    form
+    |> Form.setIf name_     ( decode .name     Decode.string )
+    |> Form.setIf memo_     ( decode .memo     Decode.string )
+    |> Form.setIf age_      ( decode .age      Decode.string )
+    |> Form.setIf email_    ( decode .email    Decode.string )
+    |> Form.setIf tel_      ( decode .tel      Decode.string )
+    |> Form.setIf birthday_ ( decode .birthday Decode.string )
+    |> Form.setIf start_at_ ( decode .start_at Decode.string )
+    |> Form.setIf gender_   ( decode .gender   Decode.string )
+    |> Form.setIf quality_  ( decode .quality  Decode.string )
+    |> Form.setIf roles_    ( decode .roles    set )
 
 view : Form -> View
 view form =

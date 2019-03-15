@@ -86,38 +86,46 @@ init signature = Edit.init
   }
 
 params : HttpView.Model Data.Response -> Form -> Encode.Value
-params get = Edit.fields >>
-  (\fields ->
-    let
-      res = get |> HttpView.response
+params get =
+  case get |> HttpView.response of
+    Nothing  -> always Encode.null
+    Just res -> Edit.fields >>
+      (\fields ->
+        let
+          set encoder = Set.toList >> Encode.list encoder
 
-      set encoder = Set.toList >> Encode.list encoder
+          encode encoder param =
+            [ ( "from", param.from |> encoder )
+            , ( "to",   param.to   |> encoder )
+            ] |> Encode.object
 
-      encode encoder values =
-        [ ( "from", values.from |> encoder )
-        , ( "to",   values.to   |> encoder )
-        ] |> Encode.object
-    in
-      [ ( "birthday", res |> Maybe.map get_birthday, fields.birthday ) |> Edit.filter (encode Encode.string)
-      , ( "start_at", res |> Maybe.map get_start_at, fields.start_at ) |> Edit.filter (encode Encode.string)
-      , ( "gender",   res |> Maybe.map get_gender,   fields.gender   ) |> Edit.filter (encode Encode.string)
-      , ( "quality",  res |> Maybe.map get_quality,  fields.quality  ) |> Edit.filter (encode Encode.string)
-      , ( "roles",    res |> Maybe.map get_roles,    fields.roles    ) |> Edit.filter (encode (set Encode.string))
-      ]
-      |> List.filterMap identity
-      |> Encode.object
-  )
+          map_name_param getter encoder =
+            Field.name_value >>
+            Tuple.mapSecond
+              ( Edit.param ( res |> getter )
+                >> Maybe.map (encode encoder)
+              )
+        in
+          [ fields.birthday |> map_name_param get_birthday Encode.string
+          , fields.start_at |> map_name_param get_start_at Encode.string
+          , fields.gender   |> map_name_param get_gender   Encode.string
+          , fields.quality  |> map_name_param get_quality  Encode.string
+          , fields.roles    |> map_name_param get_roles   (set Encode.string)
+          ]
+          |> List.filterMap (\(k,v) -> v |> Maybe.map (\val -> ( k, val )))
+          |> Encode.object
+      )
 
 encodeForm : Form -> Encode.Value
 encodeForm = Edit.encode Data.encodeResponse encodeFields
 
 encodeFields : Fields -> Encode.Value
 encodeFields fields =
-  [ ( "birthday", fields.birthday |> Field.value |> Encode.string )
-  , ( "start_at", fields.start_at |> Field.value |> Encode.string )
-  , ( "gender",   fields.gender   |> Field.value |> Encode.string )
-  , ( "quality",  fields.quality  |> Field.value |> Encode.string )
-  , ( "roles",    fields.roles    |> Field.value |> Set.toList |> Encode.list Encode.string )
+  [ fields.birthday |> Field.name_value |> Tuple.mapSecond Encode.string
+  , fields.start_at |> Field.name_value |> Tuple.mapSecond Encode.string
+  , fields.gender   |> Field.name_value |> Tuple.mapSecond Encode.string
+  , fields.quality  |> Field.name_value |> Tuple.mapSecond Encode.string
+  , fields.roles    |> Field.name_value |> Tuple.mapSecond (Set.toList >> Encode.list Encode.string)
   ] |> Encode.object
 
 decodeForm : Decode.Value -> Form -> Form
@@ -125,15 +133,21 @@ decodeForm = Edit.decode Data.decodeResponse decodeFields
 
 decodeFields : Decode.Value -> Form -> Form
 decodeFields value form =
-  form
-  |> Form.setIf birthday_ ( value |> decode "birthday" Decode.string )
-  |> Form.setIf start_at_ ( value |> decode "start_at" Decode.string )
-  |> Form.setIf gender_   ( value |> decode "gender"   Decode.string )
-  |> Form.setIf quality_  ( value |> decode "quality"  Decode.string )
-  |> Form.setIf roles_    ( value |> decode "roles"  ((Decode.list Decode.string) |> Decode.map Set.fromList) )
+  let
+    decode field decoder =
+      value
+      |> Decode.decodeValue
+        (Decode.at [form |> Edit.fields |> field |> Field.name] decoder)
+      |> Result.toMaybe
 
-decode : String -> Decode.Decoder a -> Decode.Value -> Maybe a
-decode key decoder = Decode.decodeValue (Decode.at [key] decoder) >> Result.toMaybe
+    set = Decode.list Decode.string |> Decode.map Set.fromList
+  in
+    form
+    |> Form.setIf birthday_ ( decode .birthday Decode.string )
+    |> Form.setIf start_at_ ( decode .start_at Decode.string )
+    |> Form.setIf gender_   ( decode .gender   Decode.string )
+    |> Form.setIf quality_  ( decode .quality  Decode.string )
+    |> Form.setIf roles_    ( decode .roles    set )
 
 edit : Data.Response -> Form -> Form
 edit res form =

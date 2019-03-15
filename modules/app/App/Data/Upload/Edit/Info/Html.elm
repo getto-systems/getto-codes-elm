@@ -193,9 +193,9 @@ info model =
 
 pairs : Info.Fields -> List ( String, String )
 pairs fields =
-  [ fields.name  |> Field.pair
-  , fields.memo  |> Field.pair
-  , fields.age   |> Field.pair
-  , fields.email |> Field.pair
-  , fields.tel   |> Field.pair
+  [ fields.name  |> Field.id_value
+  , fields.memo  |> Field.id_value
+  , fields.age   |> Field.id_value
+  , fields.email |> Field.id_value
+  , fields.tel   |> Field.id_value
   ]

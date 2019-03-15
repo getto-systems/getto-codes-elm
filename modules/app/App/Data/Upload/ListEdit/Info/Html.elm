@@ -115,5 +115,5 @@ info model =
 
 pairs : Info.Fields -> List ( String, String )
 pairs fields =
-  [ fields.name |> Field.pair
+  [ fields.name |> Field.id_value
   ]

@@ -59,34 +59,11 @@ get = Http.tracker "get" <|
       search = model |> Frame.app |> .search
     in
       Http.get
-        { url     = "uploads" |> Api.url []
-        , headers = model |> Api.headers
-        , params  = QueryEncode.object
-          [ ( "q"
-            , [ ( "name",           search.form.name          |> Field.value |> QueryEncode.string )
-              , ( "age_gteq",       search.form.age_gteq      |> Field.value |> QueryEncode.string )
-              , ( "age_lteq",       search.form.age_lteq      |> Field.value |> QueryEncode.string )
-              , ( "email",          search.form.email         |> Field.value |> QueryEncode.string )
-              , ( "tel",            search.form.tel           |> Field.value |> QueryEncode.string )
-              , ( "birthday_gteq",  search.form.birthday_gteq |> Field.value |> QueryEncode.string )
-              , ( "birthday_lteq",  search.form.birthday_lteq |> Field.value |> QueryEncode.string )
-              , ( "start_at_gteq",  search.form.start_at_gteq |> Field.value |> QueryEncode.string )
-              , ( "start_at_lteq",  search.form.start_at_lteq |> Field.value |> QueryEncode.string )
-              , ( "gender",         search.form.gender        |> Field.value |> QueryEncode.string )
-              , ( "roles",          search.form.roles         |> Field.value |> QueryEncode.set QueryEncode.string )
-              ] |> QueryEncode.object
-            )
-          , ( "page", search.page |> QueryEncode.int )
-          , ( "sort"
-            , case search.sort |> Sort.expose of
-              (column,order) ->
-                [ ( "column", column |> QueryEncode.string )
-                , ( "order",  order  |> QueryEncode.string )
-                ] |> QueryEncode.object
-            )
-          ]
+        { url      = "uploads" |> Api.url []
+        , headers  = model  |> Api.headers
+        , params   = search |> encodeQuery
         , response = View.response
-        , timeout = 10 * 1000
+        , timeout  = 10 * 1000
         }
 
 getTrack   = Http.track   signature get StateChanged
@@ -157,15 +134,15 @@ toPage = String.toInt >> Maybe.withDefault 0
 fill : Model.Transition Msg
 fill = Frame.app >> .search >>
   (\model -> Dom.fill
-    [ model.form.name          |> Field.pair
-    , model.form.age_gteq      |> Field.pair
-    , model.form.age_lteq      |> Field.pair
-    , model.form.email         |> Field.pair
-    , model.form.tel           |> Field.pair
-    , model.form.birthday_gteq |> Field.pair
-    , model.form.birthday_lteq |> Field.pair
-    , model.form.start_at_gteq |> Field.pair
-    , model.form.start_at_lteq |> Field.pair
+    [ model.form.name          |> Field.id_value
+    , model.form.age_gteq      |> Field.id_value
+    , model.form.age_lteq      |> Field.id_value
+    , model.form.email         |> Field.id_value
+    , model.form.tel           |> Field.id_value
+    , model.form.birthday_gteq |> Field.id_value
+    , model.form.birthday_lteq |> Field.id_value
+    , model.form.start_at_gteq |> Field.id_value
+    , model.form.start_at_lteq |> Field.id_value
     ]
   )
 

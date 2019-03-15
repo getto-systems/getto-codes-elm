@@ -63,22 +63,8 @@ get = Http.tracker "get" <|
     in
       Http.get
         { url     = "uploads" |> Api.url []
-        , headers = model |> Api.headers
-        , params  = QueryEncode.object
-          [ ( "q"
-            , [ ( "name",   search.form.name   |> Field.value |> QueryEncode.string )
-              , ( "gender", search.form.gender |> Field.value |> QueryEncode.string )
-              ] |> QueryEncode.object
-            )
-          , ( "page", search.page |> QueryEncode.int )
-          , ( "sort"
-            , case search.sort |> Sort.expose of
-              (column,order) ->
-                [ ( "column", column |> QueryEncode.string )
-                , ( "order",  order  |> QueryEncode.string )
-                ] |> QueryEncode.object
-            )
-          ]
+        , headers = model  |> Api.headers
+        , params  = search |> encodeQuery
         , response = View.response
         , timeout = 10 * 1000
         }

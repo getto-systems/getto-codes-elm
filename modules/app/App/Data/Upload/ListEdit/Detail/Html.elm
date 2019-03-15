@@ -120,5 +120,5 @@ detail model =
 
 pairs : Detail.Fields -> List ( String, String )
 pairs fields =
-  [ fields.name |> Field.pair
+  [ fields.name |> Field.id_value
   ]
