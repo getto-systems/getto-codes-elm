@@ -141,8 +141,8 @@ breadcrumb model = L.lazy2
   (model |> Frame.layout |> .side)
 
 navAddress : Model.Frame app -> Html Msg
-navAddress model = L.lazy2
-  (\auth side -> Html.navAddress
+navAddress model = L.lazy3
+  (\auth side options -> Html.navAddress
     { title = "Upload"
     , mode1 =
       { title = "mode1"
@@ -152,9 +152,9 @@ navAddress model = L.lazy2
       { title = "mode2"
       , state = False
       }
-    , badge = View.badgeState
-      { get  = side |> .get
-      , i18n = HttpI18n.error
+    , get =
+      { side    = side.get
+      , options = options.get
       }
     , roles = auth |> Auth.credential |> Credential.roles
     , href =
@@ -165,18 +165,18 @@ navAddress model = L.lazy2
       { title = identity
       , mode  = identity
       , role  = I18n.role
+      , http  = HttpI18n.error
       }
     }
   )
   (model |> Frame.auth)
   (model |> Frame.layout |> .side)
+  (model |> Frame.layout |> .options)
 
 nav : Model.Frame app -> Html Msg
 nav model = L.lazy3
   (\static auth side -> Html.nav
-    { open  = MenuOpen
-    , close = MenuClose
-    , menu  = View.menu
+    { menu  = View.menu
       { path      = model |> Frame.static |> Static.page |> .path
       , roles     = model |> Frame.auth |> Auth.credential |> Credential.roles
       , menu      = side.menu
@@ -193,6 +193,10 @@ nav model = L.lazy3
               |> Maybe.andThen (HttpView.body >> .badge >> Dict.get name)
             )
       , i18n = menuI18n
+      }
+    , msg =
+      { open  = MenuOpen
+      , close = MenuClose
       }
     }
   )

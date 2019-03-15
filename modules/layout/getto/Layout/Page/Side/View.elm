@@ -2,10 +2,8 @@ module GettoUpload.Layout.Page.Side.View exposing
   ( Response
   , Breadcrumb
   , Menu
-  , BadgeState(..)
   , MenuI18n
   , response
-  , badgeState
   , menu
   , breadcrumb
   )
@@ -50,11 +48,6 @@ type alias MenuItem =
   , badge  : Maybe Int
   }
 
-type BadgeState
-  = NoProblem
-  | Connecting
-  | Failure String
-
 type alias MenuI18n =
   { menu  : String -> String
   , title : Href.Path -> String
@@ -73,19 +66,6 @@ response = HttpView.decoder
     |> Decode.map Dict.fromList
     )
   }
-
-
-type alias BadgeStateModel response =
-  { get  : HttpView.Model response
-  , i18n : HttpView.Error -> String
-  }
-
-badgeState : BadgeStateModel response -> BadgeState
-badgeState model =
-  case model.get |> HttpView.state of
-    HttpView.Connecting _  -> Connecting
-    HttpView.Ready Nothing -> NoProblem
-    HttpView.Ready (Just error) -> error |> model.i18n |> Failure
 
 
 type alias BreadcrumbModel =
