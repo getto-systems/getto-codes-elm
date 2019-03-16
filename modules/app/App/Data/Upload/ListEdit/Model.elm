@@ -26,7 +26,7 @@ type alias Page =
 type alias Search =
   { form   : Search.Form
   , page   : Int
-  , sort   : Sort.Model
+  , sort   : Sort.Value
   , get    : HttpView.Model Search.Response
   , info   : Info.Units
   , detail : Maybe Detail.Unit

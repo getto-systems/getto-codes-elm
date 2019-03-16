@@ -49,7 +49,7 @@ type Msg
   | Input (View.Prop String) String
   | Change
   | PageTo String
-  | SortBy Sort.Model
+  | SortBy Sort.Value
   | Request
   | StateChanged (HttpView.Migration View.Response)
 
@@ -92,10 +92,10 @@ encodeQuery model = QueryEncode.object
   [ ( "q",    model.form |> View.encodeForm )
   , ( "page", model.page |> QueryEncode.int )
   , ( "sort"
-    , case model.sort |> Sort.expose of
-      (column,order) ->
-        [ ( "column", column |> QueryEncode.string )
-        , ( "order",  order  |> QueryEncode.string )
+    , case model.sort |> Sort.toString of
+      {column,direction} ->
+        [ ( "column",    column    |> QueryEncode.string )
+        , ( "direction", direction |> QueryEncode.string )
         ] |> QueryEncode.object
     )
   ]
@@ -106,9 +106,9 @@ decodeQuery names value model =
   | form = model.form |> View.decodeForm (names ++ ["q"]) value
   , page = value |> QueryDecode.entryAt (names ++ ["page"]) QueryDecode.int |> Maybe.withDefault model.page
   , sort =
-    ( value |> QueryDecode.entryAt (names ++ ["sort","column"]) QueryDecode.string
-    , value |> QueryDecode.entryAt (names ++ ["sort","order"])  QueryDecode.string
-    ) |> Sort.fromString |> Maybe.withDefault model.sort
+    { column    = value |> QueryDecode.entryAt (names ++ ["sort","column"])    QueryDecode.string
+    , direction = value |> QueryDecode.entryAt (names ++ ["sort","direction"]) QueryDecode.string
+    } |> Sort.fromString |> Maybe.withDefault model.sort
   }
 
 encodeStore : Model.Search -> Encode.Value

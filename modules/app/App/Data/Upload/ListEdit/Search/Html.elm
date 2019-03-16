@@ -131,10 +131,10 @@ paging model =
 
 type alias TableModel msg info =
   { get  : HttpView.Model View.Response
-  , sort : Sort.Model
+  , sort : Sort.Value
   , info : Table.Column Data.Upload info
   , msg :
-    { sort : Sort.Model -> msg
+    { sort : Sort.Value -> msg
     , info : info -> msg
     , edit : Data.Upload -> msg
     }
@@ -154,8 +154,8 @@ table model =
         body = res |> HttpView.body
 
         sort = SortView.render
-          { current = model.sort
-          , msg     = model.msg.sort
+          { sort = model.sort
+          , msg  = model.msg.sort
           }
       in
         body |> Table.render (TableView.config model.i18n.table)
