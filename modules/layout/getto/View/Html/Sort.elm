@@ -11,21 +11,21 @@ import Html.Attributes as A
 import Html.Events as E
 
 type alias RenderModel msg =
-  { current : Sort.Model
-  , msg     : Sort.Model -> msg
+  { sort : Sort.Value
+  , msg  : Sort.Value -> msg
   }
 
 render : RenderModel msg -> String -> List (Html msg) -> List (Html msg)
-render model col inner =
+render model column inner =
   let
-    state = col |> Sort.state model.current
+    {current,next} = model.sort |> Sort.stateOf column
   in
     [ H.a
       ( List.append
         [ "#" |> A.href
-        , state |> Sort.next |> model.msg |> E.onClick
+        , next |> model.msg |> E.onClick
         ]
-        ( case state |> Sort.current of
+        ( case current of
           Nothing -> []
           Just _  -> [ "is-active" |> A.class ]
         )
@@ -33,7 +33,7 @@ render model col inner =
       ( List.append inner
         [ " " |> H.text
         , Html.icon [] <|
-          case state |> Sort.current of
+          case current of
             Nothing        -> Icon.fas "sort"
             Just Sort.Up   -> Icon.fas "sort-up"
             Just Sort.Down -> Icon.fas "sort-down"

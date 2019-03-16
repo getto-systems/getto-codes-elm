@@ -195,9 +195,9 @@ paging model =
 
 type alias TableModel msg =
   { get  : HttpView.Model View.Response
-  , sort : Sort.Model
+  , sort : Sort.Value
   , msg :
-    { sort : Sort.Model -> msg
+    { sort : Sort.Value -> msg
     }
   , i18n :
     { field : String -> String
@@ -228,8 +228,8 @@ table model =
           ]
 
         sort = SortView.render
-          { current = model.sort
-          , msg     = model.msg.sort
+          { sort = model.sort
+          , msg  = model.msg.sort
           }
       in
         body |> Table.render (TableView.config model.i18n.table)
