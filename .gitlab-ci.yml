@@ -1,6 +1,10 @@
 image: node:11.9.0-stretch
 
 test:
+  except:
+    - master
+    - release
+    - tags
   script:
     - npm install
     - ./bin/prepare-production.sh
