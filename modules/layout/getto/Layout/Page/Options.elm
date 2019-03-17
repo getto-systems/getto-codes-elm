@@ -34,7 +34,7 @@ get = Http.tracker "get" <|
       Http.getIfNoneMatch ( options.get |> etag )
         { url      = "layout/options" |> Api.url []
         , headers  = model |> Api.headers
-        , params   = QueryEncode.empty
+        , params   = QueryEncode.null
         , response = View.response
         , timeout  = 10 * 1000
         }

@@ -16,7 +16,8 @@
             "elm/url": "1.0.0",
             "getto-systems/elm-command": "1.0.0",
             "getto-systems/elm-json": "1.0.0",
-            "getto-systems/elm-sort": "1.0.0"
+            "getto-systems/elm-sort": "1.0.0",
+            "getto-systems/elm-url": "1.0.0"
         },
         "indirect": {
             "elm/time": "1.0.0",
