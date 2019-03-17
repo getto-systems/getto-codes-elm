@@ -56,7 +56,7 @@ get = Http.tracker "get" <|
     Http.get
       { url      = "layout/menu/badge" |> Api.url []
       , headers  = model |> Api.headers
-      , params   = QueryEncode.empty
+      , params   = QueryEncode.null
       , response = View.response
       , timeout  = 10 * 1000
       }

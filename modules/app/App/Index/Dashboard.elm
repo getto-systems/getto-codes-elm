@@ -41,7 +41,7 @@ init model =
   )
 
 encodeQuery : Model.Dashboard -> QueryEncode.Value
-encodeQuery model = QueryEncode.empty
+encodeQuery model = QueryEncode.null
 
 decodeQuery : List String -> QueryDecode.Value -> Model.Dashboard -> Model.Dashboard
 decodeQuery names value model = model

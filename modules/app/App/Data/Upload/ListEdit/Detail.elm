@@ -73,7 +73,7 @@ get = Http.tracker "get" <|
       Http.get
         { url      = "uploads/:id" |> Api.url [ ( "id", id |> String.fromInt ) ]
         , headers  = model |> Api.headers
-        , params   = QueryEncode.empty
+        , params   = QueryEncode.null
         , response = Data.response
         , timeout  = 10 * 1000
         }

@@ -86,7 +86,7 @@ init model =
 encodeQuery : Model.Register -> QueryEncode.Value
 encodeQuery model =
   case model.tmpId of
-    Nothing    -> QueryEncode.empty
+    Nothing    -> QueryEncode.null
     Just tmpId -> [ ( "tmpId", tmpId |> String.fromInt |> QueryEncode.string ) ] |> QueryEncode.object
 
 decodeQuery : List String -> QueryDecode.Value -> Model.Register -> Model.Register

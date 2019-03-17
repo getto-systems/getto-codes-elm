@@ -11,7 +11,7 @@ import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
 
 href : String -> Href
-href = Href.internal QueryEncode.empty
+href = Href.internal QueryEncode.null
 
 menu : Menu.Menu
 menu =

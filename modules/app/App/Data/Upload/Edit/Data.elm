@@ -43,7 +43,7 @@ get = Http.tracker "get" <|
       Http.getIfNoneMatch ( data |> Model.etag )
         { url      = "upload/:id" |> Api.url ( data |> Model.pathInfo )
         , headers  = model |> Api.headers
-        , params   = QueryEncode.empty
+        , params   = QueryEncode.null
         , response = View.response
         , timeout = 10 * 1000
         }
@@ -61,7 +61,7 @@ init model =
   )
 
 encodeQuery : Model.Data -> QueryEncode.Value
-encodeQuery model = QueryEncode.empty
+encodeQuery model = QueryEncode.null
 
 decodeQuery : List String -> QueryDecode.Value -> Model.Data -> Model.Data
 decodeQuery names value model =
