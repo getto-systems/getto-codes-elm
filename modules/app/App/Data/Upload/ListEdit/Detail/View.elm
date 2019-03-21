@@ -102,17 +102,14 @@ params unit = unit.form |> Edit.fields |>
         , ( "to",   values.to   |> encoder )
         ] |> Encode.object
 
-      map_name_param getter encoder =
-        Field.name_value >>
-        Tuple.mapSecond
-          ( Edit.param ( res |> getter )
-            >> Maybe.map (encode encoder)
-          )
+      param getter encoder =
+        Field.param ( res |> getter ) >>
+        Maybe.map (Tuple.mapSecond (encode encoder))
     in
-      [ fields.name   |> map_name_param get_name   Encode.string
-      , fields.gender |> map_name_param get_gender Encode.string
+      [ fields.name   |> param get_name   Encode.string
+      , fields.gender |> param get_gender Encode.string
       ]
-      |> List.filterMap (\(k,v) -> v |> Maybe.map (\val -> ( k, val )))
+      |> List.filterMap identity
       |> Encode.object
   )
 

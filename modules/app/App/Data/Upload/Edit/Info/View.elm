@@ -93,20 +93,17 @@ params get =
             , ( "to",   values.to   |> encoder )
             ] |> Encode.object
 
-          map_name_param getter encoder =
-            Field.name_value >>
-            Tuple.mapSecond
-              ( Edit.param ( res |> getter )
-                >> Maybe.map (encode encoder)
-              )
+          param getter encoder =
+            Field.param ( res |> getter ) >>
+            Maybe.map (Tuple.mapSecond (encode encoder))
         in
-          [ fields.name  |> map_name_param get_name  Encode.string
-          , fields.memo  |> map_name_param get_memo  Encode.string
-          , fields.age   |> map_name_param get_age   Encode.string
-          , fields.email |> map_name_param get_email Encode.string
-          , fields.tel   |> map_name_param get_tel   Encode.string
+          [ fields.name  |> param get_name  Encode.string
+          , fields.memo  |> param get_memo  Encode.string
+          , fields.age   |> param get_age   Encode.string
+          , fields.email |> param get_email Encode.string
+          , fields.tel   |> param get_tel   Encode.string
           ]
-          |> List.filterMap (\(k,v) -> v |> Maybe.map (\val -> ( k, val )))
+          |> List.filterMap identity
           |> Encode.object
       )
 

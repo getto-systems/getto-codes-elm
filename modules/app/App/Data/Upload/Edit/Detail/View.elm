@@ -91,25 +91,23 @@ params get =
         let
           set encoder = Set.toList >> Encode.list encoder
 
-          encode encoder param =
-            [ ( "from", param.from |> encoder )
-            , ( "to",   param.to   |> encoder )
+          encode encoder values =
+            [ ( "from", values.from |> encoder )
+            , ( "to",   values.to   |> encoder )
             ] |> Encode.object
 
-          map_name_param getter encoder =
-            Field.name_value >>
-            Tuple.mapSecond
-              ( Edit.param ( res |> getter )
-                >> Maybe.map (encode encoder)
-              )
+
+          param getter encoder =
+            Field.param ( res |> getter ) >>
+            Maybe.map (Tuple.mapSecond (encode encoder))
         in
-          [ fields.birthday |> map_name_param get_birthday Encode.string
-          , fields.start_at |> map_name_param get_start_at Encode.string
-          , fields.gender   |> map_name_param get_gender   Encode.string
-          , fields.quality  |> map_name_param get_quality  Encode.string
-          , fields.roles    |> map_name_param get_roles   (set Encode.string)
+          [ fields.birthday |> param get_birthday Encode.string
+          , fields.start_at |> param get_start_at Encode.string
+          , fields.gender   |> param get_gender   Encode.string
+          , fields.quality  |> param get_quality  Encode.string
+          , fields.roles    |> param get_roles   (set Encode.string)
           ]
-          |> List.filterMap (\(k,v) -> v |> Maybe.map (\val -> ( k, val )))
+          |> List.filterMap identity
           |> Encode.object
       )
 

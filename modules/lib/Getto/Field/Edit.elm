@@ -5,7 +5,6 @@ module Getto.Field.Edit exposing
   , form
   , fields
   , update
-  , param
   , encode
   , decode
   , edit
@@ -51,11 +50,6 @@ type AggregateState
   | HasError
   | HasModified
 
-type alias Param a =
-  { from : a
-  , to   : a
-  }
-
 
 form : fields -> Form response fields
 form = Form Static
@@ -65,15 +59,6 @@ fields (Form _ model) = model
 
 update : (fields -> fields) -> Form response fields -> Form response fields
 update f (Form state model) = Form state (model |> f)
-
-param : a -> a -> Maybe (Param a)
-param lastValue formValue =
-  if lastValue == formValue
-    then Nothing
-    else Just
-      { from = lastValue
-      , to   = formValue
-      }
 
 encode : (response -> Encode.Value) -> (fields -> Encode.Value) -> Form response fields -> Encode.Value
 encode encodeResponse encodeModel (Form state model) =
