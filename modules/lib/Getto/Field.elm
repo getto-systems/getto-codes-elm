@@ -6,6 +6,7 @@ module Getto.Field exposing
   , value
   , id_value
   , name_value
+  , param
   , set
   , toggle
   , attribute
@@ -18,6 +19,11 @@ type Model attr value = Model attr
   { id    : String
   , name  : String
   , value : value
+  }
+
+type alias Param a =
+  { from : a
+  , to   : a
   }
 
 init : String -> attr -> value -> String -> Model attr value
@@ -42,6 +48,20 @@ id_value model = ( model |> id, model |> value )
 
 name_value : Model attr value -> ( String, value )
 name_value model = ( model |> name, model |> value )
+
+param : a -> Model attr a -> Maybe ( String, Param a )
+param lastValue field =
+  let
+    formValue = field |> value
+  in
+    if lastValue == formValue
+      then Nothing
+      else Just
+        ( field |> name
+        , { from = lastValue
+          , to   = formValue
+          }
+        )
 
 
 set : value -> Model attr value -> Model attr value
