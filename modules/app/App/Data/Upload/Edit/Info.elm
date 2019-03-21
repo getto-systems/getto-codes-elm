@@ -22,10 +22,8 @@ import GettoUpload.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
-import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Edit as Edit
-import Getto.Field.Validate as Validate
 import Getto.Field.Conflict as Conflict
 
 import Json.Encode as Encode

@@ -11,6 +11,7 @@ module GettoUpload.App.Data.Upload.New.Register.View exposing
   , view
   )
 import GettoUpload.View.Http as HttpView
+import GettoUpload.View.Validate as V
 
 import Getto.Apply as Apply
 import Getto.Field as Field
@@ -86,17 +87,17 @@ roles_    = Form.prop .roles    (\v m -> { m | roles    = v })
 
 init : String -> Form
 init signature =
-  { name     = "name"     |> Field.init signature () ""
-  , text     = "text"     |> Field.init signature () []
-  , memo     = "memo"     |> Field.init signature () ""
-  , age      = "age"      |> Field.init signature () ""
-  , email    = "email"    |> Field.init signature () ""
-  , tel      = "tel"      |> Field.init signature () ""
-  , birthday = "birthday" |> Field.init signature () ""
-  , start_at = "start_at" |> Field.init signature () ""
-  , gender   = "gender"   |> Field.init signature () ""
-  , quality  = "quality"  |> Field.init signature () ""
-  , roles    = "roles"    |> Field.init signature () Set.empty
+  { name     = "name"     |> Validate.init signature ""
+  , text     = "text"     |> Validate.init signature []
+  , memo     = "memo"     |> Validate.init signature ""
+  , age      = "age"      |> Validate.init signature ""
+  , email    = "email"    |> Validate.init signature ""
+  , tel      = "tel"      |> Validate.init signature ""
+  , birthday = "birthday" |> Validate.init signature ""
+  , start_at = "start_at" |> Validate.init signature ""
+  , gender   = "gender"   |> Validate.init signature ""
+  , quality  = "quality"  |> Validate.init signature ""
+  , roles    = "roles"    |> Validate.init signature Set.empty
   }
 
 params : Form -> Part.Value
@@ -153,8 +154,8 @@ decodeForm value form =
 
 view : Form -> View
 view form = form |> Apply.apply11 (Validate.compose11 ViewForm)
-  ( name_     |> Validate.single [ form.name |> blank ] )
-  ( text_     |> Validate.single [ form.text |> noFile ] )
+  ( name_     |> Validate.single [ form.name |> V.blank ] )
+  ( text_     |> Validate.single [ form.text |> V.noFile ] )
   ( memo_     |> Validate.single [] )
   ( age_      |> Validate.single [] )
   ( email_    |> Validate.single [] )
@@ -164,6 +165,3 @@ view form = form |> Apply.apply11 (Validate.compose11 ViewForm)
   ( gender_   |> Validate.single [] )
   ( quality_  |> Validate.single [] )
   ( roles_    |> Validate.single [] )
-
-blank  = Validate.blank "blank"
-noFile = Validate.empty "no-file"

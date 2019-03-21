@@ -14,12 +14,12 @@ module GettoUpload.App.Data.Upload.Edit.Detail.View exposing
   )
 import GettoUpload.App.Data.Upload.Edit.Data.View as Data
 import GettoUpload.View.Http as HttpView
+import GettoUpload.View.Validate as V
 
 import Getto.Apply as Apply
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Edit as Edit
-import Getto.Field.Validate as Validate
 import Getto.Field.Conflict as Conflict
 import Getto.Http.Header.Decode as HeaderDecode
 
@@ -162,7 +162,7 @@ view put form = HttpView.response >> Maybe.map
     let
       fields = form |> Edit.fields
     in
-      { error       = "conflict"
+      { error       = V.conflict
       , form        = form
       , last        = res
       , isConflict  = put |> HttpView.isConflict

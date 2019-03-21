@@ -14,12 +14,12 @@ module GettoUpload.App.Data.Upload.ListEdit.Detail.View exposing
   )
 import GettoUpload.App.Data.Upload.ListEdit.Data.View as Data
 import GettoUpload.View.Http as HttpView
+import GettoUpload.View.Validate as V
 
 import Getto.Apply as Apply
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Edit as Edit
-import Getto.Field.Validate as Validate
 import Getto.Field.Conflict as Conflict
 import Getto.Http.Header.Decode as HeaderDecode
 
@@ -129,7 +129,7 @@ view unit =
     fields = unit.form |> Edit.fields
   in
     { view =
-      { error       = "conflict"
+      { error       = V.conflict
       , form        = unit.form
       , last        = unit.get |> HttpView.response |> Maybe.withDefault (unit.row |> Data.toResponse)
       , isConflict  = unit.put |> HttpView.isConflict
@@ -138,12 +138,10 @@ view unit =
       |> Edit.options
       |> Tuple.mapSecond
         ( Apply.apply2 (Conflict.compose2 ViewForm)
-          ( ( name_,   get_name   ) |> Conflict.single [ fields.name |> blank ] )
+          ( ( name_,   get_name   ) |> Conflict.single [ fields.name |> V.blank ] )
           ( ( gender_, get_gender ) |> Conflict.single [] )
         )
       |> Edit.view
     , put = unit.put
     , get = unit.get
     }
-
-blank = Validate.blank "blank"
