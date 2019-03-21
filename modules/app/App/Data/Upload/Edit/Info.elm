@@ -8,6 +8,7 @@ module GettoUpload.App.Data.Upload.Edit.Info exposing
   , contents
   )
 import GettoUpload.App.Data.Upload.Edit.Model as Model
+import GettoUpload.App.Data.Upload.Edit.Data.View as Data
 import GettoUpload.App.Data.Upload.Edit.Info.View as View
 import GettoUpload.App.Data.Upload.Edit.Info.Html as Html
 import GettoUpload.Layout.Frame as Frame
@@ -84,23 +85,21 @@ subscriptions model = putTrack
 update : Model.Data -> Msg -> Model.Info -> ( Model.Info, ( Model.Transition Msg, Bool ) )
 update data msg model =
   case msg of
-    Edit    -> ( { model | form = model.form |> Edit.edit View.edit data.get }, ( fillAndStore,   False ) )
-    Cancel  -> ( { model | form = model.form |> Edit.cancel },                  ( Frame.storeApp, False ) )
-    Change  -> ( { model | form = model.form |> Edit.change },                  ( Frame.storeApp, False ) )
-    Request -> ( { model | form = model.form |> Edit.commit },                  ( putRequest,     False ) )
+    Edit    -> ( { model | form = model.form |> edit data.get }, ( fillAndStore,   False ) )
+    Cancel  -> ( { model | form = model.form |> Edit.cancel },   ( Frame.storeApp, False ) )
+    Change  -> ( { model | form = model.form |> Edit.change },   ( Frame.storeApp, False ) )
+    Request -> ( { model | form = model.form |> Edit.commit },   ( putRequest,     False ) )
 
     Input   prop value -> ( { model | form = model.form |> Form.set prop value },       ( T.none,       False ) )
     Resolve prop mig   -> ( { model | form = model.form |> Conflict.resolve prop mig }, ( fillAndStore, False ) )
 
     StateChanged mig ->
-      ( { model
-        | put  = model.put  |> HttpView.update mig
-        , form = model.form |> Edit.put mig
-        }
-      , ( T.none
-        , mig |> HttpView.isComplete
-        )
+      ( { model | put = model.put |> HttpView.update mig }
+      , ( T.none, mig |> HttpView.isComplete )
       )
+
+edit : HttpView.Model Data.Response -> View.Form -> View.Form
+edit = HttpView.response >> Edit.edit View.edit
 
 fill : Model.Transition Msg
 fill = Frame.app >> .info >> .form >> Edit.fields >> Html.pairs >> Dom.fill
@@ -117,7 +116,7 @@ contents model =
 content : Model.Frame -> Html Msg
 content model = L.lazy2
   (\data info -> Html.info
-    { view = info.form |> View.view
+    { view = View.view info.put info.form data.get
     , get  = data.get
     , put  = info.put
     , msg =

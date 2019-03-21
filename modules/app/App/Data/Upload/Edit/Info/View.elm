@@ -15,6 +15,7 @@ module GettoUpload.App.Data.Upload.Edit.Info.View exposing
 import GettoUpload.App.Data.Upload.Edit.Data.View as Data
 import GettoUpload.View.Http as HttpView
 
+import Getto.Apply as Apply
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Edit as Edit
@@ -27,8 +28,9 @@ import Json.Decode as Decode
 
 type alias Prop  a = Conflict.Prop Form a
 type alias Field a = Conflict.Field a
+type alias Single a = Conflict.Single Form {} a
 
-type alias Form = Edit.Model Data.Response Fields
+type alias Form = Edit.Form Data.Response Fields
 type alias Fields =
   { name  : Field String
   , memo  : Field String
@@ -37,16 +39,13 @@ type alias Fields =
   , tel   : Field String
   }
 
-type alias View = HttpView.Model Data.Response -> Maybe
-  { isStatic : Bool
-  , state    : Edit.AggregateState
-  , form :
-    { name  : Edit.State Form String
-    , memo  : Edit.State Form String
-    , age   : Edit.State Form String
-    , email : Edit.State Form String
-    , tel   : Edit.State Form String
-    }
+type alias View = Edit.View ViewForm
+type alias ViewForm =
+  { name  : Single String
+  , memo  : Single String
+  , age   : Single String
+  , email : Single String
+  , tel   : Single String
   }
 
 type alias Response = HttpView.Response () ()
@@ -74,13 +73,13 @@ get_tel   = HttpView.body >> .info >> .tel
 
 init : String -> Form
 init signature =
-  { name  = "name"  |> Field.init signature Conflict.none ""
-  , memo  = "memo"  |> Field.init signature Conflict.none ""
-  , age   = "age"   |> Field.init signature Conflict.none ""
-  , email = "email" |> Field.init signature Conflict.none ""
-  , tel   = "tel"   |> Field.init signature Conflict.none ""
+  { name  = "name"  |> Conflict.init signature ""
+  , memo  = "memo"  |> Conflict.init signature ""
+  , age   = "age"   |> Conflict.init signature ""
+  , email = "email" |> Conflict.init signature ""
+  , tel   = "tel"   |> Conflict.init signature ""
   }
-  |> Edit.init
+  |> Edit.form
 
 params : HttpView.Model Data.Response -> Form -> Encode.Value
 params get =
@@ -152,55 +151,28 @@ edit res form =
   |> Form.set tel_   (res |> get_tel)
 
 
-view : Form -> View
-view form = HttpView.response >> Maybe.map
+view : HttpView.Model Response -> Form -> HttpView.Model Data.Response -> Maybe View
+view put form = HttpView.response >> Maybe.map
   (\res ->
     let
-      error = "conflict"
-
-      blank = Validate.blank "blank"
-
-      data =
-        ( form |> Edit.response
-        , res
-        )
-
       fields = form |> Edit.fields
-
-      model =
-        { name  = form |> Conflict.init error data ( get_name, ( name_,  [ fields.name |> blank ] ) )
-        , memo  = form |> Conflict.init error data ( get_memo, ( memo_,  [] ) )
-        , age   = form |> Conflict.init error data ( get_age,  ( age_,   [] ) )
-        , email = form |> Conflict.init error data ( get_email,( email_, [] ) )
-        , tel   = form |> Conflict.init error data ( get_tel,  ( tel_,   [] ) )
-        }
-
-      modifieds =
-        [ model.name  |> Conflict.modified
-        , model.memo  |> Conflict.modified
-        , model.age   |> Conflict.modified
-        , model.email |> Conflict.modified
-        , model.tel   |> Conflict.modified
-        ]
-
-      errors = List.concat
-        [ model.name  |> Conflict.form |> Validate.errors
-        , model.memo  |> Conflict.form |> Validate.errors
-        , model.age   |> Conflict.form |> Validate.errors
-        , model.email |> Conflict.form |> Validate.errors
-        , model.tel   |> Conflict.form |> Validate.errors
-        ]
-
-      isStatic = form |> Edit.isStatic Data.isDifferentResponse res
     in
-      { isStatic = isStatic
-      , state    = errors |> Edit.aggregate modifieds
-      , form =
-        { name  = model.name  |> Edit.expose isStatic
-        , memo  = model.memo  |> Edit.expose isStatic
-        , age   = model.age   |> Edit.expose isStatic
-        , email = model.email |> Edit.expose isStatic
-        , tel   = model.tel   |> Edit.expose isStatic
-        }
+      { error       = "conflict"
+      , form        = form
+      , last        = res
+      , isConflict  = put |> HttpView.isConflict
+      , isDifferent = Data.isDifferentResponse
       }
+      |> Edit.options
+      |> Tuple.mapSecond
+        ( Apply.apply5 (Conflict.compose5 ViewForm)
+          ( ( name_,  get_name  ) |> Conflict.single [ fields.name |> blank ] )
+          ( ( memo_,  get_memo  ) |> Conflict.single [] )
+          ( ( age_,   get_age   ) |> Conflict.single [] )
+          ( ( email_, get_email ) |> Conflict.single [] )
+          ( ( tel_,   get_tel   ) |> Conflict.single [] )
+        )
+      |> Edit.view
   )
+
+blank = Validate.blank "blank"

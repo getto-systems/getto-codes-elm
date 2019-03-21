@@ -1,7 +1,7 @@
 module GettoUpload.App.Data.Upload.ListEdit.Search.View exposing
   ( Form
-  , View
   , Prop
+  , View
   , Response
   , response
   , init
@@ -12,6 +12,7 @@ module GettoUpload.App.Data.Upload.ListEdit.Search.View exposing
 import GettoUpload.App.Data.Upload.ListEdit.Data.View as Data
 import GettoUpload.View.Http as HttpView
 
+import Getto.Apply as Apply
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Present as Present
@@ -22,20 +23,17 @@ import Getto.Url.Query.Decode as QueryDecode
 import Json.Encode as Encode
 import Json.Decode as Decode
 
-type alias Attribute = ()
-type alias Prop  a = Form.Prop Form Attribute a
-type alias Field a = Field.Model Attribute a
-
-type alias ViewModel a = ( String, Form.Model Form Attribute a, Bool )
-
 type alias Form =
-  { name   : Field String
-  , gender : Field String
+  { name   : Present.Field String
+  , gender : Present.Field String
   }
 
+type alias Prop a = Present.Prop Form a
+type alias Single a = Present.Single Form {} a
+
 type alias View =
-  { name   : ViewModel String
-  , gender : ViewModel String
+  { name   : Single String
+  , gender : Single String
   }
 
 type alias Response = HttpView.Response ResponseHeader ResponseBody
@@ -78,13 +76,6 @@ decodeForm names value form =
     |> Form.setIf gender_ ( qEntryAt .gender )
 
 view : Form -> View
-view form =
-  let
-    model =
-      { name   = ( name_,   Present.string )
-      , gender = ( gender_, Present.string )
-      }
-  in
-    { name   = form |> Present.init model.name   |> Present.expose
-    , gender = form |> Present.init model.gender |> Present.expose
-    }
+view = Apply.apply2 View
+  ( name_   |> Present.single Present.string )
+  ( gender_ |> Present.single Present.string )

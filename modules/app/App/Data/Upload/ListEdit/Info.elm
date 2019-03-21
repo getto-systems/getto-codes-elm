@@ -104,12 +104,7 @@ update msg model =
     PutStateChanged row mig ->
       ( model
         |> View.update row
-          (\unit ->
-            { unit
-            | put  = unit.put  |> HttpView.update mig
-            , form = unit.form |> Edit.put mig
-            }
-          )
+          (\unit -> { unit | put = unit.put |> HttpView.update mig })
       , if mig |> HttpView.isComplete
         then getRequest row
         else T.none
@@ -125,7 +120,7 @@ update msg model =
       )
 
 edit : Data.Upload -> View.Form -> View.Form
-edit row = Edit.edit View.edit (Data.http row)
+edit = Data.http >> HttpView.response >> Edit.edit View.edit
 
 fill : Data.Upload -> Model.Transition Msg
 fill row = Frame.app >> .search >> .info >> View.get row >> .form >> Edit.fields >> Html.pairs >> Dom.fill

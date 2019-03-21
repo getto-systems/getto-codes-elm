@@ -1,9 +1,12 @@
 module Getto.Field.Present exposing
   ( Model
-  , Init
+  , Single
+  , Between
+  , Field
+  , Prop
   , init
+  , single
   , between
-  , expose
   , string
   , set
   , present
@@ -13,65 +16,55 @@ import Getto.Field.Form as Form
 
 import Set exposing ( Set )
 
-type Model form = Model
-  { name    : String
-  , present : Bool
-  , form    : form
-  }
+type alias Model form opts = ( String, form, { opts | isPresent : Bool } )
+type alias Single  form opts a = Model (Form.Model   form Attribute a) opts
+type alias Between form opts a = Model (Form.Between form Attribute a) opts
 
-type alias Init form attr a = ( Form.Prop form attr a, Field.Model attr a -> Bool )
-type alias InitBetween form attr a =
-  { gteq : Init form attr a
-  , lteq : Init form attr a
-  }
+type alias Attribute = ()
+type alias Field a = Field.Model Attribute a
+type alias Prop form a = Form.Prop form Attribute a
 
-init : Init form attr a -> form -> Model (Form.Model form attr a)
-init (prop,f) model =
+type alias Presenter attr a = Field.Model attr a -> Bool
+
+
+init : String -> value -> String -> Field value
+init signature = Field.init signature ()
+
+
+single : Presenter attr a -> Form.Prop form attr a -> form -> Model (Form.Model form attr a) {}
+single f prop model =
   let
     field = model |> Form.at prop
   in
-    Model
-      { name    = field |> Field.name
-      , present = field |> f
-      , form    = field |> Form.init prop
+    ( field |> Field.name
+    , field |> Form.init prop
+    , { isPresent = field |> f
       }
+    )
 
-between : String -> InitBetween form attr a -> form -> Model (Form.Between form attr a)
-between compositName spec model =
+between : { gteq : model -> Model (Form.Model form attr a) opts, lteq : model -> Model (Form.Model form attr a) opts } -> String -> model -> Model (Form.Between form attr a) {}
+between units name model =
   let
-    gteq = model |> init spec.gteq
-    lteq = model |> init spec.lteq
+    gteq = model |> units.gteq
+    lteq = model |> units.lteq
+
+    isPresent (_,_,opts) = opts.isPresent
+    getForm   (_,form,_) = form
   in
-    Model
-      { name    = compositName
-      , present = ( gteq |> isPresent ) || ( lteq |> isPresent )
-      , form =
-        { gteq = gteq |> form
-        , lteq = lteq |> form
-        }
+    ( name
+    , { gteq = gteq |> getForm
+      , lteq = lteq |> getForm
       }
+    , { isPresent = ( gteq |> isPresent ) || ( lteq |> isPresent )
+      }
+    )
 
 
-isPresent : Model form -> Bool
-isPresent (Model model) = model.present
-
-form : Model form -> form
-form (Model model) = model.form
-
-
-expose : Model form -> ( String, form, Bool )
-expose (Model model) =
-  ( model.name
-  , model.form
-  , model.present
-  )
-
-
-string : Field.Model attr String -> Bool
+string : Presenter attr String
 string = present (String.isEmpty >> not)
 
-set : Field.Model attr (Set String) -> Bool
+set : Presenter attr (Set a)
 set = present (Set.isEmpty >> not)
 
-present : (a -> Bool) -> Field.Model attr a -> Bool
+present : (a -> Bool) -> Presenter attr a
 present f = Field.value >> f
