@@ -154,9 +154,6 @@ isSuccess mig =
     Success res -> Just res
     _ -> Nothing
 
-isConflict : Migration response -> Bool
-isConflict = (==) (Failure Conflict)
-
 isComplete : Migration response -> Bool
 isComplete mig =
   case mig of
@@ -191,3 +188,6 @@ progress data =
     Just (Sending value)          -> Just ( True,  value |> Progress.percentage )
     Just (Receiving (Just value)) -> Just ( False, value |> Progress.percentage |> (-) 100 )
     _ -> Nothing
+
+isConflict : Model response -> Bool
+isConflict = state >> (==) (Ready (Just Conflict))

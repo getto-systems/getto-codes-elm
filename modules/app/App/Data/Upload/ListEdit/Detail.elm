@@ -91,7 +91,7 @@ subscriptions model = putTrack
 update : Msg -> Maybe View.Unit -> ( Maybe View.Unit, Model.Transition Msg )
 update msg model =
   case msg of
-    Edit row -> ( View.init signature row (Edit.edit View.edit (Data.http row)), fill )
+    Edit row -> ( View.init signature row (toEdit row), fill )
     Cancel   -> ( Nothing, T.none )
     Change   -> ( model |> View.updateForm Edit.change, T.none )
     Request  -> ( model |> View.updateForm Edit.commit, putRequest )
@@ -102,12 +102,7 @@ update msg model =
     PutStateChanged mig ->
       ( model
         |> Maybe.map
-          (\unit ->
-            { unit
-            | put  = unit.put  |> HttpView.update mig
-            , form = unit.form |> Edit.put mig
-            }
-          )
+          (\unit -> { unit | put = unit.put |> HttpView.update mig })
       , if mig |> HttpView.isComplete
         then getRequest
         else T.none
@@ -119,6 +114,9 @@ update msg model =
           (\unit -> { unit | get = unit.get |> HttpView.update mig } )
       , T.none
       )
+
+toEdit : Data.Upload -> View.Form -> View.Form
+toEdit = Data.http >> HttpView.response >> Edit.edit View.edit
 
 fill : Model.Transition Msg
 fill = Frame.app >> .search >> .detail >>
@@ -132,7 +130,7 @@ content : Model.Frame -> Html Msg
 content model = L.lazy
   (\detail ->
     Html.detail
-      { view = detail |> View.view
+      { view = detail |> Maybe.map View.view
       , options =
         { gender =
           [ ( "", "please-select" |> AppI18n.form )

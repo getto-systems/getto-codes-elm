@@ -10,7 +10,7 @@ import GettoUpload.View.Html.Http as Http
 import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
-import Getto.Field.Edit as Edit exposing ( State(..), AggregateState(..) )
+import Getto.Field.Edit as Edit
 import Getto.Field.Conflict as Conflict
 
 import Html as H exposing ( Html )
@@ -19,7 +19,7 @@ import Html.Events as E
 
 
 type alias DetailModel msg =
-  { view : Detail.View
+  { view : Maybe Detail.View
   , options :
     { gender : List ( String, String )
     }
@@ -43,7 +43,7 @@ detail : DetailModel msg -> Html msg
 detail model =
   case model.view of
     Nothing -> "" |> H.text
-    Just view ->
+    Just v ->
       H.section [ "dialog" |> A.class ]
         [ H.section [ "edit" |> A.class ]
           [ H.section []
@@ -51,64 +51,64 @@ detail model =
               [ H.h2 [] [ "info" |> model.i18n.title |> H.text ]
               , H.table []
                 [ H.tbody [] <| List.concat
-                  [ case view.form.name of
-                    Static name value ->
+                  [ case (v.view.isStatic,v.view.form.name) of
+                    (True,(name,form,opts)) ->
                       [ H.tr []
                         [ H.th [] [ name |> model.i18n.field |> H.text ]
                         , H.td []
-                          [ H.p [] [ value |> H.text ]
+                          [ H.p [] [ form.last |> H.text ]
                           ]
                         ]
                       ]
-                    Edit name form conflict errors ->
-                      [ H.tr ( errors |> Input.isError )
+                    (False,(name,form,opts)) ->
+                      [ H.tr ( opts.errors |> Input.isError )
                         [ H.th [] [ name |> model.i18n.field |> H.text ]
                         , H.td [] <| List.concat
                           [ [ form.field |> Input.text []
                               (model.msg.input form.prop) model.msg.change
                             ]
-                          , conflict |> Input.conflict model.i18n.form (model.msg.resolve form.prop)
-                          , errors   |> Input.errors   model.i18n.error
+                          , form |> Conflict.state |> Input.conflict model.i18n.form (model.msg.resolve form.prop)
+                          , opts.errors |> Input.errors model.i18n.error
                           ]
                         ]
                       ]
-                  , case view.form.gender of
-                    Static name value ->
+                  , case (v.view.isStatic,v.view.form.gender) of
+                    (True,(name,form,opts)) ->
                       [ H.tr []
                         [ H.th [] [ name |> model.i18n.field |> H.text ]
                         , H.td []
-                          [ H.p [] [ value |> H.text ]
+                          [ H.p [] [ form.last |> H.text ]
                           ]
                         ]
                       ]
-                    Edit name form conflict errors ->
-                      [ H.tr ( errors |> Input.isError )
+                    (False,(name,form,opts)) ->
+                      [ H.tr ( opts.errors |> Input.isError )
                         [ H.th [] [ name |> model.i18n.field |> H.text ]
                         , H.td [] <| List.concat
                           [ [ form.field |> Input.select model.options.gender []
                               (model.msg.input form.prop) model.msg.change
                             ]
-                          , conflict |> Input.conflict model.i18n.form (model.msg.resolve form.prop)
-                          , errors   |> Input.errors   model.i18n.error
+                          , form |> Conflict.state |> Input.conflict model.i18n.form (model.msg.resolve form.prop)
+                          , opts.errors |> Input.errors model.i18n.error
                           ]
                         ]
                       ]
                   ]
                 ]
               , H.footer [] <|
-                case view.put |> HttpView.state of
+                case v.put |> HttpView.state of
                   HttpView.Connecting progress ->
                     [ "saving" |> model.i18n.form |> Button.connecting
                     , progress |> Http.progress
                     ]
                   HttpView.Ready response ->
-                    [ case view.get |> HttpView.state of
+                    [ case v.get |> HttpView.state of
                         HttpView.Connecting _ -> Html.spinner
                         HttpView.Ready _ ->
-                          case view.state of
-                            Same -> "" |> H.text
-                            HasError    -> "has-error" |> model.i18n.form |> Button.error
-                            HasModified -> "save"      |> model.i18n.form |> Button.save
+                          case v.view.state of
+                            Edit.Same -> "" |> H.text
+                            Edit.HasError    -> "has-error" |> model.i18n.form |> Button.error
+                            Edit.HasModified -> "save"      |> model.i18n.form |> Button.save
                     , " " |> H.text
                     , "cancel" |> model.i18n.form |> Button.cancel model.msg.cancel
                     , response |> Http.error model.i18n.http

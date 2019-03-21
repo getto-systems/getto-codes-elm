@@ -1,7 +1,7 @@
 module GettoUpload.App.Data.Upload.New.Register.View exposing
   ( Form
-  , View
   , Prop
+  , View
   , Response
   , response
   , init
@@ -12,6 +12,7 @@ module GettoUpload.App.Data.Upload.New.Register.View exposing
   )
 import GettoUpload.View.Http as HttpView
 
+import Getto.Apply as Apply
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Validate as Validate
@@ -24,41 +25,36 @@ import File exposing ( File )
 
 import Set exposing ( Set )
 
-type alias Attribute = ()
-type alias Prop  a = Form.Prop Form Attribute a
-type alias Field a = Field.Model Attribute a
-
-type alias ViewModel a = ( String, Form.Model Form Attribute a, List String )
-
 type alias Form =
-  { name     : Field String
-  , text     : Field (List File)
-  , memo     : Field String
-  , age      : Field String
-  , email    : Field String
-  , tel      : Field String
-  , birthday : Field String
-  , start_at : Field String
-  , gender   : Field String
-  , quality  : Field String
-  , roles    : Field (Set String)
+  { name     : Validate.Field String
+  , text     : Validate.Field (List File)
+  , memo     : Validate.Field String
+  , age      : Validate.Field String
+  , email    : Validate.Field String
+  , tel      : Validate.Field String
+  , birthday : Validate.Field String
+  , start_at : Validate.Field String
+  , gender   : Validate.Field String
+  , quality  : Validate.Field String
+  , roles    : Validate.Field (Set String)
   }
 
-type alias View =
-  { hasError : Bool
-  , form     :
-    { name     : ViewModel String
-    , text     : ViewModel (List File)
-    , memo     : ViewModel String
-    , age      : ViewModel String
-    , email    : ViewModel String
-    , tel      : ViewModel String
-    , birthday : ViewModel String
-    , start_at : ViewModel String
-    , gender   : ViewModel String
-    , quality  : ViewModel String
-    , roles    : ViewModel (Set String)
-    }
+type alias Prop a = Validate.Prop Form a
+type alias Single a = Validate.Single Form {} a
+
+type alias View = Validate.View ViewForm
+type alias ViewForm =
+  { name     : Single String
+  , text     : Single (List File)
+  , memo     : Single String
+  , age      : Single String
+  , email    : Single String
+  , tel      : Single String
+  , birthday : Single String
+  , start_at : Single String
+  , gender   : Single String
+  , quality  : Single String
+  , roles    : Single (Set String)
   }
 
 type alias Response = HttpView.Response ResponseHeader ResponseBody
@@ -156,50 +152,18 @@ decodeForm value form =
     |> Form.setIf roles_    ( decode .roles    set )
 
 view : Form -> View
-view form =
-  let
-    blank  = Validate.blank "blank"
-    noFile = Validate.empty "no-file"
+view form = form |> Apply.apply11 (Validate.compose11 ViewForm)
+  ( name_     |> Validate.single [ form.name |> blank ] )
+  ( text_     |> Validate.single [ form.text |> noFile ] )
+  ( memo_     |> Validate.single [] )
+  ( age_      |> Validate.single [] )
+  ( email_    |> Validate.single [] )
+  ( tel_      |> Validate.single [] )
+  ( birthday_ |> Validate.single [] )
+  ( start_at_ |> Validate.single [] )
+  ( gender_   |> Validate.single [] )
+  ( quality_  |> Validate.single [] )
+  ( roles_    |> Validate.single [] )
 
-    model =
-      { name     = form |> Validate.init Validate.none ( name_,     [ form.name |> blank ] )
-      , text     = form |> Validate.init Validate.none ( text_,     [ form.text |> noFile ] )
-      , memo     = form |> Validate.init Validate.none ( memo_,     [] )
-      , age      = form |> Validate.init Validate.none ( age_,      [] )
-      , email    = form |> Validate.init Validate.none ( email_,    [] )
-      , tel      = form |> Validate.init Validate.none ( tel_,      [] )
-      , birthday = form |> Validate.init Validate.none ( birthday_, [] )
-      , start_at = form |> Validate.init Validate.none ( start_at_, [] )
-      , gender   = form |> Validate.init Validate.none ( gender_,   [] )
-      , quality  = form |> Validate.init Validate.none ( quality_,  [] )
-      , roles    = form |> Validate.init Validate.none ( roles_,    [] )
-      }
-    errors = List.concat
-      [ model.name     |> Validate.errors
-      , model.text     |> Validate.errors
-      , model.memo     |> Validate.errors
-      , model.age      |> Validate.errors
-      , model.email    |> Validate.errors
-      , model.tel      |> Validate.errors
-      , model.birthday |> Validate.errors
-      , model.start_at |> Validate.errors
-      , model.gender   |> Validate.errors
-      , model.quality  |> Validate.errors
-      , model.roles    |> Validate.errors
-      ]
-  in
-    { hasError = errors |> List.isEmpty |> not
-    , form     =
-      { name     = model.name     |> Validate.expose
-      , text     = model.text     |> Validate.expose
-      , memo     = model.memo     |> Validate.expose
-      , age      = model.age      |> Validate.expose
-      , email    = model.email    |> Validate.expose
-      , tel      = model.tel      |> Validate.expose
-      , birthday = model.birthday |> Validate.expose
-      , start_at = model.start_at |> Validate.expose
-      , gender   = model.gender   |> Validate.expose
-      , quality  = model.quality  |> Validate.expose
-      , roles    = model.roles    |> Validate.expose
-      }
-    }
+blank  = Validate.blank "blank"
+noFile = Validate.empty "no-file"

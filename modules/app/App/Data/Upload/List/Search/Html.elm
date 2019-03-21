@@ -17,6 +17,7 @@ import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
 import Getto.Field.Form as Form
+import Getto.Field.Present as Present
 import Getto.Sort as Sort
 import Getto.Html.Table as Table
 
@@ -54,8 +55,8 @@ search model =
         [ H.table []
           [ H.tbody [] <| List.concat
             [ case model.view.name of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.field |> Input.text [] (model.msg.input form.prop) model.msg.change
@@ -63,8 +64,8 @@ search model =
                   ]
                 ]
             , case model.view.email of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.field |> Input.text [] (model.msg.input form.prop) model.msg.change
@@ -72,8 +73,8 @@ search model =
                   ]
                 ]
             , case model.view.tel of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.field |> Input.tel [] (model.msg.input form.prop) model.msg.change
@@ -87,8 +88,8 @@ search model =
         [ H.table []
           [ H.tbody [] <| List.concat
             [ case model.view.age of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.gteq.field |> Input.number [] (model.msg.input form.gteq.prop) model.msg.change
@@ -98,8 +99,8 @@ search model =
                   ]
                 ]
             , case model.view.birthday of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.gteq.field |> Input.date [] (model.msg.input form.gteq.prop) model.msg.change
@@ -109,8 +110,8 @@ search model =
                   ]
                 ]
             , case model.view.start_at of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.gteq.field |> Input.time [] (model.msg.input form.gteq.prop) model.msg.change
@@ -126,8 +127,8 @@ search model =
         [ H.table []
           [ H.tbody [] <| List.concat
             [ case model.view.gender of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.field |> Input.select model.options.gender [] (model.msg.input form.prop) model.msg.change
@@ -135,8 +136,8 @@ search model =
                   ]
                 ]
             , case model.view.roles of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.field |> Input.checkbox model.options.role [] (model.msg.toggle form.prop) model.msg.change

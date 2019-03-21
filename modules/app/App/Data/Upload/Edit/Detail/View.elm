@@ -15,6 +15,7 @@ module GettoUpload.App.Data.Upload.Edit.Detail.View exposing
 import GettoUpload.App.Data.Upload.Edit.Data.View as Data
 import GettoUpload.View.Http as HttpView
 
+import Getto.Apply as Apply
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Edit as Edit
@@ -29,10 +30,9 @@ import Set exposing ( Set )
 
 type alias Prop  a = Conflict.Prop Form a
 type alias Field a = Conflict.Field a
+type alias Single a = Conflict.Single Form {} a
 
-type alias ViewModel a = Validate.Model (Conflict.Form Form a)
-
-type alias Form = Edit.Model Data.Response Fields
+type alias Form = Edit.Form Data.Response Fields
 type alias Fields =
   { birthday : Field String
   , start_at : Field String
@@ -41,16 +41,13 @@ type alias Fields =
   , roles    : Field (Set String)
   }
 
-type alias View = HttpView.Model Data.Response -> Maybe
-  { isStatic : Bool
-  , state    : Edit.AggregateState
-  , form :
-    { birthday : Edit.State Form String
-    , start_at : Edit.State Form String
-    , gender   : Edit.State Form String
-    , quality  : Edit.State Form String
-    , roles    : Edit.State Form (Set String)
-    }
+type alias View = Edit.View ViewForm
+type alias ViewForm =
+  { birthday : Single String
+  , start_at : Single String
+  , gender   : Single String
+  , quality  : Single String
+  , roles    : Single (Set String)
   }
 
 type alias Response = HttpView.Response () ()
@@ -77,12 +74,12 @@ get_roles    = HttpView.body >> .detail >> .roles
 
 
 init : String -> Form
-init signature = Edit.init
-  { birthday = "birthday" |> Field.init signature Conflict.none ""
-  , start_at = "start_at" |> Field.init signature Conflict.none ""
-  , gender   = "gender"   |> Field.init signature Conflict.none ""
-  , quality  = "quality"  |> Field.init signature Conflict.none ""
-  , roles    = "roles"    |> Field.init signature Conflict.none Set.empty
+init signature = Edit.form
+  { birthday = "birthday" |> Conflict.init signature ""
+  , start_at = "start_at" |> Conflict.init signature ""
+  , gender   = "gender"   |> Conflict.init signature ""
+  , quality  = "quality"  |> Conflict.init signature ""
+  , roles    = "roles"    |> Conflict.init signature Set.empty
   }
 
 params : HttpView.Model Data.Response -> Form -> Encode.Value
@@ -159,53 +156,26 @@ edit res form =
   |> Form.set roles_    (res |> get_roles)
 
 
-view : Form -> View
-view form = HttpView.response >> Maybe.map
+view : HttpView.Model Response -> Form -> HttpView.Model Data.Response -> Maybe View
+view put form = HttpView.response >> Maybe.map
   (\res ->
     let
-      error = "conflict"
-
-      data =
-        ( form |> Edit.response
-        , res
-        )
-
       fields = form |> Edit.fields
-
-      model =
-        { birthday = form |> Conflict.init error data ( get_birthday, ( birthday_, [] ) )
-        , start_at = form |> Conflict.init error data ( get_start_at, ( start_at_, [] ) )
-        , gender   = form |> Conflict.init error data ( get_gender,   ( gender_,   [] ) )
-        , quality  = form |> Conflict.init error data ( get_quality,  ( quality_,  [] ) )
-        , roles    = form |> Conflict.init error data ( get_roles,    ( roles_,    [] ) )
-        }
-
-      modifieds =
-        [ model.birthday |> Conflict.modified
-        , model.start_at |> Conflict.modified
-        , model.gender   |> Conflict.modified
-        , model.quality  |> Conflict.modified
-        , model.roles    |> Conflict.modified
-        ]
-
-      errors = List.concat
-        [ model.birthday |> Conflict.form |> Validate.errors
-        , model.start_at |> Conflict.form |> Validate.errors
-        , model.gender   |> Conflict.form |> Validate.errors
-        , model.quality  |> Conflict.form |> Validate.errors
-        , model.roles    |> Conflict.form |> Validate.errors
-        ]
-
-      isStatic = form |> Edit.isStatic Data.isDifferentResponse res
     in
-      { isStatic = isStatic
-      , state    = errors |> Edit.aggregate modifieds
-      , form     =
-        { birthday = model.birthday |> Edit.expose isStatic
-        , start_at = model.start_at |> Edit.expose isStatic
-        , gender   = model.gender   |> Edit.expose isStatic
-        , quality  = model.quality  |> Edit.expose isStatic
-        , roles    = model.roles    |> Edit.expose isStatic
-        }
+      { error       = "conflict"
+      , form        = form
+      , last        = res
+      , isConflict  = put |> HttpView.isConflict
+      , isDifferent = Data.isDifferentResponse
       }
+      |> Edit.options
+      |> Tuple.mapSecond
+        ( Apply.apply5 (Conflict.compose5 ViewForm)
+          ( ( birthday_, get_birthday ) |> Conflict.single [] )
+          ( ( start_at_, get_start_at ) |> Conflict.single [] )
+          ( ( gender_,   get_gender   ) |> Conflict.single [] )
+          ( ( quality_,  get_quality  ) |> Conflict.single [] )
+          ( ( roles_,    get_roles    ) |> Conflict.single [] )
+        )
+      |> Edit.view
   )

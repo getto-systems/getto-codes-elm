@@ -29,7 +29,6 @@ import Getto.Http.Header.Decode as HeaderDecode
 import Getto.Http.Part as Part
 import Getto.Field as Field
 import Getto.Field.Form as Form
-import Getto.Field.Present as Present
 import Getto.Sort as Sort
 
 import Json.Encode as Encode

@@ -19,7 +19,6 @@ import GettoUpload.View.Http as HttpView
 
 import Getto.Field as Field
 import Getto.Field.Form as Form
-import Getto.Field.Edit exposing ( State(..) )
 import Getto.Field.Conflict as Conflict
 import Getto.Sort as Sort
 import Getto.Html.Table as Table
@@ -56,8 +55,8 @@ search model =
         [ H.table []
           [ H.tbody [] <| List.concat
             [ case model.view.name of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.field |> Input.text []
@@ -72,8 +71,8 @@ search model =
         [ H.table []
           [ H.tbody [] <| List.concat
             [ case model.view.gender of
-              (name,form,present) ->
-                [ H.tr ( present |> Input.isPresent )
+              (name,form,opts) ->
+                [ H.tr ( opts.isPresent |> Input.isPresent )
                   [ H.th [] [ name |> model.i18n.field |> H.text ]
                   , H.td []
                     [ form.field |> Input.select model.options.gender []
