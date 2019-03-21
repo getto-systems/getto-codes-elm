@@ -27,9 +27,7 @@ import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode
 import Getto.Json.SafeDecode as SafeDecode
-import Getto.Field as Field
 import Getto.Field.Form as Form
-import Getto.Field.Validate as Validate
 
 import File exposing ( File )
 import File.Select

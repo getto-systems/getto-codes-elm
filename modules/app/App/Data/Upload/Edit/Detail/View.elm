@@ -19,7 +19,6 @@ import Getto.Apply as Apply
 import Getto.Field as Field
 import Getto.Field.Form as Form
 import Getto.Field.Edit as Edit
-import Getto.Field.Validate as Validate
 import Getto.Field.Conflict as Conflict
 import Getto.Http.Header.Decode as HeaderDecode
 
