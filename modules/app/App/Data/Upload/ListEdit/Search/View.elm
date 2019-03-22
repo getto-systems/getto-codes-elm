@@ -76,6 +76,6 @@ decodeForm names value form =
     |> Form.setIf gender_ ( qEntryAt .gender )
 
 view : Form -> View
-view = Apply.apply2 View
+view = Apply.map2 View
   ( name_   |> Present.single Present.string )
   ( gender_ |> Present.single Present.string )

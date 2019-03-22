@@ -162,7 +162,7 @@ view put form = HttpView.response >> Maybe.map
       }
       |> Edit.options
       |> Tuple.mapSecond
-        ( Apply.apply5 (Conflict.compose5 ViewForm)
+        ( Apply.map5 (Conflict.compose5 ViewForm)
           ( ( name_,  get_name  ) |> Conflict.single [ fields.name |> V.blank ] )
           ( ( memo_,  get_memo  ) |> Conflict.single [] )
           ( ( age_,   get_age   ) |> Conflict.single [] )

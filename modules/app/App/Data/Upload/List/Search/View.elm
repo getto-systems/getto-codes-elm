@@ -160,7 +160,7 @@ decodeForm names value form =
     |> Form.setIf roles_         ( qListAt  .roles |> Maybe.map Set.fromList )
 
 view : Form -> View
-view = Apply.apply8 View
+view = Apply.map8 View
   ( name_   |> Present.single Present.string )
   ( email_  |> Present.single Present.string )
   ( tel_    |> Present.single Present.string )
