@@ -153,7 +153,7 @@ decodeForm value form =
     |> Form.setIf roles_    ( decode .roles    set )
 
 view : Form -> View
-view form = form |> Apply.apply11 (Validate.compose11 ViewForm)
+view form = form |> Apply.map11 (Validate.compose11 ViewForm)
   ( name_     |> Validate.single [ form.name |> V.blank ] )
   ( text_     |> Validate.single [ form.text |> V.noFile ] )
   ( memo_     |> Validate.single [] )

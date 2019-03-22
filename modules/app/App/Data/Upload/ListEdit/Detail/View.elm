@@ -134,7 +134,7 @@ view unit =
       }
       |> Edit.options
       |> Tuple.mapSecond
-        ( Apply.apply2 (Conflict.compose2 ViewForm)
+        ( Apply.map2 (Conflict.compose2 ViewForm)
           ( ( name_,   get_name   ) |> Conflict.single [ fields.name |> V.blank ] )
           ( ( gender_, get_gender ) |> Conflict.single [] )
         )
