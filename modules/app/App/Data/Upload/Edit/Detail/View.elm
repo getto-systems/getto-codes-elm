@@ -92,8 +92,8 @@ params get =
           set encoder = Set.toList >> Encode.list encoder
 
           encode encoder values =
-            [ ( "from", values.from |> encoder )
-            , ( "to",   values.to   |> encoder )
+            [ ( "before", values.before |> encoder )
+            , ( "after",  values.after  |> encoder )
             ] |> Encode.object
 
 
