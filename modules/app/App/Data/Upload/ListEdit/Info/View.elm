@@ -125,8 +125,8 @@ params row = get row >> .form >> Edit.fields >>
       res = row |> Data.toResponse
 
       encode encoder values =
-        [ ( "from", values.from |> encoder )
-        , ( "to",   values.to   |> encoder )
+        [ ( "before", values.before |> encoder )
+        , ( "after",  values.after  |> encoder )
         ] |> Encode.object
 
       param getter encoder =

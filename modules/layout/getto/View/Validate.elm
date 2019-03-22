@@ -9,4 +9,4 @@ import Getto.Field.Validate as Validate
 conflict = "conflict"
 
 blank  = Validate.blank "blank"
-noFile = Validate.empty "no-file"
+noFile = Validate.emptyList "no-file"
