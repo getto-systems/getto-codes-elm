@@ -1,9 +1,9 @@
-module GettoUpload.Command.Http.Mock exposing
+module GettoCodes.Command.Http.Mock exposing
   ( request
   )
-import GettoUpload.Command.Http.Real as Real
-import GettoUpload.View.Http as HttpView
-import GettoUpload.Env as Env
+import GettoCodes.Command.Http.Real as Real
+import GettoCodes.View.Http as HttpView
+import GettoCodes.Env as Env
 
 import Getto.Http.Header.Decode as HeaderDecode
 

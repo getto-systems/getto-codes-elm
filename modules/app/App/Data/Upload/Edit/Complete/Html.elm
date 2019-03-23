@@ -1,12 +1,12 @@
-module GettoUpload.App.Data.Upload.Edit.Complete.Html exposing
+module GettoCodes.App.Data.Upload.Edit.Complete.Html exposing
   ( state
   , dialog
   )
-import GettoUpload.App.Data.Upload.Edit.Data.View as Data
-import GettoUpload.View.Html as Html
-import GettoUpload.View.Html.Button as Button
-import GettoUpload.View.Html.Http as Http
-import GettoUpload.View.Http as HttpView
+import GettoCodes.App.Data.Upload.Edit.Data.View as Data
+import GettoCodes.View.Html as Html
+import GettoCodes.View.Html.Button as Button
+import GettoCodes.View.Html.Http as Http
+import GettoCodes.View.Http as HttpView
 
 import Html as H exposing ( Html )
 import Html.Attributes as A

@@ -1,4 +1,4 @@
-module GettoUpload.App.Data.Upload.New.Register exposing
+module GettoCodes.App.Data.Upload.New.Register exposing
   ( Msg
   , init
   , encodeStore
@@ -9,19 +9,19 @@ module GettoUpload.App.Data.Upload.New.Register exposing
   , update
   , contents
   )
-import GettoUpload.App.Data.Upload.New.Model as Model
-import GettoUpload.App.Data.Upload.New.Register.View as View
-import GettoUpload.App.Data.Upload.New.Register.Html as Html
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Api as Api
-import GettoUpload.Command.Http as Http
-import GettoUpload.Command.Dom as Dom
-import GettoUpload.View.Http as HttpView
-import GettoUpload.I18n.App as AppI18n
-import GettoUpload.I18n.App.Data.Upload as I18n
-import GettoUpload.I18n.Http as HttpI18n
-import GettoUpload.Extension.Href as Href
-import GettoUpload.Extension.Href.Data.Upload as Upload
+import GettoCodes.App.Data.Upload.New.Model as Model
+import GettoCodes.App.Data.Upload.New.Register.View as View
+import GettoCodes.App.Data.Upload.New.Register.Html as Html
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Api as Api
+import GettoCodes.Command.Http as Http
+import GettoCodes.Command.Dom as Dom
+import GettoCodes.View.Http as HttpView
+import GettoCodes.I18n.App as AppI18n
+import GettoCodes.I18n.App.Data.Upload as I18n
+import GettoCodes.I18n.Http as HttpI18n
+import GettoCodes.Extension.Href as Href
+import GettoCodes.Extension.Href.Data.Upload as Upload
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode

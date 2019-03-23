@@ -1,4 +1,4 @@
-module GettoUpload.I18n.App.Data.Upload exposing
+module GettoCodes.I18n.App.Data.Upload exposing
   ( title
   , field
   , error
@@ -8,8 +8,8 @@ module GettoUpload.I18n.App.Data.Upload exposing
   , quality
   , state
   )
-import GettoUpload.App.Data.Upload.Edit.Data.View as Data
-import GettoUpload.I18n.App as AppI18n
+import GettoCodes.App.Data.Upload.Edit.Data.View as Data
+import GettoCodes.I18n.App as AppI18n
 
 title : String -> String
 title name =

@@ -1,4 +1,4 @@
-module GettoUpload.App.Data.Upload.Edit.Model exposing
+module GettoCodes.App.Data.Upload.Edit.Model exposing
   ( Frame
   , Transition
   , Msg
@@ -11,14 +11,14 @@ module GettoUpload.App.Data.Upload.Edit.Model exposing
   , pathInfo
   , etag
   )
-import GettoUpload.App.Data.Upload.Edit.Data.View       as Data
-import GettoUpload.App.Data.Upload.Edit.Info.View       as Info
-import GettoUpload.App.Data.Upload.Edit.Detail.View     as Detail
-import GettoUpload.App.Data.Upload.Edit.Complete.View   as Complete
-import GettoUpload.App.Data.Upload.Edit.Unregister.View as Unregister
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Page.Page as Layout
-import GettoUpload.View.Http as HttpView
+import GettoCodes.App.Data.Upload.Edit.Data.View       as Data
+import GettoCodes.App.Data.Upload.Edit.Info.View       as Info
+import GettoCodes.App.Data.Upload.Edit.Detail.View     as Detail
+import GettoCodes.App.Data.Upload.Edit.Complete.View   as Complete
+import GettoCodes.App.Data.Upload.Edit.Unregister.View as Unregister
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Page.Page as Layout
+import GettoCodes.View.Http as HttpView
 
 import Getto.Command.Transition as T
 

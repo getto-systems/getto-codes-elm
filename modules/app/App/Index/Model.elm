@@ -1,13 +1,13 @@
-module GettoUpload.App.Index.Model exposing
+module GettoCodes.App.Index.Model exposing
   ( Frame
   , Transition
   , Msg
   , Page
   , Dashboard
   )
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Page.Page as Layout
-import GettoUpload.View.Http as HttpView
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Page.Page as Layout
+import GettoCodes.View.Http as HttpView
 
 import Getto.Command.Transition as T
 

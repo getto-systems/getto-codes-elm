@@ -1,11 +1,11 @@
-module GettoUpload.Extension.Href.Data.Upload exposing
+module GettoCodes.Extension.Href.Data.Upload exposing
   ( list
   , list_edit
   , new
   , edit_
   , edit
   )
-import GettoUpload.Extension.Href as Href
+import GettoCodes.Extension.Href as Href
 
 import Getto.Url.Query.Encode as QueryEncode
 

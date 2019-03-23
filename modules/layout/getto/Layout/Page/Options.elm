@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Page.Options exposing
+module GettoCodes.Layout.Page.Options exposing
   ( Msg
   , init
   , encodeStore
@@ -6,12 +6,12 @@ module GettoUpload.Layout.Page.Options exposing
   , subscriptions
   , update
   )
-import GettoUpload.Layout.Page.Model as Model
-import GettoUpload.Layout.Page.Options.View as View
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Api as Api
-import GettoUpload.Command.Http as Http
-import GettoUpload.View.Http as HttpView
+import GettoCodes.Layout.Page.Model as Model
+import GettoCodes.Layout.Page.Options.View as View
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Api as Api
+import GettoCodes.Command.Http as Http
+import GettoCodes.View.Http as HttpView
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode

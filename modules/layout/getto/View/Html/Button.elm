@@ -1,4 +1,4 @@
-module GettoUpload.View.Html.Button exposing
+module GettoCodes.View.Html.Button exposing
   ( error
   , connecting
   , select
@@ -11,8 +11,8 @@ module GettoUpload.View.Html.Button exposing
   , search
   , complete
   )
-import GettoUpload.View.Icon as Icon
-import GettoUpload.View.Html as Html
+import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Html as Html
 
 import Html as H exposing ( Html )
 import Html.Attributes as A

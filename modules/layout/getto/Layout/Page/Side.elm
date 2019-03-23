@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Page.Side exposing
+module GettoCodes.Layout.Page.Side exposing
   ( Msg
   , init
   , encodeStore
@@ -13,23 +13,23 @@ module GettoUpload.Layout.Page.Side exposing
   , nav
   , navFooter
   )
-import GettoUpload.Layout.Page.Model as Model
-import GettoUpload.Layout.Page.Side.Html as Html
-import GettoUpload.Layout.Page.Side.View as View
-import GettoUpload.Layout.Frame.Static as Static
-import GettoUpload.Layout.Frame.Credential as Credential
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Api as Api
-import GettoUpload.Command.Auth as Auth
-import GettoUpload.Command.Http as Http
-import GettoUpload.View.Http as HttpView
-import GettoUpload.View.Menu as Menu exposing ( Menu )
-import GettoUpload.View.Icon as Icon
-import GettoUpload.I18n.App  as I18n
-import GettoUpload.I18n.Http as HttpI18n
-import GettoUpload.Extension.Href as Href exposing ( Href )
-import GettoUpload.Extension.Href.Home   as Home
-import GettoUpload.Extension.Href.Data.Upload as Upload
+import GettoCodes.Layout.Page.Model as Model
+import GettoCodes.Layout.Page.Side.Html as Html
+import GettoCodes.Layout.Page.Side.View as View
+import GettoCodes.Layout.Frame.Static as Static
+import GettoCodes.Layout.Frame.Credential as Credential
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Api as Api
+import GettoCodes.Command.Auth as Auth
+import GettoCodes.Command.Http as Http
+import GettoCodes.View.Http as HttpView
+import GettoCodes.View.Menu as Menu exposing ( Menu )
+import GettoCodes.View.Icon as Icon
+import GettoCodes.I18n.App  as I18n
+import GettoCodes.I18n.Http as HttpI18n
+import GettoCodes.Extension.Href as Href exposing ( Href )
+import GettoCodes.Extension.Href.Home   as Home
+import GettoCodes.Extension.Href.Data.Upload as Upload
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode

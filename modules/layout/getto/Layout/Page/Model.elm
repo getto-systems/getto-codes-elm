@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Page.Model exposing
+module GettoCodes.Layout.Page.Model exposing
   ( Frame
   , Transition
   , Page
@@ -6,11 +6,11 @@ module GettoUpload.Layout.Page.Model exposing
   , Side
   , Options
   )
-import GettoUpload.Layout.Page.Side.View as Side
-import GettoUpload.Layout.Page.Options.View as Options
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.View.Http as HttpView
-import GettoUpload.View.Menu exposing ( Menu )
+import GettoCodes.Layout.Page.Side.View as Side
+import GettoCodes.Layout.Page.Options.View as Options
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.View.Http as HttpView
+import GettoCodes.View.Menu exposing ( Menu )
 
 import Getto.Command.Transition as T
 

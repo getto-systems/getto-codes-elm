@@ -1,4 +1,4 @@
-module GettoUpload.View.Html.Input exposing
+module GettoCodes.View.Html.Input exposing
   ( Paging
   , isError
   , isPresent
@@ -26,9 +26,9 @@ module GettoUpload.View.Html.Input exposing
   , onChange
   , paging
   )
-import GettoUpload.View.Icon as Icon
-import GettoUpload.View.Html as Html
-import GettoUpload.View.Html.Button as Button
+import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Html as Html
+import GettoCodes.View.Html.Button as Button
 
 import Getto.Field as Field
 import Getto.Field.Conflict as Conflict

@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Page.Article exposing
+module GettoCodes.Layout.Page.Article exposing
   ( Msg
   , init
   , encodeStore
@@ -9,11 +9,11 @@ module GettoUpload.Layout.Page.Article exposing
   , header
   , footer
   )
-import GettoUpload.Layout.Page.Model as Model
-import GettoUpload.Layout.Page.Article.Html as Html
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Frame.Static as Static
-import GettoUpload.I18n.App as AppI18n
+import GettoCodes.Layout.Page.Model as Model
+import GettoCodes.Layout.Page.Article.Html as Html
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Frame.Static as Static
+import GettoCodes.I18n.App as AppI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 

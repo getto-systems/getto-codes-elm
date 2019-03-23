@@ -1,8 +1,8 @@
-module GettoUpload.View.Html.Sort exposing
+module GettoCodes.View.Html.Sort exposing
   ( render
   )
-import GettoUpload.View.Html as Html
-import GettoUpload.View.Icon as Icon
+import GettoCodes.View.Html as Html
+import GettoCodes.View.Icon as Icon
 
 import Getto.Sort as Sort
 

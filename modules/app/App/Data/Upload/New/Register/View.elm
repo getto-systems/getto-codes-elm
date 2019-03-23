@@ -1,4 +1,4 @@
-module GettoUpload.App.Data.Upload.New.Register.View exposing
+module GettoCodes.App.Data.Upload.New.Register.View exposing
   ( Form
   , Prop
   , View
@@ -10,8 +10,8 @@ module GettoUpload.App.Data.Upload.New.Register.View exposing
   , decodeForm
   , view
   )
-import GettoUpload.View.Http as HttpView
-import GettoUpload.View.Validate as V
+import GettoCodes.View.Http as HttpView
+import GettoCodes.View.Validate as V
 
 import Getto.Apply as Apply
 import Getto.Field as Field

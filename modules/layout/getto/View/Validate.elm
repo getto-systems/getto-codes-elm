@@ -1,4 +1,4 @@
-module GettoUpload.View.Validate exposing
+module GettoCodes.View.Validate exposing
   ( conflict
   , blank
   , noFile

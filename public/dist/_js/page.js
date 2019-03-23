@@ -30,7 +30,7 @@ try {
     var keycloak = Keycloak({
       url: document.getElementById("keycloak").src.replace("/js/keycloak.js",""),
       realm:    "getto",
-      clientId: "upload",
+      clientId: "codes",
     });
 
     var updateTokenConfig = {
@@ -209,7 +209,7 @@ try {
 
     var init = function(credential){
       return current_page.split(".")
-        .reduce(function(acc,m){return acc[m];},Elm.GettoUpload.App).Page
+        .reduce(function(acc,m){return acc[m];},Elm.GettoCodes.App).Page
         .init({
           flags: {
             'static': {

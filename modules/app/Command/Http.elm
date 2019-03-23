@@ -1,4 +1,4 @@
-module GettoUpload.Command.Http exposing
+module GettoCodes.Command.Http exposing
   ( Tracker
   , Header
   , request
@@ -12,9 +12,9 @@ module GettoUpload.Command.Http exposing
   , post
   , upload
   )
-import GettoUpload.Command.Http.Real as Real
-import GettoUpload.Command.Http.Mock as Mock
-import GettoUpload.View.Http as HttpView
+import GettoCodes.Command.Http.Real as Real
+import GettoCodes.Command.Http.Mock as Mock
+import GettoCodes.View.Http as HttpView
 
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Http.Header.Decode as HeaderDecode

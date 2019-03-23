@@ -1,4 +1,4 @@
-module GettoUpload.App.Data.Upload.ListEdit.Search.View exposing
+module GettoCodes.App.Data.Upload.ListEdit.Search.View exposing
   ( Form
   , Prop
   , View
@@ -9,8 +9,8 @@ module GettoUpload.App.Data.Upload.ListEdit.Search.View exposing
   , decodeForm
   , view
   )
-import GettoUpload.App.Data.Upload.ListEdit.Data.View as Data
-import GettoUpload.View.Http as HttpView
+import GettoCodes.App.Data.Upload.ListEdit.Data.View as Data
+import GettoCodes.View.Http as HttpView
 
 import Getto.Apply as Apply
 import Getto.Field as Field

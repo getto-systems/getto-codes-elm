@@ -1,7 +1,7 @@
-module GettoUpload.Command.Http.Real exposing
+module GettoCodes.Command.Http.Real exposing
   ( request
   )
-import GettoUpload.View.Http as HttpView
+import GettoCodes.View.Http as HttpView
 
 import Getto.Http.Header.Decode as HeaderDecode
 

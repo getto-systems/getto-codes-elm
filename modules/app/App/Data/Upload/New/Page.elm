@@ -1,8 +1,8 @@
-module GettoUpload.App.Data.Upload.New.Page exposing ( main )
-import GettoUpload.App.Data.Upload.New.Model as Model
-import GettoUpload.App.Data.Upload.New.Register as Register
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Page.Page as Layout
+module GettoCodes.App.Data.Upload.New.Page exposing ( main )
+import GettoCodes.App.Data.Upload.New.Model as Model
+import GettoCodes.App.Data.Upload.New.Register as Register
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Page.Page as Layout
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode

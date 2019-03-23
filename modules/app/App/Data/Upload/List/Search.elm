@@ -1,4 +1,4 @@
-module GettoUpload.App.Data.Upload.List.Search exposing
+module GettoCodes.App.Data.Upload.List.Search exposing
   ( Msg
   , init
   , encodeQuery
@@ -9,18 +9,18 @@ module GettoUpload.App.Data.Upload.List.Search exposing
   , update
   , contents
   )
-import GettoUpload.App.Data.Upload.List.Model as Model
-import GettoUpload.App.Data.Upload.List.Search.View as View
-import GettoUpload.App.Data.Upload.List.Search.Html as Html
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Page.Options.View as Options
-import GettoUpload.Layout.Api as Api
-import GettoUpload.Command.Http as Http
-import GettoUpload.Command.Dom as Dom
-import GettoUpload.View.Http as HttpView
-import GettoUpload.I18n.App as AppI18n
-import GettoUpload.I18n.App.Data.Upload as I18n
-import GettoUpload.I18n.Http as HttpI18n
+import GettoCodes.App.Data.Upload.List.Model as Model
+import GettoCodes.App.Data.Upload.List.Search.View as View
+import GettoCodes.App.Data.Upload.List.Search.Html as Html
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Page.Options.View as Options
+import GettoCodes.Layout.Api as Api
+import GettoCodes.Command.Http as Http
+import GettoCodes.Command.Dom as Dom
+import GettoCodes.View.Http as HttpView
+import GettoCodes.I18n.App as AppI18n
+import GettoCodes.I18n.App.Data.Upload as I18n
+import GettoCodes.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode

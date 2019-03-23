@@ -1,10 +1,10 @@
-module GettoUpload.View.Html.Http exposing
+module GettoCodes.View.Html.Http exposing
   ( progress
   , error
   )
-import GettoUpload.View.Http as HttpView
-import GettoUpload.View.Icon as Icon
-import GettoUpload.View.Html as Html
+import GettoCodes.View.Http as HttpView
+import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Html as Html
 
 import Html as H exposing ( Html )
 import Html.Attributes as A

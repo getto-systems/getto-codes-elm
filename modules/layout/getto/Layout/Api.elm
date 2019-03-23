@@ -1,12 +1,12 @@
-module GettoUpload.Layout.Api exposing
+module GettoCodes.Layout.Api exposing
   ( headers
   , url
   )
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Frame.Credential as Credential
-import GettoUpload.Command.Auth as Auth
-import GettoUpload.Command.Http as Http
-import GettoUpload.Env as Env
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Frame.Credential as Credential
+import GettoCodes.Command.Auth as Auth
+import GettoCodes.Command.Http as Http
+import GettoCodes.Env as Env
 
 headers : Frame.Model layout app -> List Http.Header
 headers =

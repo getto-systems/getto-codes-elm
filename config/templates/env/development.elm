@@ -1,4 +1,4 @@
-module GettoUpload.Env exposing
+module GettoCodes.Env exposing
   ( href
   , api
   )

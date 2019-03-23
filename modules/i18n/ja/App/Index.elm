@@ -1,4 +1,4 @@
-module GettoUpload.I18n.App.Index exposing
+module GettoCodes.I18n.App.Index exposing
   ( title
   )
 

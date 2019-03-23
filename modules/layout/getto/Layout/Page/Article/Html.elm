@@ -1,11 +1,11 @@
-module GettoUpload.Layout.Page.Article.Html exposing
+module GettoCodes.Layout.Page.Article.Html exposing
   ( documentTitle
   , header
   , footer
   )
-import GettoUpload.View.Html as Html
-import GettoUpload.View.Icon as Icon
-import GettoUpload.Extension.Href as Href
+import GettoCodes.View.Html as Html
+import GettoCodes.View.Icon as Icon
+import GettoCodes.Extension.Href as Href
 
 import Html as H exposing ( Html )
 import Html.Attributes as A

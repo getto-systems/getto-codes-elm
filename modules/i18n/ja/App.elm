@@ -1,4 +1,4 @@
-module GettoUpload.I18n.App exposing
+module GettoCodes.I18n.App exposing
   ( title
   , menu
   , role
@@ -8,8 +8,8 @@ module GettoUpload.I18n.App exposing
   , table
   , box
   )
-import GettoUpload.View.Html.Input as Input
-import GettoUpload.Extension.Href as Href
+import GettoCodes.View.Html.Input as Input
+import GettoCodes.Extension.Href as Href
 
 menu : String -> String
 menu = String.toUpper

@@ -1,4 +1,4 @@
-module GettoUpload.View.Html.Table exposing
+module GettoCodes.View.Html.Table exposing
   ( config
   )
 

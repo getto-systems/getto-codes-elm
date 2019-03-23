@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Page.Side.View exposing
+module GettoCodes.Layout.Page.Side.View exposing
   ( Response
   , Breadcrumb
   , Menu
@@ -7,10 +7,10 @@ module GettoUpload.Layout.Page.Side.View exposing
   , menu
   , breadcrumb
   )
-import GettoUpload.View.Menu as Menu
-import GettoUpload.View.Icon as Icon exposing ( Icon )
-import GettoUpload.View.Http as HttpView
-import GettoUpload.Extension.Href as Href exposing ( Href )
+import GettoCodes.View.Menu as Menu
+import GettoCodes.View.Icon as Icon exposing ( Icon )
+import GettoCodes.View.Http as HttpView
+import GettoCodes.Extension.Href as Href exposing ( Href )
 
 import Getto.Http.Header.Decode as HeaderDecode
 

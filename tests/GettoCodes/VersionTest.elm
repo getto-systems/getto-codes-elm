@@ -1,5 +1,5 @@
-module GettoUpload.VersionTest exposing (..)
-import GettoUpload.Version as Version
+module GettoCodes.VersionTest exposing (..)
+import GettoCodes.Version as Version
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
