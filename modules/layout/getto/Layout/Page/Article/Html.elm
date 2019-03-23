@@ -8,7 +8,6 @@ import GettoCodes.View.Icon as Icon
 import GettoCodes.Extension.Href as Href
 
 import Html as H exposing ( Html )
-import Html.Attributes as A
 
 
 documentTitle : { path : Href.Path, company : String, title : String, i18n : Href.Path -> String } -> String

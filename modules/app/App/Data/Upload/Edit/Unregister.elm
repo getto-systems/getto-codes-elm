@@ -22,13 +22,11 @@ import GettoCodes.Extension.Href as Href
 import GettoCodes.Extension.Href.Data.Upload as Upload
 
 import Getto.Command.Transition as T exposing ( Transition )
-import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
 import Json.Decode as Decode
 
 import Html as H exposing ( Html )
-import Html.Attributes as A
 import Html.Lazy as L
 
 type Msg

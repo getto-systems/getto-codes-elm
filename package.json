@@ -8,7 +8,7 @@
     "watch:test": "exec-on-changed -d ./tests -f ./bin/test.sh",
     "watch:routes": "exec-on-changed -d ./config/routes -f ./bin/routes.sh",
     "elm": "elm",
-    "test": "elm-test"
+    "test": "elm-test && ./bin/check-all-unused-import.sh"
   },
   "author": "shun@getto.systems",
   "license": "MIT",

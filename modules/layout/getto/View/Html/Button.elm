@@ -11,7 +11,6 @@ module GettoCodes.View.Html.Button exposing
   , search
   , complete
   )
-import GettoCodes.View.Icon as Icon
 import GettoCodes.View.Html as Html
 
 import Html as H exposing ( Html )

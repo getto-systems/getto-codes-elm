@@ -5,11 +5,8 @@ import GettoCodes.Command.Http.Real as Real
 import GettoCodes.View.Http as HttpView
 import GettoCodes.Env as Env
 
-import Getto.Http.Header.Decode as HeaderDecode
-
 import Dict exposing ( Dict )
 import Json.Encode as Encode
-import Json.Decode as Decode
 import Http
 import Task
 import Process

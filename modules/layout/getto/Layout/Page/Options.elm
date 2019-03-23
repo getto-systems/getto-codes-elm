@@ -13,8 +13,6 @@ import GettoCodes.Layout.Api as Api
 import GettoCodes.Command.Http as Http
 import GettoCodes.View.Http as HttpView
 
-import Getto.Command.Transition as T exposing ( Transition )
-import Getto.Json.SafeDecode as SafeDecode
 import Getto.Url.Query.Encode as QueryEncode
 
 import Json.Encode as Encode

@@ -20,13 +20,11 @@ import GettoCodes.I18n.App.Data.Upload as I18n
 import GettoCodes.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
-import Getto.Json.SafeDecode as SafeDecode
 
 import Json.Encode as Encode
 import Json.Decode as Decode
 
 import Html as H exposing ( Html )
-import Html.Attributes as A
 import Html.Lazy as L
 
 type Msg

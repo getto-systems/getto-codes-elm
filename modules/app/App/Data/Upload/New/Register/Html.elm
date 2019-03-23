@@ -7,17 +7,14 @@ import GettoCodes.View.Html as Html
 import GettoCodes.View.Html.Button as Button
 import GettoCodes.View.Html.Input as Input
 import GettoCodes.View.Html.Http as Http
-import GettoCodes.View.Icon as Icon
 import GettoCodes.View.Http as HttpView
 
 import Getto.Field as Field
-import Getto.Field.Form as Form
 
 import File exposing ( File )
 
 import Set exposing ( Set )
 import Html as H exposing ( Html )
-import Html.Attributes as A
 import Html.Events as E
 
 

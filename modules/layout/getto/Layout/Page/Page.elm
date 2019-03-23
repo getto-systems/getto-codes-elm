@@ -27,7 +27,6 @@ import Getto.Json.SafeDecode as SafeDecode
 import Json.Encode as Encode
 
 import Html as H exposing ( Html )
-import Html.Lazy as L
 
 type alias Model = Model.Page
 

@@ -16,7 +16,6 @@ import Getto.Field.Conflict as Conflict
 import Getto.Html.Table as Table
 
 import Html as H exposing ( Html )
-import Html.Attributes as A
 import Html.Events as E
 
 
