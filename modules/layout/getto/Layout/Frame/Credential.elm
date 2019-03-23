@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Frame.Credential exposing
+module GettoCodes.Layout.Frame.Credential exposing
   ( Model
   , init
   , token

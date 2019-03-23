@@ -1,15 +1,15 @@
-module GettoUpload.App.Data.Upload.Edit.Detail.Html exposing
+module GettoCodes.App.Data.Upload.Edit.Detail.Html exposing
   ( detail
   , pairs
   )
-import GettoUpload.App.Data.Upload.Edit.Data.View   as Data
-import GettoUpload.App.Data.Upload.Edit.Detail.View as Detail
-import GettoUpload.View.Html as Html
-import GettoUpload.View.Html.Button as Button
-import GettoUpload.View.Html.Input as Input
-import GettoUpload.View.Html.Http as Http
-import GettoUpload.View.Icon as Icon
-import GettoUpload.View.Http as HttpView
+import GettoCodes.App.Data.Upload.Edit.Data.View   as Data
+import GettoCodes.App.Data.Upload.Edit.Detail.View as Detail
+import GettoCodes.View.Html as Html
+import GettoCodes.View.Html.Button as Button
+import GettoCodes.View.Html.Input as Input
+import GettoCodes.View.Html.Http as Http
+import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Http as HttpView
 
 import Getto.Field as Field
 import Getto.Field.Edit as Edit

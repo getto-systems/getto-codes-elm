@@ -1,4 +1,4 @@
-port module GettoUpload.Command.Auth exposing
+port module GettoCodes.Command.Auth exposing
   ( Model
   , Init
   , init

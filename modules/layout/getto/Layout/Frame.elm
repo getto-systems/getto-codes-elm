@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Frame exposing
+module GettoCodes.Layout.Frame exposing
   ( SetupLayout
   , SetupApp
   , InitModel
@@ -24,14 +24,14 @@ module GettoUpload.Layout.Frame exposing
   , mapLayout
   , mapApp
   )
-import GettoUpload.Layout.Frame.Static     as Static
-import GettoUpload.Layout.Frame.Credential as Credential
-import GettoUpload.Command.Auth         as Auth
-import GettoUpload.Command.Store        as Store
-import GettoUpload.Command.Search       as Search
-import GettoUpload.Command.FixedMidashi as FixedMidashi
-import GettoUpload.Extension.Href exposing ( Href )
-import GettoUpload.Version as Version
+import GettoCodes.Layout.Frame.Static     as Static
+import GettoCodes.Layout.Frame.Credential as Credential
+import GettoCodes.Command.Auth         as Auth
+import GettoCodes.Command.Store        as Store
+import GettoCodes.Command.Search       as Search
+import GettoCodes.Command.FixedMidashi as FixedMidashi
+import GettoCodes.Extension.Href exposing ( Href )
+import GettoCodes.Version as Version
 
 import Getto.Command as Command
 import Getto.Command.Transition as T exposing ( Transition )

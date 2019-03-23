@@ -1,4 +1,4 @@
-module GettoUpload.App.Data.Upload.Edit.Data.View exposing
+module GettoCodes.App.Data.Upload.Edit.Data.View exposing
   ( Response
   , State(..)
   , response
@@ -6,7 +6,7 @@ module GettoUpload.App.Data.Upload.Edit.Data.View exposing
   , decodeResponse
   , isDifferentResponse
   )
-import GettoUpload.View.Http as HttpView
+import GettoCodes.View.Http as HttpView
 
 import Getto.Http.Header.Decode as HeaderDecode
 

@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Page.Side.Html exposing
+module GettoCodes.Layout.Page.Side.Html exposing
   ( mobileHeader
   , breadcrumb
   , navHeader
@@ -6,12 +6,12 @@ module GettoUpload.Layout.Page.Side.Html exposing
   , navAddress
   , nav
   )
-import GettoUpload.Layout.Page.Side.View as Side
-import GettoUpload.Layout.Page.Options.View as Options
-import GettoUpload.View.Http as HttpView
-import GettoUpload.View.Html as Html
-import GettoUpload.View.Icon as Icon
-import GettoUpload.Extension.Href as Href exposing ( Href )
+import GettoCodes.Layout.Page.Side.View as Side
+import GettoCodes.Layout.Page.Options.View as Options
+import GettoCodes.View.Http as HttpView
+import GettoCodes.View.Html as Html
+import GettoCodes.View.Icon as Icon
+import GettoCodes.Extension.Href as Href exposing ( Href )
 
 import Html as H exposing ( Html )
 import Html.Attributes as A

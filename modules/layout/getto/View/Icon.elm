@@ -1,4 +1,4 @@
-module GettoUpload.View.Icon exposing
+module GettoCodes.View.Icon exposing
   ( Icon(..)
   , Fa(..)
   , fas

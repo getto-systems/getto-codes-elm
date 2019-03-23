@@ -1,4 +1,4 @@
-module GettoUpload.App.Data.Upload.Edit.Complete exposing
+module GettoCodes.App.Data.Upload.Edit.Complete exposing
   ( Msg
   , init
   , encodeStore
@@ -8,16 +8,16 @@ module GettoUpload.App.Data.Upload.Edit.Complete exposing
   , contents
   , dialogs
   )
-import GettoUpload.App.Data.Upload.Edit.Model as Model
-import GettoUpload.App.Data.Upload.Edit.Complete.View as View
-import GettoUpload.App.Data.Upload.Edit.Complete.Html as Html
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Api as Api
-import GettoUpload.Command.Http as Http
-import GettoUpload.View.Http as HttpView
-import GettoUpload.I18n.App as AppI18n
-import GettoUpload.I18n.App.Data.Upload as I18n
-import GettoUpload.I18n.Http as HttpI18n
+import GettoCodes.App.Data.Upload.Edit.Model as Model
+import GettoCodes.App.Data.Upload.Edit.Complete.View as View
+import GettoCodes.App.Data.Upload.Edit.Complete.Html as Html
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Api as Api
+import GettoCodes.Command.Http as Http
+import GettoCodes.View.Http as HttpView
+import GettoCodes.I18n.App as AppI18n
+import GettoCodes.I18n.App.Data.Upload as I18n
+import GettoCodes.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode

@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Frame.Static exposing
+module GettoCodes.Layout.Frame.Static exposing
   ( Flags
   , Model
   , Project
@@ -8,7 +8,7 @@ module GettoUpload.Layout.Frame.Static exposing
   , page
   , version
   )
-import GettoUpload.Extension.Href as Href
+import GettoCodes.Extension.Href as Href
 
 type alias Flags =
   { project : Project

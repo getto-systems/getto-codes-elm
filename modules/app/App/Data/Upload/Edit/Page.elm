@@ -1,12 +1,12 @@
-module GettoUpload.App.Data.Upload.Edit.Page exposing ( main )
-import GettoUpload.App.Data.Upload.Edit.Model      as Model
-import GettoUpload.App.Data.Upload.Edit.Data       as Data
-import GettoUpload.App.Data.Upload.Edit.Info       as Info
-import GettoUpload.App.Data.Upload.Edit.Detail     as Detail
-import GettoUpload.App.Data.Upload.Edit.Complete   as Complete
-import GettoUpload.App.Data.Upload.Edit.Unregister as Unregister
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Page.Page as Layout
+module GettoCodes.App.Data.Upload.Edit.Page exposing ( main )
+import GettoCodes.App.Data.Upload.Edit.Model      as Model
+import GettoCodes.App.Data.Upload.Edit.Data       as Data
+import GettoCodes.App.Data.Upload.Edit.Info       as Info
+import GettoCodes.App.Data.Upload.Edit.Detail     as Detail
+import GettoCodes.App.Data.Upload.Edit.Complete   as Complete
+import GettoCodes.App.Data.Upload.Edit.Unregister as Unregister
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Page.Page as Layout
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode

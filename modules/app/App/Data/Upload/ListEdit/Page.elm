@@ -1,8 +1,8 @@
-module GettoUpload.App.Data.Upload.ListEdit.Page exposing ( main )
-import GettoUpload.App.Data.Upload.ListEdit.Model as Model
-import GettoUpload.App.Data.Upload.ListEdit.Search as Search
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Page.Page as Layout
+module GettoCodes.App.Data.Upload.ListEdit.Page exposing ( main )
+import GettoCodes.App.Data.Upload.ListEdit.Model as Model
+import GettoCodes.App.Data.Upload.ListEdit.Search as Search
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Page.Page as Layout
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode

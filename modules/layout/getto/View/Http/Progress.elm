@@ -1,4 +1,4 @@
-module GettoUpload.View.Http.Progress exposing
+module GettoCodes.View.Http.Progress exposing
   ( Model
   , percentage
   )

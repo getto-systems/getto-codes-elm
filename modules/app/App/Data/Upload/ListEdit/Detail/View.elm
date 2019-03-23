@@ -1,4 +1,4 @@
-module GettoUpload.App.Data.Upload.ListEdit.Detail.View exposing
+module GettoCodes.App.Data.Upload.ListEdit.Detail.View exposing
   ( Unit
   , Form
   , Fields
@@ -12,9 +12,9 @@ module GettoUpload.App.Data.Upload.ListEdit.Detail.View exposing
   , edit
   , view
   )
-import GettoUpload.App.Data.Upload.ListEdit.Data.View as Data
-import GettoUpload.View.Http as HttpView
-import GettoUpload.View.Validate as V
+import GettoCodes.App.Data.Upload.ListEdit.Data.View as Data
+import GettoCodes.View.Http as HttpView
+import GettoCodes.View.Validate as V
 
 import Getto.Apply as Apply
 import Getto.Field as Field

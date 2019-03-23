@@ -1,8 +1,8 @@
-module GettoUpload.App.Data.Upload.Edit.Unregister.View exposing
+module GettoCodes.App.Data.Upload.Edit.Unregister.View exposing
   ( Response
   , response
   )
-import GettoUpload.View.Http as HttpView
+import GettoCodes.View.Http as HttpView
 
 import Getto.Http.Header.Decode as HeaderDecode
 

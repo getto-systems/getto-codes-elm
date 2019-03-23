@@ -1,14 +1,14 @@
-module GettoUpload.App.Data.Upload.New.Model exposing
+module GettoCodes.App.Data.Upload.New.Model exposing
   ( Frame
   , Transition
   , Msg
   , Page
   , Register
   )
-import GettoUpload.App.Data.Upload.New.Register.View as Register
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Page.Page as Layout
-import GettoUpload.View.Http as HttpView
+import GettoCodes.App.Data.Upload.New.Register.View as Register
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Page.Page as Layout
+import GettoCodes.View.Http as HttpView
 
 import Getto.Command.Transition as T
 

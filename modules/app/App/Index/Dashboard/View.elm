@@ -1,4 +1,4 @@
-module GettoUpload.App.Index.Dashboard.View exposing
+module GettoCodes.App.Index.Dashboard.View exposing
   ( Example
   , example
   )

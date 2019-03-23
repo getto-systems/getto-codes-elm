@@ -12,6 +12,6 @@ test:
 
 release:
   only:
-    - release@getto-systems-labo/upload/elm
+    - release@getto-systems-labo/codes/elm
   script:
     - ./bin/push_tags.sh

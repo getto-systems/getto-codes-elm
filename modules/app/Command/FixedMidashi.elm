@@ -1,4 +1,4 @@
-port module GettoUpload.Command.FixedMidashi exposing
+port module GettoCodes.Command.FixedMidashi exposing
   ( create
   )
 

@@ -1,4 +1,4 @@
-module GettoUpload.View.Http exposing
+module GettoCodes.View.Http exposing
   ( Model
   , Migration
   , State(..)
@@ -27,7 +27,7 @@ module GettoUpload.View.Http exposing
   , body
   , progress
   )
-import GettoUpload.View.Http.Progress as Progress
+import GettoCodes.View.Http.Progress as Progress
 
 import Getto.Http.Header.Decode as HeaderDecode
 

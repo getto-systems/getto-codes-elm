@@ -1,8 +1,8 @@
-module GettoUpload.Env exposing
+module GettoCodes.Env exposing
   ( href
   , api
   )
-import GettoUpload.Version as Version
+import GettoCodes.Version as Version
 
 href =
   { internal = "/" ++ Version.data.version ++ "/"

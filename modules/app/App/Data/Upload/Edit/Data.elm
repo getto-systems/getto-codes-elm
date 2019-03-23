@@ -1,4 +1,4 @@
-module GettoUpload.App.Data.Upload.Edit.Data exposing
+module GettoCodes.App.Data.Upload.Edit.Data exposing
   ( Msg
   , getRequest
   , init
@@ -9,12 +9,12 @@ module GettoUpload.App.Data.Upload.Edit.Data exposing
   , subscriptions
   , update
   )
-import GettoUpload.App.Data.Upload.Edit.Model as Model
-import GettoUpload.App.Data.Upload.Edit.Data.View as View
-import GettoUpload.Layout.Frame as Frame
-import GettoUpload.Layout.Api as Api
-import GettoUpload.Command.Http as Http
-import GettoUpload.View.Http as HttpView
+import GettoCodes.App.Data.Upload.Edit.Model as Model
+import GettoCodes.App.Data.Upload.Edit.Data.View as View
+import GettoCodes.Layout.Frame as Frame
+import GettoCodes.Layout.Api as Api
+import GettoCodes.Command.Http as Http
+import GettoCodes.View.Http as HttpView
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode

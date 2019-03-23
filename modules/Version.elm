@@ -1,4 +1,4 @@
-module GettoUpload.Version exposing
+module GettoCodes.Version exposing
   ( Data
   , data
   )

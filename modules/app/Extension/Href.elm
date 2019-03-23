@@ -1,4 +1,4 @@
-module GettoUpload.Extension.Href exposing
+module GettoCodes.Extension.Href exposing
   ( Href
   , Path(..)
   , path
@@ -6,7 +6,7 @@ module GettoUpload.Extension.Href exposing
   , keycloak
   , toString
   )
-import GettoUpload.Env as Env
+import GettoCodes.Env as Env
 
 import Getto.Url.Query.Encode as QueryEncode
 

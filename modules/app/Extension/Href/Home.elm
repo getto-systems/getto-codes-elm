@@ -1,7 +1,7 @@
-module GettoUpload.Extension.Href.Home exposing
+module GettoCodes.Extension.Href.Home exposing
   ( index
   )
-import GettoUpload.Extension.Href as Href
+import GettoCodes.Extension.Href as Href
 
 import Getto.Url.Query.Encode as QueryEncode
 

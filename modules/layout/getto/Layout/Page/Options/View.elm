@@ -1,4 +1,4 @@
-module GettoUpload.Layout.Page.Options.View exposing
+module GettoCodes.Layout.Page.Options.View exposing
   ( Response
   , response
   , encodeResponse
@@ -7,7 +7,7 @@ module GettoUpload.Layout.Page.Options.View exposing
   , gender
   , quality
   )
-import GettoUpload.View.Http as HttpView
+import GettoCodes.View.Http as HttpView
 
 import Getto.Http.Header.Decode as HeaderDecode
 

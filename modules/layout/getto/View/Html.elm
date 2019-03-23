@@ -1,9 +1,9 @@
-module GettoUpload.View.Html exposing
+module GettoCodes.View.Html exposing
   ( icon
   , spinner
   , badge
   )
-import GettoUpload.View.Icon as Icon exposing ( Icon )
+import GettoCodes.View.Icon as Icon exposing ( Icon )
 
 import Html as H exposing ( Html )
 import Html.Attributes as A
