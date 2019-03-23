@@ -3,8 +3,6 @@ module GettoCodes.Command.Http.Real exposing
   )
 import GettoCodes.View.Http as HttpView
 
-import Getto.Http.Header.Decode as HeaderDecode
-
 import Json.Decode as Decode
 import Http
 

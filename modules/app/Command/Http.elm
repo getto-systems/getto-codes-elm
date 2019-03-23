@@ -17,11 +17,9 @@ import GettoCodes.Command.Http.Mock as Mock
 import GettoCodes.View.Http as HttpView
 
 import Getto.Url.Query.Encode as QueryEncode
-import Getto.Http.Header.Decode as HeaderDecode
 import Getto.Http.Part as Part
 
 import Json.Encode as Encode
-import Json.Decode as Decode
 import Http
 import Task
 

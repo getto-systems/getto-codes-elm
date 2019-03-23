@@ -14,12 +14,9 @@ import GettoCodes.View.Html.Input as Input
 import GettoCodes.View.Html.Http as Http
 import GettoCodes.View.Html.Table as TableView
 import GettoCodes.View.Html.Sort as SortView
-import GettoCodes.View.Icon as Icon
 import GettoCodes.View.Http as HttpView
 
 import Getto.Field as Field
-import Getto.Field.Form as Form
-import Getto.Field.Conflict as Conflict
 import Getto.Sort as Sort
 import Getto.Html.Table as Table
 

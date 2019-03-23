@@ -15,9 +15,6 @@ import GettoCodes.View.Html.Sort as SortView
 import GettoCodes.View.Icon as Icon
 import GettoCodes.View.Http as HttpView
 
-import Getto.Field as Field
-import Getto.Field.Form as Form
-import Getto.Field.Present as Present
 import Getto.Sort as Sort
 import Getto.Html.Table as Table
 

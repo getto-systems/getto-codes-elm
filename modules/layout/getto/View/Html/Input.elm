@@ -39,7 +39,6 @@ import Json.Decode as Decode
 import Html as H exposing ( Html )
 import Html.Attributes as A
 import Html.Events as E
-import Html.Lazy as L
 
 type alias Paging =
   { page : Int

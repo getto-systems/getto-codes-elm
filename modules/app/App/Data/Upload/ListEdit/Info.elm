@@ -26,11 +26,6 @@ import Getto.Field.Edit as Edit
 import Getto.Field.Conflict as Conflict
 import Getto.Html.Table as Table
 
-import Html as H exposing ( Html )
-import Html.Attributes as A
-import Html.Events as E
-import Html.Lazy as L
-
 type Msg
   = Edit    Data.Upload
   | Cancel  Data.Upload
