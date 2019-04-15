@@ -8,7 +8,7 @@ test:
   script:
     - npm install
     - ./bin/prepare-production.sh
-    - ./bin/test.sh
+    - npm test
 
 release:
   only:
