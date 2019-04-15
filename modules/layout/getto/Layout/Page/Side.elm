@@ -14,8 +14,7 @@ module GettoCodes.Layout.Page.Side exposing
   , navFooter
   )
 import GettoCodes.App.Href as AppHref
-import GettoCodes.App.Data.Upload.Href as UploadHref
-import GettoCodes.App.System.Href as SystemHref
+import GettoCodes.App.Menu as AppMenu
 import GettoCodes.Layout.Page.Model as Model
 import GettoCodes.Layout.Page.Side.Html as Html
 import GettoCodes.Layout.Page.Side.View as View
@@ -27,7 +26,6 @@ import GettoCodes.Command.Auth as Auth
 import GettoCodes.Command.Http as Http
 import GettoCodes.View.Http as HttpView
 import GettoCodes.View.Menu as Menu exposing ( Menu )
-import GettoCodes.View.Icon as IconView
 import GettoCodes.View.Href as Href exposing ( Href )
 import GettoCodes.I18n.App  as I18n
 import GettoCodes.I18n.Http as HttpI18n
@@ -213,24 +211,7 @@ menuI18n =
 
 
 menu : Menu
-menu =
-  [ ( "main"
-    , [ Menu.item (IconView.fas "home") AppHref.index []
-      ]
-    )
-  , ( "upload"
-    , [ Menu.item (IconView.fas "file") UploadHref.list
-        [ Menu.item (IconView.edit) UploadHref.new []
-        , Menu.item (IconView.edit) UploadHref.edit_ []
-        ]
-      , Menu.item (IconView.fas "file") UploadHref.list_edit []
-      ]
-    )
-  , ( "system"
-    , [ Menu.item (IconView.fas "user") SystemHref.profile []
-      ]
-    )
-  ]
+menu = AppMenu.menu
 
 allow : List String -> ( String, List Menu.Item ) -> Bool
 allow roles (group,_) =
