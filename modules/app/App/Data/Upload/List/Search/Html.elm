@@ -4,8 +4,8 @@ module GettoCodes.App.Data.Upload.List.Search.Html exposing
   , table
   )
 import GettoCodes.App.Data.Upload.List.Search.View as View
-import GettoCodes.Extension.Href as Href
-import GettoCodes.Extension.Href.Data.Upload as Upload
+import GettoCodes.View.Href as Href
+import GettoCodes.View.Href.Data.Upload as Upload
 import GettoCodes.View.Icon as IconView
 import GettoCodes.View.Http as HttpView
 import GettoCodes.Html.Icon as Icon

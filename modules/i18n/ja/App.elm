@@ -9,7 +9,7 @@ module GettoCodes.I18n.App exposing
   , box
   )
 import GettoCodes.Html.Input as Input
-import GettoCodes.Extension.Href as Href
+import GettoCodes.View.Href as Href
 
 menu : String -> String
 menu = String.toUpper

@@ -2,9 +2,9 @@ module GettoCodes.App.Index.Dashboard.Html exposing
   ( example
   )
 import GettoCodes.App.Index.Dashboard.View as View
+import GettoCodes.View.Href as Href exposing ( Href )
 import GettoCodes.View.Icon as IconView
 import GettoCodes.Html.Icon as Icon
-import GettoCodes.Extension.Href as Href exposing ( Href )
 
 import Html as H exposing ( Html )
 import Html.Attributes as A

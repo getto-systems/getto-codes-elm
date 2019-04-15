@@ -15,11 +15,10 @@ commander.version(require("../package.json").version)
 const fluidity = {
   "Version":   1,
   "Env":       2,
-  "Extension": 3,
-  "View":      4,
-  "Command":   5,
-  "Html":      6,
-  "I18n":      7,
+  "View":      3,
+  "Command":   4,
+  "Html":      5,
+  "I18n":      6,
 };
 
 const data = stat.dump({

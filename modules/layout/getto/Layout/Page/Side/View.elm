@@ -7,10 +7,10 @@ module GettoCodes.Layout.Page.Side.View exposing
   , menu
   , breadcrumb
   )
+import GettoCodes.View.Href as Href exposing ( Href )
 import GettoCodes.View.Menu as Menu
 import GettoCodes.View.Icon as IconView exposing ( Icon )
 import GettoCodes.View.Http as HttpView
-import GettoCodes.Extension.Href as Href exposing ( Href )
 
 import Getto.Http.Header.Decode as HeaderDecode
 

@@ -1,7 +1,7 @@
-module GettoCodes.Extension.Href.Home exposing
+module GettoCodes.View.Href.Home exposing
   ( index
   )
-import GettoCodes.Extension.Href as Href
+import GettoCodes.View.Href as Href
 
 import Getto.Url.Query.Encode as QueryEncode
 

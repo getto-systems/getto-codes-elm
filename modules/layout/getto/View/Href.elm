@@ -1,4 +1,4 @@
-module GettoCodes.Extension.Href exposing
+module GettoCodes.View.Href exposing
   ( Href
   , Path(..)
   , path
