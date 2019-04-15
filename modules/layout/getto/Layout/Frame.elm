@@ -30,7 +30,7 @@ import GettoCodes.Command.Auth         as Auth
 import GettoCodes.Command.Store        as Store
 import GettoCodes.Command.Search       as Search
 import GettoCodes.Command.FixedMidashi as FixedMidashi
-import GettoCodes.Extension.Href exposing ( Href )
+import GettoCodes.View.Href exposing ( Href )
 import GettoCodes.Version as Version
 
 import Getto.Command as Command

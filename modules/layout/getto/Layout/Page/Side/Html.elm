@@ -8,11 +8,11 @@ module GettoCodes.Layout.Page.Side.Html exposing
   )
 import GettoCodes.Layout.Page.Side.View as Side
 import GettoCodes.Layout.Page.Options.View as Options
+import GettoCodes.View.Href as Href exposing ( Href )
 import GettoCodes.View.Http as HttpView
 import GettoCodes.View.Icon as IconView
 import GettoCodes.Html.Icon as Icon
 import GettoCodes.Html.Content as Content
-import GettoCodes.Extension.Href as Href exposing ( Href )
 
 import Html as H exposing ( Html )
 import Html.Attributes as A

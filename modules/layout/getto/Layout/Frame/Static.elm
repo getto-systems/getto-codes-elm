@@ -8,7 +8,7 @@ module GettoCodes.Layout.Frame.Static exposing
   , page
   , version
   )
-import GettoCodes.Extension.Href as Href
+import GettoCodes.View.Href as Href
 
 type alias Flags =
   { project : Project

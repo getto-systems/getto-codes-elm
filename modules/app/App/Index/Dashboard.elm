@@ -13,9 +13,9 @@ import GettoCodes.App.Index.Model as Model
 import GettoCodes.App.Index.Dashboard.Html as Html
 import GettoCodes.App.Index.Dashboard.View as View
 import GettoCodes.Layout.Frame as Frame
+import GettoCodes.View.Href.Home as Home
 import GettoCodes.I18n.App.Index as I18n
 import GettoCodes.I18n.App as AppI18n
-import GettoCodes.Extension.Href.Home as Home
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode

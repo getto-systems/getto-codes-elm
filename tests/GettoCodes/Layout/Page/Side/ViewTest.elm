@@ -1,6 +1,6 @@
 module GettoCodes.Layout.Page.Side.ViewTest exposing (..)
 import GettoCodes.Layout.Page.Side.View as Side
-import GettoCodes.Extension.Href as Href exposing ( Href )
+import GettoCodes.View.Href as Href exposing ( Href )
 import GettoCodes.View.Menu as Menu
 import GettoCodes.View.Icon as IconView
 

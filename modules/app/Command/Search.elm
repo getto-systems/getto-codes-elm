@@ -6,7 +6,7 @@ module GettoCodes.Command.Search exposing
   , pushUrl
   , loadUrl
   )
-import GettoCodes.Extension.Href as Href exposing ( Href )
+import GettoCodes.View.Href as Href exposing ( Href )
 
 import Getto.Url.Query.Encode as QueryEncode
 import Getto.Url.Query.Decode as QueryDecode

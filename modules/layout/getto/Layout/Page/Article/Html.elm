@@ -3,9 +3,9 @@ module GettoCodes.Layout.Page.Article.Html exposing
   , header
   , footer
   )
+import GettoCodes.View.Href as Href
 import GettoCodes.View.Icon as IconView
 import GettoCodes.Html.Icon as Icon
-import GettoCodes.Extension.Href as Href
 
 import Html as H exposing ( Html )
 

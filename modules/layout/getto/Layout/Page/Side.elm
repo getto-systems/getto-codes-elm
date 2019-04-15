@@ -25,11 +25,11 @@ import GettoCodes.Command.Http as Http
 import GettoCodes.View.Http as HttpView
 import GettoCodes.View.Menu as Menu exposing ( Menu )
 import GettoCodes.View.Icon as IconView
+import GettoCodes.View.Href as Href exposing ( Href )
+import GettoCodes.View.Href.Home   as Home
+import GettoCodes.View.Href.Data.Upload as Upload
 import GettoCodes.I18n.App  as I18n
 import GettoCodes.I18n.Http as HttpI18n
-import GettoCodes.Extension.Href as Href exposing ( Href )
-import GettoCodes.Extension.Href.Home   as Home
-import GettoCodes.Extension.Href.Data.Upload as Upload
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
