@@ -6,8 +6,6 @@ module GettoCodes.App.Data.Upload.ListEdit.Search.Html exposing
   )
 import GettoCodes.App.Data.Upload.ListEdit.Data.View   as Data
 import GettoCodes.App.Data.Upload.ListEdit.Search.View as View
-import GettoCodes.View.Href as Href
-import GettoCodes.View.Href.Data.Upload as Upload
 import GettoCodes.View.Http as HttpView
 import GettoCodes.Html.Button as Button
 import GettoCodes.Html.Input as Input

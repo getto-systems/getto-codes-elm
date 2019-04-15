@@ -3,9 +3,9 @@ module GettoCodes.App.Data.Upload.List.Search.Html exposing
   , paging
   , table
   )
+import GettoCodes.App.Data.Upload.Href as UploadHref
 import GettoCodes.App.Data.Upload.List.Search.View as View
 import GettoCodes.View.Href as Href
-import GettoCodes.View.Href.Data.Upload as Upload
 import GettoCodes.View.Icon as IconView
 import GettoCodes.View.Http as HttpView
 import GettoCodes.Html.Icon as Icon
@@ -156,7 +156,7 @@ search model =
           , error |> Http.error model.i18n.http
           ]
       , [ " " |> H.text
-        , H.a [ Upload.new |> Href.toString |> A.href ]
+        , H.a [ UploadHref.new |> Href.toString |> A.href ]
           [ IconView.edit |> Icon.toHtml []
           , " " |> H.text
           , "new" |> model.i18n.form |> H.text
@@ -242,7 +242,7 @@ table model =
             , summary = Table.empty
             , content = \upload -> Table.td []
               [ H.p []
-                [ H.a [ upload.id |> Upload.edit |> Href.toString |> A.href ]
+                [ H.a [ upload.id |> UploadHref.edit |> Href.toString |> A.href ]
                   [ IconView.edit |> Icon.toHtml []
                   , " " |> H.text
                   , "detail" |> model.i18n.form |> H.text

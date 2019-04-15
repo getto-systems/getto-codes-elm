@@ -1,4 +1,4 @@
-module GettoCodes.View.Href.System exposing
+module GettoCodes.App.System.Href exposing
   ( profile
   )
 import GettoCodes.View.Href as Href

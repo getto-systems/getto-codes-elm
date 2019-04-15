@@ -8,14 +8,13 @@ module GettoCodes.App.Data.Upload.Edit.Unregister exposing
   , contents
   , dialogs
   )
+import GettoCodes.App.Data.Upload.Href as UploadHref
 import GettoCodes.App.Data.Upload.Edit.Model as Model
 import GettoCodes.App.Data.Upload.Edit.Unregister.View as View
 import GettoCodes.App.Data.Upload.Edit.Unregister.Html as Html
 import GettoCodes.Layout.Frame as Frame
 import GettoCodes.Layout.Api as Api
 import GettoCodes.Command.Http as Http
-import GettoCodes.View.Href as Href
-import GettoCodes.View.Href.Data.Upload as Upload
 import GettoCodes.View.Http as HttpView
 import GettoCodes.I18n.App as AppI18n
 import GettoCodes.I18n.App.Data.Upload as I18n
@@ -84,7 +83,7 @@ update msg model =
       ( { model | delete = model.delete |> HttpView.update mig }
       , case mig |> HttpView.isSuccess of
         Nothing -> T.none
-        Just _  -> Upload.list |> Frame.loadUrl
+        Just _  -> UploadHref.list |> Frame.loadUrl
       )
 
 
