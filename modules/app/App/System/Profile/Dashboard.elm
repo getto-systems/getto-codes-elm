@@ -9,10 +9,10 @@ module GettoCodes.App.System.Profile.Dashboard exposing
   , update
   , contents
   )
+import GettoCodes.App.System.Profile.I18n as I18n
 import GettoCodes.App.System.Profile.Model as Model
 import GettoCodes.App.System.Profile.Dashboard.Html as Html
 import GettoCodes.Layout.Frame as Frame
-import GettoCodes.I18n.App.System.Profile as I18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode

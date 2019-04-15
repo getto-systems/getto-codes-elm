@@ -1,4 +1,4 @@
-module GettoCodes.I18n.App.System.Profile exposing
+module GettoCodes.App.System.Profile.I18n exposing
   ( button
   )
 

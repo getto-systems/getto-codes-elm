@@ -1,4 +1,4 @@
-module GettoCodes.I18n.App exposing
+module GettoCodes.App.I18n exposing
   ( title
   , menu
   , role
@@ -7,9 +7,11 @@ module GettoCodes.I18n.App exposing
   , paging
   , table
   , box
+  , http
   )
 import GettoCodes.Html.Input as Input
 import GettoCodes.View.Href as Href
+import GettoCodes.View.Http as HttpView
 
 menu : String -> String
 menu = String.toUpper
@@ -102,3 +104,19 @@ box name =
     "unregister" -> "削除"
 
     _ -> name
+
+http : HttpView.Error -> String
+http err =
+  case err of
+    HttpView.BadUrl _             -> "アクセスエラー"
+    HttpView.Timeout              -> "タイムアウトエラー"
+    HttpView.NetworkError         -> "ネットワークエラー"
+    HttpView.BadRequest           -> "リクエストエラー"
+    HttpView.Unauthorized         -> "ログインしなおしてください"
+    HttpView.Forbidden            -> "権限がありません"
+    HttpView.NotFound             -> "存在しませんでした"
+    HttpView.Conflict             -> "ほかの場所で変更されました"
+    HttpView.UnprocessableEntity  -> "保存できませんでした"
+    HttpView.PreconditionRequired -> "情報が送信されませんでした"
+    HttpView.BadStatus _          -> "サーバーエラー"
+    HttpView.BadResponse _        -> "レスポンスエラー"

@@ -1,4 +1,4 @@
-module GettoCodes.I18n.App.Index exposing
+module GettoCodes.App.Index.I18n exposing
   ( title
   )
 
