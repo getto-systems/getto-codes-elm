@@ -24,6 +24,8 @@ title path =
     Href.Internal "data/upload/new.html"       -> "アップロード登録"
     Href.Internal "data/upload/edit.html"      -> "アップロード情報"
 
+    Href.Internal "system/profile.html" -> "プロフィール"
+
     Href.Internal p -> p
     Href.Keycloak p -> "keycloak:" ++ p
 

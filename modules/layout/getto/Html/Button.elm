@@ -8,9 +8,11 @@ module GettoCodes.Html.Button exposing
   , cancel
   , save
   , delete
+  , logout
   , search
   , complete
   )
+import GettoCodes.View.Icon as IconView
 import GettoCodes.Html.Icon as Icon
 
 import Html as H exposing ( Html )
@@ -69,6 +71,14 @@ delete : String -> Html msg
 delete text =
   submit [ "is-delete" |> A.class ]
     [ text |> H.text ]
+
+logout : String -> Html msg
+logout text =
+  submit [ "is-delete" |> A.class ]
+    [ IconView.fas "sign-out-alt" |> Icon.toHtml []
+    , " " |> H.text
+    , text |> H.text
+    ]
 
 search : String -> Html msg
 search text =

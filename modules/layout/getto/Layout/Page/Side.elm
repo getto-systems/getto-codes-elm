@@ -28,6 +28,7 @@ import GettoCodes.View.Icon as IconView
 import GettoCodes.View.Href as Href exposing ( Href )
 import GettoCodes.View.Href.Home   as Home
 import GettoCodes.View.Href.Data.Upload as Upload
+import GettoCodes.View.Href.System as System
 import GettoCodes.I18n.App  as I18n
 import GettoCodes.I18n.Http as HttpI18n
 
@@ -223,6 +224,10 @@ menu =
         , Menu.item (IconView.edit) Upload.edit_ []
         ]
       , Menu.item (IconView.fas "file") Upload.list_edit []
+      ]
+    )
+  , ( "system"
+    , [ Menu.item (IconView.fas "user") System.profile []
       ]
     )
   ]
