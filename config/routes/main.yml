@@ -8,3 +8,7 @@
     - name: list_edit
     - name: new
     - name: edit
+
+- name: system
+  entries:
+  - name: profile
