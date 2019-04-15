@@ -9,8 +9,9 @@ module GettoCodes.Layout.Page.Side.Html exposing
 import GettoCodes.Layout.Page.Side.View as Side
 import GettoCodes.Layout.Page.Options.View as Options
 import GettoCodes.View.Http as HttpView
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Icon as IconView
+import GettoCodes.Html.Icon as Icon
+import GettoCodes.Html.Content as Content
 import GettoCodes.Extension.Href as Href exposing ( Href )
 
 import Html as H exposing ( Html )
@@ -88,7 +89,7 @@ navAddress model =
       in
         H.li []
           [ H.span [ state |> A.class ]
-            [ Icon.fas "circle" |> Html.icon []
+            [ IconView.fas "circle" |> Icon.toHtml []
             , " " |> H.text
             , m.title |> model.i18n.mode |> H.text
             ]
@@ -96,8 +97,8 @@ navAddress model =
 
     badge get =
       case get |> HttpView.state of
-        HttpView.Ready (Just error) -> error |> model.i18n.http |> Html.badge ["is-small","is-danger"]
-        HttpView.Connecting _       -> Html.spinner
+        HttpView.Ready (Just error) -> error |> model.i18n.http |> Content.badge ["is-small","is-danger"]
+        HttpView.Connecting _       -> Icon.spinner
         _ -> "" |> H.text
   in
     H.address []
@@ -114,7 +115,7 @@ navAddress model =
         , model.get.options |> badge
         , " " |> H.text
         , H.a [ model.href.profile |> Href.toString |> A.href ]
-          [ Icon.fas "user-circle" |> Html.icon []
+          [ IconView.fas "user-circle" |> Icon.toHtml []
           , " " |> H.text
           , model.roles |> List.map model.i18n.role |> String.join " " |> H.text
           ]
@@ -133,7 +134,7 @@ breadcrumb data =
             (\item ->
               H.li []
                 [ H.a [ item.href |> Href.toString |> A.href ]
-                  [ item.icon |> Html.icon []
+                  [ item.icon |> Icon.toHtml []
                   , " " |> H.text
                   , item.title |> H.text
                   ]
@@ -141,7 +142,7 @@ breadcrumb data =
             )
           ]
           |> List.concat
-          |> List.intersperse (H.li [] [ Icon.fas "caret-right" |> Html.icon ["fa-fw"] ])
+          |> List.intersperse (H.li [] [ IconView.fas "caret-right" |> Icon.toHtml ["fa-fw"] ])
         )
 
 
@@ -169,12 +170,12 @@ nav model =
     badge count =
       case count of
         Nothing    -> "" |> H.text
-        Just value -> value |> String.fromInt |> Html.badge ["is-danger","is-small"]
+        Just value -> value |> String.fromInt |> Content.badge ["is-danger","is-small"]
 
     caret item =
       if item.collapsed
-        then Icon.fas "caret-left" |> Html.icon []
-        else Icon.fas "caret-down" |> Html.icon []
+        then IconView.fas "caret-left" |> Icon.toHtml []
+        else IconView.fas "caret-down" |> Icon.toHtml []
 
     active item =
       if item.active
@@ -201,7 +202,7 @@ nav model =
             (\item ->
               H.li [ item |> active |> A.class ]
                 [ H.a [ item.href |> Href.toString |> A.href ]
-                  [ item.icon |> Html.icon ["fa-fw"]
+                  [ item.icon |> Icon.toHtml ["fa-fw"]
                   , " " |> H.text
                   , item.title |> H.text
                   , " " |> H.text

@@ -8,13 +8,12 @@ import GettoCodes.App.Data.Upload.ListEdit.Data.View   as Data
 import GettoCodes.App.Data.Upload.ListEdit.Search.View as View
 import GettoCodes.Extension.Href as Href
 import GettoCodes.Extension.Href.Data.Upload as Upload
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Html.Button as Button
-import GettoCodes.View.Html.Input as Input
-import GettoCodes.View.Html.Http as Http
-import GettoCodes.View.Html.Table as TableView
-import GettoCodes.View.Html.Sort as SortView
 import GettoCodes.View.Http as HttpView
+import GettoCodes.Html.Button as Button
+import GettoCodes.Html.Input as Input
+import GettoCodes.Html.Http as Http
+import GettoCodes.Html.Table as TableView
+import GettoCodes.Html.Sort as SortView
 
 import Getto.Field as Field
 import Getto.Sort as Sort

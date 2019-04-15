@@ -6,14 +6,14 @@ module GettoCodes.App.Data.Upload.List.Search.Html exposing
 import GettoCodes.App.Data.Upload.List.Search.View as View
 import GettoCodes.Extension.Href as Href
 import GettoCodes.Extension.Href.Data.Upload as Upload
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Html.Button as Button
-import GettoCodes.View.Html.Input as Input
-import GettoCodes.View.Html.Http as Http
-import GettoCodes.View.Html.Table as TableView
-import GettoCodes.View.Html.Sort as SortView
-import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Icon as IconView
 import GettoCodes.View.Http as HttpView
+import GettoCodes.Html.Icon as Icon
+import GettoCodes.Html.Button as Button
+import GettoCodes.Html.Input as Input
+import GettoCodes.Html.Http as Http
+import GettoCodes.Html.Table as TableView
+import GettoCodes.Html.Sort as SortView
 
 import Getto.Sort as Sort
 import Getto.Html.Table as Table
@@ -157,7 +157,7 @@ search model =
           ]
       , [ " " |> H.text
         , H.a [ Upload.new |> Href.toString |> A.href ]
-          [ Icon.edit |> Html.icon []
+          [ IconView.edit |> Icon.toHtml []
           , " " |> H.text
           , "new" |> model.i18n.form |> H.text
           ]
@@ -243,7 +243,7 @@ table model =
             , content = \upload -> Table.td []
               [ H.p []
                 [ H.a [ upload.id |> Upload.edit |> Href.toString |> A.href ]
-                  [ Icon.edit |> Html.icon []
+                  [ IconView.edit |> Icon.toHtml []
                   , " " |> H.text
                   , "detail" |> model.i18n.form |> H.text
                   ]
@@ -280,7 +280,7 @@ table model =
                   , content = \upload -> Table.td [ "is-center" |> A.class ]
                     [ H.p []
                       [ if upload.gender == gender.value
-                        then Icon.far "check-circle" |> Html.icon []
+                        then IconView.far "check-circle" |> Icon.toHtml []
                         else "" |> H.text
                       ]
                     ]
@@ -292,7 +292,7 @@ table model =
                   , content = \upload -> Table.td [ "is-center" |> A.class ]
                     [ H.p []
                       [ if upload.gender /= gender.value
-                        then Icon.fas "times" |> Html.icon []
+                        then IconView.fas "times" |> Icon.toHtml []
                         else "" |> H.text
                       ]
                     ]

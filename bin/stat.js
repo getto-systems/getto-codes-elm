@@ -17,11 +17,9 @@ const fluidity = {
   "Env":       2,
   "Extension": 3,
   "View":      4,
-  "Command":   6,
-
-  "Layout": 7,
-  "App":    7,
-  "I18n":   7,
+  "Command":   5,
+  "Html":      6,
+  "I18n":      7,
 };
 
 const data = stat.dump({
@@ -34,7 +32,17 @@ const data = stat.dump({
     if (tips[0] !== "GettoCodes") {
       return 0;
     } else {
-      return fluidity[tips[1]];
+      const module = tips[1];
+      if (module === "App" || module === "Layout") {
+        const bottom = tips.pop();
+        if (fluidity[bottom] !== null) {
+          return fluidity[bottom];
+        } else {
+          return fluidity.I18n;
+        }
+      } else {
+        return fluidity[module];
+      }
     }
   },
 });

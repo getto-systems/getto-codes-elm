@@ -8,7 +8,7 @@ module GettoCodes.I18n.App exposing
   , table
   , box
   )
-import GettoCodes.View.Html.Input as Input
+import GettoCodes.Html.Input as Input
 import GettoCodes.Extension.Href as Href
 
 menu : String -> String
