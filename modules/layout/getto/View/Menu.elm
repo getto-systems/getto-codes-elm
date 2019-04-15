@@ -6,7 +6,7 @@ module GettoCodes.View.Menu exposing
   , href
   , children
   )
-import GettoCodes.View.Icon as Icon exposing ( Icon )
+import GettoCodes.View.Icon as IconView exposing ( Icon )
 import GettoCodes.Extension.Href as Href exposing ( Href )
 
 type alias Menu = List ( String, List Item )

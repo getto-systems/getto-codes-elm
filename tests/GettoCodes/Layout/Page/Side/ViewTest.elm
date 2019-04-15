@@ -2,7 +2,7 @@ module GettoCodes.Layout.Page.Side.ViewTest exposing (..)
 import GettoCodes.Layout.Page.Side.View as Side
 import GettoCodes.Extension.Href as Href exposing ( Href )
 import GettoCodes.View.Menu as Menu
-import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Icon as IconView
 
 import Getto.Url.Query.Encode as QueryEncode
 
@@ -16,27 +16,27 @@ href = Href.internal QueryEncode.null
 menu : Menu.Menu
 menu =
   [ ( "main"
-    , [ Menu.item (Icon.fas "home") ("home.html" |> href)
-        [ Menu.item (Icon.fas "file") ("home/file.html" |> href)
-          [ Menu.item (Icon.fas "pencil") ("home/file/edit.html" |> href) []
+    , [ Menu.item (IconView.fas "home") ("home.html" |> href)
+        [ Menu.item (IconView.fas "file") ("home/file.html" |> href)
+          [ Menu.item (IconView.fas "pencil") ("home/file/edit.html" |> href) []
           ]
         ]
-      , Menu.item (Icon.fas "data") ("data.html" |> href)
-        [ Menu.item (Icon.fas "file") ("data/file.html" |> href)
-          [ Menu.item (Icon.fas "pencil") ("data/file/edit.html" |> href) []
+      , Menu.item (IconView.fas "data") ("data.html" |> href)
+        [ Menu.item (IconView.fas "file") ("data/file.html" |> href)
+          [ Menu.item (IconView.fas "pencil") ("data/file/edit.html" |> href) []
           ]
         ]
       ]
     )
   , ( "data"
-    , [ Menu.item (Icon.fas "home") ("master.html" |> href)
-        [ Menu.item (Icon.fas "file") ("master/file.html" |> href)
-          [ Menu.item (Icon.fas "pencil") ("master/file/edit.html" |> href) []
+    , [ Menu.item (IconView.fas "home") ("master.html" |> href)
+        [ Menu.item (IconView.fas "file") ("master/file.html" |> href)
+          [ Menu.item (IconView.fas "pencil") ("master/file/edit.html" |> href) []
           ]
         ]
-      , Menu.item (Icon.fas "data") ("upload.html" |> href)
-        [ Menu.item (Icon.fas "file") ("upload/file.html" |> href)
-          [ Menu.item (Icon.fas "pencil") ("upload/file/edit.html" |> href) []
+      , Menu.item (IconView.fas "data") ("upload.html" |> href)
+        [ Menu.item (IconView.fas "file") ("upload/file.html" |> href)
+          [ Menu.item (IconView.fas "pencil") ("upload/file/edit.html" |> href) []
           ]
         ]
       ]
@@ -74,13 +74,13 @@ suite =
                   [ { active = True
                     , title  = "home.html"
                     , href   = "home.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "data.html"
                     , href   = "data.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -93,13 +93,13 @@ suite =
                   [ { active = False
                     , title  = "master.html"
                     , href   = "master.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "upload.html"
                     , href   = "upload.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -124,13 +124,13 @@ suite =
                   [ { active = True
                     , title  = "home.html"
                     , href   = "home.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "data.html"
                     , href   = "data.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -155,13 +155,13 @@ suite =
                   [ { active = True
                     , title  = "home.html"
                     , href   = "home.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "data.html"
                     , href   = "data.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -174,13 +174,13 @@ suite =
                   [ { active = False
                     , title  = "master.html"
                     , href   = "master.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "upload.html"
                     , href   = "upload.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -205,13 +205,13 @@ suite =
                   [ { active = True
                     , title  = "home.html"
                     , href   = "home.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "data.html"
                     , href   = "data.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -242,7 +242,7 @@ suite =
                   [ { active = True
                     , title  = "home.html"
                     , href   = "home.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   ]
@@ -255,13 +255,13 @@ suite =
                   [ { active = False
                     , title  = "master.html"
                     , href   = "master.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "upload.html"
                     , href   = "upload.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -289,13 +289,13 @@ suite =
                   [ { active = True
                     , title  = "home.html"
                     , href   = "home.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Just 4
                     }
                   , { active = False
                     , title  = "data.html"
                     , href   = "data.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -308,13 +308,13 @@ suite =
                   [ { active = False
                     , title  = "master.html"
                     , href   = "master.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "upload.html"
                     , href   = "upload.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -343,13 +343,13 @@ suite =
                   [ { active = True
                     , title  = "home.html"
                     , href   = "home.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Just 4
                     }
                   , { active = False
                     , title  = "data.html"
                     , href   = "data.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Just 3
                     }
                   ]
@@ -362,13 +362,13 @@ suite =
                   [ { active = False
                     , title  = "master.html"
                     , href   = "master.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "upload.html"
                     , href   = "upload.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -397,13 +397,13 @@ suite =
                   [ { active = True
                     , title  = "home.html"
                     , href   = "home.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Just 7
                     }
                   , { active = False
                     , title  = "data.html"
                     , href   = "data.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -416,13 +416,13 @@ suite =
                   [ { active = False
                     , title  = "master.html"
                     , href   = "master.html" |> href
-                    , icon   = Icon.fas "home"
+                    , icon   = IconView.fas "home"
                     , badge  = Nothing
                     }
                   , { active = False
                     , title  = "upload.html"
                     , href   = "upload.html" |> href
-                    , icon   = Icon.fas "data"
+                    , icon   = IconView.fas "data"
                     , badge  = Nothing
                     }
                   ]
@@ -437,7 +437,7 @@ suite =
           |> Expect.equal
             (Just
               ( "main"
-              , [ { title = "home.html", icon = Icon.fas "home", href = "home.html" |> href }
+              , [ { title = "home.html", icon = IconView.fas "home", href = "home.html" |> href }
                 ]
               )
             )
@@ -448,8 +448,8 @@ suite =
           |> Expect.equal
             (Just
               ( "main"
-              , [ { title = "home.html", icon = Icon.fas "home", href = "home.html" |> href }
-                , { title = "home/file.html", icon = Icon.fas "file", href = "home/file.html" |> href }
+              , [ { title = "home.html", icon = IconView.fas "home", href = "home.html" |> href }
+                , { title = "home/file.html", icon = IconView.fas "file", href = "home/file.html" |> href }
                 ]
               )
             )
@@ -460,9 +460,9 @@ suite =
           |> Expect.equal
             (Just
               ( "main"
-              , [ { title = "home.html", icon = Icon.fas "home", href = "home.html" |> href }
-                , { title = "home/file.html", icon = Icon.fas "file", href = "home/file.html" |> href }
-                , { title = "home/file/edit.html", icon = Icon.fas "pencil", href = "home/file/edit.html" |> href }
+              , [ { title = "home.html", icon = IconView.fas "home", href = "home.html" |> href }
+                , { title = "home/file.html", icon = IconView.fas "file", href = "home/file.html" |> href }
+                , { title = "home/file/edit.html", icon = IconView.fas "pencil", href = "home/file/edit.html" |> href }
                 ]
               )
             )
@@ -473,9 +473,9 @@ suite =
           |> Expect.equal
             (Just
               ( "data"
-              , [ { title = "master.html", icon = Icon.fas "home", href = "master.html" |> href }
-                , { title = "master/file.html", icon = Icon.fas "file", href = "master/file.html" |> href }
-                , { title = "master/file/edit.html", icon = Icon.fas "pencil", href = "master/file/edit.html" |> href }
+              , [ { title = "master.html", icon = IconView.fas "home", href = "master.html" |> href }
+                , { title = "master/file.html", icon = IconView.fas "file", href = "master/file.html" |> href }
+                , { title = "master/file/edit.html", icon = IconView.fas "pencil", href = "master/file/edit.html" |> href }
                 ]
               )
             )
@@ -486,7 +486,7 @@ suite =
           |> Expect.equal
             (Just
               ( "data"
-              , [ { title = "upload.html", icon = Icon.fas "data", href = "upload.html" |> href }
+              , [ { title = "upload.html", icon = IconView.fas "data", href = "upload.html" |> href }
                 ]
               )
             )

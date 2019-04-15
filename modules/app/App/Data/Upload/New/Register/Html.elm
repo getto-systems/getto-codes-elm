@@ -3,11 +3,10 @@ module GettoCodes.App.Data.Upload.New.Register.Html exposing
   , pairs
   )
 import GettoCodes.App.Data.Upload.New.Register.View as View
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Html.Button as Button
-import GettoCodes.View.Html.Input as Input
-import GettoCodes.View.Html.Http as Http
 import GettoCodes.View.Http as HttpView
+import GettoCodes.Html.Button as Button
+import GettoCodes.Html.Input as Input
+import GettoCodes.Html.Http as Http
 
 import Getto.Field as Field
 

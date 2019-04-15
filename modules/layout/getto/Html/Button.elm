@@ -1,4 +1,4 @@
-module GettoCodes.View.Html.Button exposing
+module GettoCodes.Html.Button exposing
   ( error
   , connecting
   , select
@@ -11,7 +11,7 @@ module GettoCodes.View.Html.Button exposing
   , search
   , complete
   )
-import GettoCodes.View.Html as Html
+import GettoCodes.Html.Icon as Icon
 
 import Html as H exposing ( Html )
 import Html.Attributes as A
@@ -25,7 +25,7 @@ error text =
 connecting : String -> Html msg
 connecting text =
   button [ "is-connecting" |> A.class ]
-    [ Html.spinner
+    [ Icon.spinner
     , " " |> H.text
     , text |> H.text
     ]

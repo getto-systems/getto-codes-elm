@@ -3,9 +3,9 @@ module GettoCodes.App.Data.Upload.Edit.Unregister.Html exposing
   , dialog
   )
 import GettoCodes.App.Data.Upload.Edit.Data.View as Data
-import GettoCodes.View.Html.Button as Button
-import GettoCodes.View.Html.Http as Http
 import GettoCodes.View.Http as HttpView
+import GettoCodes.Html.Button as Button
+import GettoCodes.Html.Http as Http
 
 import Html as H exposing ( Html )
 import Html.Attributes as A

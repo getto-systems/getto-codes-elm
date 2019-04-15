@@ -3,8 +3,8 @@ module GettoCodes.Layout.Page.Article.Html exposing
   , header
   , footer
   )
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Icon as IconView
+import GettoCodes.Html.Icon as Icon
 import GettoCodes.Extension.Href as Href
 
 import Html as H exposing ( Html )
@@ -28,7 +28,7 @@ footer : { copyright : String } -> Html msg
 footer model =
   H.footer []
     [ H.p []
-      [ Icon.far "copyright" |> Html.icon []
+      [ IconView.far "copyright" |> Icon.toHtml []
       , " " |> H.text
       , model.copyright |> H.text
       ]

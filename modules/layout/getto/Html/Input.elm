@@ -1,4 +1,4 @@
-module GettoCodes.View.Html.Input exposing
+module GettoCodes.Html.Input exposing
   ( Paging
   , isError
   , isPresent
@@ -26,9 +26,9 @@ module GettoCodes.View.Html.Input exposing
   , onChange
   , paging
   )
-import GettoCodes.View.Icon as Icon
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Html.Button as Button
+import GettoCodes.View.Icon as IconView
+import GettoCodes.Html.Icon as Icon
+import GettoCodes.Html.Button as Button
 
 import Getto.Field as Field
 import Getto.Field.Conflict as Conflict
@@ -192,7 +192,7 @@ files li =
         (li |> List.map
           (\file ->
             H.li []
-              [ Icon.far "file" |> Html.icon ["fa-fw"]
+              [ IconView.far "file" |> Icon.toHtml ["fa-fw"]
               , file |> File.name |> H.text
               ]
           )

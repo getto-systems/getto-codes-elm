@@ -1,8 +1,8 @@
-module GettoCodes.View.Html.Sort exposing
+module GettoCodes.Html.Sort exposing
   ( render
   )
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Icon as IconView
+import GettoCodes.Html.Icon as Icon
 
 import Getto.Sort as Sort
 
@@ -32,11 +32,11 @@ render model column inner =
       )
       ( List.append inner
         [ " " |> H.text
-        , Html.icon [] <|
+        , Icon.toHtml [] <|
           case current of
-            Nothing        -> Icon.fas "sort"
-            Just Sort.Up   -> Icon.fas "sort-up"
-            Just Sort.Down -> Icon.fas "sort-down"
+            Nothing        -> IconView.fas "sort"
+            Just Sort.Up   -> IconView.fas "sort-up"
+            Just Sort.Down -> IconView.fas "sort-down"
         ]
       )
     ]

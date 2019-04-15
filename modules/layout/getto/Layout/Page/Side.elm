@@ -24,7 +24,7 @@ import GettoCodes.Command.Auth as Auth
 import GettoCodes.Command.Http as Http
 import GettoCodes.View.Http as HttpView
 import GettoCodes.View.Menu as Menu exposing ( Menu )
-import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Icon as IconView
 import GettoCodes.I18n.App  as I18n
 import GettoCodes.I18n.Http as HttpI18n
 import GettoCodes.Extension.Href as Href exposing ( Href )
@@ -214,15 +214,15 @@ menuI18n =
 menu : Menu
 menu =
   [ ( "main"
-    , [ Menu.item (Icon.fas "home") Home.index []
+    , [ Menu.item (IconView.fas "home") Home.index []
       ]
     )
   , ( "upload"
-    , [ Menu.item (Icon.fas "file") Upload.list
-        [ Menu.item (Icon.edit) Upload.new []
-        , Menu.item (Icon.edit) Upload.edit_ []
+    , [ Menu.item (IconView.fas "file") Upload.list
+        [ Menu.item (IconView.edit) Upload.new []
+        , Menu.item (IconView.edit) Upload.edit_ []
         ]
-      , Menu.item (Icon.fas "file") Upload.list_edit []
+      , Menu.item (IconView.fas "file") Upload.list_edit []
       ]
     )
   ]

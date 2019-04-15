@@ -4,11 +4,12 @@ module GettoCodes.App.Data.Upload.Edit.Info.Html exposing
   )
 import GettoCodes.App.Data.Upload.Edit.Data.View as Data
 import GettoCodes.App.Data.Upload.Edit.Info.View as Info
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Html.Button as Button
-import GettoCodes.View.Html.Input as Input
-import GettoCodes.View.Html.Http as Http
 import GettoCodes.View.Http as HttpView
+import GettoCodes.Html.Icon as Icon
+import GettoCodes.Html.Content as Content
+import GettoCodes.Html.Button as Button
+import GettoCodes.Html.Input as Input
+import GettoCodes.Html.Http as Http
 
 import Getto.Field as Field
 import Getto.Field.Edit as Edit
@@ -47,10 +48,10 @@ info model =
       case model.get |> HttpView.state of
         HttpView.Ready (Just error) ->
           H.section [ "loading" |> A.class ]
-            [ H.section [] [ error |> model.i18n.http |> Html.badge ["is-danger"] ] ]
+            [ H.section [] [ error |> model.i18n.http |> Content.badge ["is-danger"] ] ]
         _ ->
           H.section [ "loading" |> A.class ]
-            [ H.section [] [ Html.spinner ] ]
+            [ H.section [] [ Icon.spinner ] ]
     Just view ->
       H.section []
         [ H.form [ model.msg.put |> E.onSubmit ]
@@ -177,7 +178,7 @@ info model =
                     ]
                   HttpView.Ready response ->
                     [ case model.get |> HttpView.state of
-                      HttpView.Connecting _ -> Html.spinner
+                      HttpView.Connecting _ -> Icon.spinner
                       HttpView.Ready _ ->
                         case view.state of
                           Edit.Same -> "" |> H.text

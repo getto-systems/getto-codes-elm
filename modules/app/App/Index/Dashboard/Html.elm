@@ -2,8 +2,8 @@ module GettoCodes.App.Index.Dashboard.Html exposing
   ( example
   )
 import GettoCodes.App.Index.Dashboard.View as View
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Icon as Icon
+import GettoCodes.View.Icon as IconView
+import GettoCodes.Html.Icon as Icon
 import GettoCodes.Extension.Href as Href exposing ( Href )
 
 import Html as H exposing ( Html )
@@ -40,7 +40,7 @@ example model =
       [ model.data.percent ++ "%" |> H.text ]
     , H.footer []
       [ H.a [ model.page |> Href.toString |> A.href ]
-        [ Icon.fas "user" |> Html.icon []
+        [ IconView.fas "user" |> Icon.toHtml []
         , " " |> H.text
         , model.page |> Href.path |> model.i18n.title |> H.text
         ]

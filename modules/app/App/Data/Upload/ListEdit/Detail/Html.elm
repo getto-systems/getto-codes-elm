@@ -3,11 +3,11 @@ module GettoCodes.App.Data.Upload.ListEdit.Detail.Html exposing
   , pairs
   )
 import GettoCodes.App.Data.Upload.ListEdit.Detail.View as Detail
-import GettoCodes.View.Html as Html
-import GettoCodes.View.Html.Button as Button
-import GettoCodes.View.Html.Input as Input
-import GettoCodes.View.Html.Http as Http
 import GettoCodes.View.Http as HttpView
+import GettoCodes.Html.Icon as Icon
+import GettoCodes.Html.Button as Button
+import GettoCodes.Html.Input as Input
+import GettoCodes.Html.Http as Http
 
 import Getto.Field as Field
 import Getto.Field.Edit as Edit
@@ -103,7 +103,7 @@ detail model =
                     ]
                   HttpView.Ready response ->
                     [ case v.get |> HttpView.state of
-                        HttpView.Connecting _ -> Html.spinner
+                        HttpView.Connecting _ -> Icon.spinner
                         HttpView.Ready _ ->
                           case v.view.state of
                             Edit.Same -> "" |> H.text

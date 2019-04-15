@@ -1,4 +1,4 @@
-module GettoCodes.View.Html.Table exposing
+module GettoCodes.Html.Table exposing
   ( config
   )
 
