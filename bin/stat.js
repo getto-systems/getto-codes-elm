@@ -13,12 +13,16 @@ commander.version(require("../package.json").version)
   .parse(process.argv);
 
 const fluidity = {
-  "Version":   1,
-  "Env":       2,
-  "View":      3,
-  "Command":   4,
-  "Html":      5,
-  "I18n":      6,
+  "Version": 1,
+  "Env":     2,
+
+  "View": 3,
+  "Href": 3,
+
+  "Command": 4,
+
+  "Html": 5,
+  "I18n": 6,
 };
 
 const data = stat.dump({

@@ -9,11 +9,11 @@ module GettoCodes.App.Index.Dashboard exposing
   , update
   , contents
   )
+import GettoCodes.App.Href as AppHref
 import GettoCodes.App.Index.Model as Model
 import GettoCodes.App.Index.Dashboard.Html as Html
 import GettoCodes.App.Index.Dashboard.View as View
 import GettoCodes.Layout.Frame as Frame
-import GettoCodes.View.Href.Home as Home
 import GettoCodes.I18n.App.Index as I18n
 import GettoCodes.I18n.App as AppI18n
 
@@ -81,7 +81,7 @@ example model = L.lazy
       { current = 3
       , target = 20
       }
-    , page = Home.index
+    , page = AppHref.index
     , i18n =
       { title = AppI18n.title
       , name  = I18n.title

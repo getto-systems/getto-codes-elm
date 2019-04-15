@@ -4,7 +4,6 @@ module GettoCodes.App.System.Profile.Dashboard.Html exposing
 import GettoCodes.Html.Button as Button
 
 import Html as H exposing ( Html )
-import Html.Attributes as A
 import Html.Events as E
 
 

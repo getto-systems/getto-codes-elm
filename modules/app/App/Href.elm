@@ -1,4 +1,4 @@
-module GettoCodes.View.Href.Home exposing
+module GettoCodes.App.Href exposing
   ( index
   )
 import GettoCodes.View.Href as Href

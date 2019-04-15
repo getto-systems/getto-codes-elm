@@ -13,6 +13,9 @@ module GettoCodes.Layout.Page.Side exposing
   , nav
   , navFooter
   )
+import GettoCodes.App.Href as AppHref
+import GettoCodes.App.Data.Upload.Href as UploadHref
+import GettoCodes.App.System.Href as SystemHref
 import GettoCodes.Layout.Page.Model as Model
 import GettoCodes.Layout.Page.Side.Html as Html
 import GettoCodes.Layout.Page.Side.View as View
@@ -26,9 +29,6 @@ import GettoCodes.View.Http as HttpView
 import GettoCodes.View.Menu as Menu exposing ( Menu )
 import GettoCodes.View.Icon as IconView
 import GettoCodes.View.Href as Href exposing ( Href )
-import GettoCodes.View.Href.Home   as Home
-import GettoCodes.View.Href.Data.Upload as Upload
-import GettoCodes.View.Href.System as System
 import GettoCodes.I18n.App  as I18n
 import GettoCodes.I18n.Http as HttpI18n
 
@@ -159,8 +159,8 @@ navAddress model = L.lazy3
       }
     , roles = auth |> Auth.credential |> Credential.roles
     , href =
-      { config = Home.index
-      , profile = Home.index
+      { config = AppHref.index
+      , profile = AppHref.index
       }
     , i18n =
       { title = identity
@@ -215,19 +215,19 @@ menuI18n =
 menu : Menu
 menu =
   [ ( "main"
-    , [ Menu.item (IconView.fas "home") Home.index []
+    , [ Menu.item (IconView.fas "home") AppHref.index []
       ]
     )
   , ( "upload"
-    , [ Menu.item (IconView.fas "file") Upload.list
-        [ Menu.item (IconView.edit) Upload.new []
-        , Menu.item (IconView.edit) Upload.edit_ []
+    , [ Menu.item (IconView.fas "file") UploadHref.list
+        [ Menu.item (IconView.edit) UploadHref.new []
+        , Menu.item (IconView.edit) UploadHref.edit_ []
         ]
-      , Menu.item (IconView.fas "file") Upload.list_edit []
+      , Menu.item (IconView.fas "file") UploadHref.list_edit []
       ]
     )
   , ( "system"
-    , [ Menu.item (IconView.fas "user") System.profile []
+    , [ Menu.item (IconView.fas "user") SystemHref.profile []
       ]
     )
   ]
@@ -244,7 +244,7 @@ collapsed data name = data |> Set.member name
 
 badgeNames : Dict String String
 badgeNames = Dict.fromList
-  [ ( Home.index |> toBadgeName, "home" )
+  [ ( AppHref.index |> toBadgeName, "home" )
   ]
 
 toBadgeName : Href -> String

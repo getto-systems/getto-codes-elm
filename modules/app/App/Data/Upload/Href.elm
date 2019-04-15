@@ -1,4 +1,4 @@
-module GettoCodes.View.Href.Data.Upload exposing
+module GettoCodes.App.Data.Upload.Href exposing
   ( list
   , list_edit
   , new

@@ -12,9 +12,7 @@ module GettoCodes.App.System.Profile.Dashboard exposing
 import GettoCodes.App.System.Profile.Model as Model
 import GettoCodes.App.System.Profile.Dashboard.Html as Html
 import GettoCodes.Layout.Frame as Frame
-import GettoCodes.View.Href.Home as Home
 import GettoCodes.I18n.App.System.Profile as I18n
-import GettoCodes.I18n.App as AppI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode

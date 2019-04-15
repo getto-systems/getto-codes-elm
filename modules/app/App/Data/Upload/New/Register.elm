@@ -9,6 +9,7 @@ module GettoCodes.App.Data.Upload.New.Register exposing
   , update
   , contents
   )
+import GettoCodes.App.Data.Upload.Href as UploadHref
 import GettoCodes.App.Data.Upload.New.Model as Model
 import GettoCodes.App.Data.Upload.New.Register.View as View
 import GettoCodes.App.Data.Upload.New.Register.Html as Html
@@ -16,8 +17,6 @@ import GettoCodes.Layout.Frame as Frame
 import GettoCodes.Layout.Api as Api
 import GettoCodes.Command.Http as Http
 import GettoCodes.Command.Dom as Dom
-import GettoCodes.View.Href as Href
-import GettoCodes.View.Href.Data.Upload as Upload
 import GettoCodes.View.Http as HttpView
 import GettoCodes.I18n.App as AppI18n
 import GettoCodes.I18n.App.Data.Upload as I18n
@@ -142,7 +141,7 @@ update msg model =
       , case mig |> HttpView.isSuccess of
         Just res ->
           [ Frame.clearApp
-          , res |> HttpView.header |> .id |> Upload.edit |> Frame.loadUrl
+          , res |> HttpView.header |> .id |> UploadHref.edit |> Frame.loadUrl
           ]
           |> T.batch
         Nothing -> T.none
