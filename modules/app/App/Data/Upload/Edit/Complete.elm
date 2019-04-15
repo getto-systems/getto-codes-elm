@@ -8,6 +8,8 @@ module GettoCodes.App.Data.Upload.Edit.Complete exposing
   , contents
   , dialogs
   )
+import GettoCodes.App.I18n as AppI18n
+import GettoCodes.App.Data.Upload.I18n as I18n
 import GettoCodes.App.Data.Upload.Edit.Model as Model
 import GettoCodes.App.Data.Upload.Edit.Complete.View as View
 import GettoCodes.App.Data.Upload.Edit.Complete.Html as Html
@@ -15,9 +17,6 @@ import GettoCodes.Layout.Frame as Frame
 import GettoCodes.Layout.Api as Api
 import GettoCodes.Command.Http as Http
 import GettoCodes.View.Http as HttpView
-import GettoCodes.I18n.App as AppI18n
-import GettoCodes.I18n.App.Data.Upload as I18n
-import GettoCodes.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 
@@ -170,7 +169,7 @@ dialog model = L.lazy2
       , message = I18n.message
       , button  = I18n.button
       , form    = AppI18n.form
-      , http    = HttpI18n.error
+      , http    = AppI18n.http
       }
     }
   )

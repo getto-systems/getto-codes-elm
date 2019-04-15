@@ -13,6 +13,7 @@ module GettoCodes.Layout.Page.Side exposing
   , nav
   , navFooter
   )
+import GettoCodes.App.I18n as AppI18n
 import GettoCodes.App.Href as AppHref
 import GettoCodes.App.Menu as AppMenu
 import GettoCodes.Layout.Page.Model as Model
@@ -27,8 +28,6 @@ import GettoCodes.Command.Http as Http
 import GettoCodes.View.Http as HttpView
 import GettoCodes.View.Menu as Menu exposing ( Menu )
 import GettoCodes.View.Href as Href exposing ( Href )
-import GettoCodes.I18n.App  as I18n
-import GettoCodes.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Json.SafeDecode as SafeDecode
@@ -163,8 +162,8 @@ navAddress model = L.lazy3
     , i18n =
       { title = identity
       , mode  = identity
-      , role  = I18n.role
-      , http  = HttpI18n.error
+      , role  = AppI18n.role
+      , http  = AppI18n.http
       }
     }
   )
@@ -205,8 +204,8 @@ nav model = L.lazy3
 
 menuI18n : View.MenuI18n
 menuI18n =
-  { title = I18n.title
-  , menu  = I18n.menu
+  { title = AppI18n.title
+  , menu  = AppI18n.menu
   }
 
 

@@ -7,6 +7,8 @@ module GettoCodes.App.Data.Upload.Edit.Detail exposing
   , update
   , contents
   )
+import GettoCodes.App.I18n as AppI18n
+import GettoCodes.App.Data.Upload.I18n as I18n
 import GettoCodes.App.Data.Upload.Edit.Model as Model
 import GettoCodes.App.Data.Upload.Edit.Data.View as Data
 import GettoCodes.App.Data.Upload.Edit.Detail.View as View
@@ -17,9 +19,6 @@ import GettoCodes.Layout.Api as Api
 import GettoCodes.Command.Http as Http
 import GettoCodes.Command.Dom as Dom
 import GettoCodes.View.Http as HttpView
-import GettoCodes.I18n.App as AppI18n
-import GettoCodes.I18n.App.Data.Upload as I18n
-import GettoCodes.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Field.Form as Form
@@ -142,7 +141,7 @@ content model = L.lazy3
       , field   = I18n.field
       , error   = I18n.error
       , form    = AppI18n.form
-      , http    = HttpI18n.error
+      , http    = AppI18n.http
       , gender  = I18n.gender
       , quality = I18n.quality
       , role    = AppI18n.role

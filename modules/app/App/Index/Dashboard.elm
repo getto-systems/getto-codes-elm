@@ -9,13 +9,13 @@ module GettoCodes.App.Index.Dashboard exposing
   , update
   , contents
   )
+import GettoCodes.App.I18n as AppI18n
 import GettoCodes.App.Href as AppHref
+import GettoCodes.App.Index.I18n as I18n
 import GettoCodes.App.Index.Model as Model
 import GettoCodes.App.Index.Dashboard.Html as Html
 import GettoCodes.App.Index.Dashboard.View as View
 import GettoCodes.Layout.Frame as Frame
-import GettoCodes.I18n.App.Index as I18n
-import GettoCodes.I18n.App as AppI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode

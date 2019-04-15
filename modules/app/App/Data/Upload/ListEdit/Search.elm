@@ -10,6 +10,8 @@ module GettoCodes.App.Data.Upload.ListEdit.Search exposing
   , contents
   , dialogs
   )
+import GettoCodes.App.I18n as AppI18n
+import GettoCodes.App.Data.Upload.I18n as I18n
 import GettoCodes.App.Data.Upload.ListEdit.Model as Model
 import GettoCodes.App.Data.Upload.ListEdit.Search.View as View
 import GettoCodes.App.Data.Upload.ListEdit.Search.Html as Html
@@ -21,9 +23,6 @@ import GettoCodes.Layout.Api as Api
 import GettoCodes.Command.Http as Http
 import GettoCodes.Command.Dom as Dom
 import GettoCodes.View.Http as HttpView
-import GettoCodes.I18n.App as AppI18n
-import GettoCodes.I18n.App.Data.Upload as I18n
-import GettoCodes.I18n.Http as HttpI18n
 
 import Getto.Command.Transition as T exposing ( Transition )
 import Getto.Url.Query.Encode as QueryEncode
@@ -186,7 +185,7 @@ form model = L.lazy2
     , i18n =
       { field = I18n.field
       , form  = AppI18n.form
-      , http  = HttpI18n.error
+      , http  = AppI18n.http
       }
     }
   )
