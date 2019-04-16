@@ -1,14 +1,15 @@
 {
   "version": "0.1.0",
   "scripts": {
-    "start": "npm run reload & npm run watch",
-    "reload": "./bin/prepare-development.sh && reload-wrapper -d ./public -w ./public/dist",
+    "start": "npm run prepare & npm run reload & npm run watch",
+    "prepare": "./bin/prepare-development.sh",
+    "reload": "reload-wrapper -d ./public -w ./public/dist",
     "watch": "npm run watch:build & npm run watch:test & npm run watch:routes",
     "watch:build": "exec-on-changed -d ./src -f ./bin/build.sh",
     "watch:test": "exec-on-changed -d ./tests -f ./bin/test.sh",
     "watch:routes": "exec-on-changed -d ./config/routes -f ./bin/routes.sh",
     "elm": "elm",
-    "test": "elm-test && ./bin/check-all-unused-import.sh && ./bin/all_build.sh && ./bin/stat.js -d ./src -p $ELM_HOME"
+    "test": "elm-test && ./bin/all_build.sh && ./bin/check-perfect-test.sh && ./bin/check-all-unused-import.sh && ./bin/stat.js -d ./src -p $ELM_HOME"
   },
   "author": "shun@getto.systems",
   "license": "MIT",
