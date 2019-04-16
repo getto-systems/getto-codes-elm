@@ -5,35 +5,6 @@ import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
 
-{-
-  ( Model
-  , Migration
-  , State(..)
-  , Response
-  , ResponseDecoder
-  , ResponseValue
-  , Progress(..)
-  , Error(..)
-  , empty
-  , clear
-  , toResponse
-  , load
-  , transfer
-  , notModified
-  , success
-  , failure
-  , isSuccess
-  , isConflict
-  , isComplete
-  , update
-  , state
-  , response
-  , header
-  , body
-  , progress
-  )
--}
-
 suite : Test
 suite =
   describe "Http"
